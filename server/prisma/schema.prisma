@@ -19,14 +19,19 @@ model User {
   email     String   @unique
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
+  role String
   
   reservations Reservation[]
+  staffActions StaffAction[]
 
   @@map("users")
 }
 
 model Restaurant {
   id  Int @id @default(autoincrement())
+  name String
+  address String
+  website String
 
   tables Table[]
   games Game[]
@@ -37,6 +42,9 @@ model Restaurant {
 
 model Table {
   id  Int @id @default(autoincrement())
+  name String
+  capacity Int
+  status String
 
   restaurantId Int
   restaurant Restaurant @relation(fields: [restaurantId], references: [id])
@@ -48,6 +56,11 @@ model Table {
 
 model Game {
   id  Int @id @default(autoincrement())
+  name String
+  minPlayers Int @map("min_players")
+  maxPlayers Int @map("max_players")
+  estimatedPlayTime Int @map("estimated_play_time")
+  status String
 
   restaurantId Int
   restaurant Restaurant @relation(fields: [restaurantId], references: [id])
@@ -60,6 +73,11 @@ model Game {
 
 model Reservation {
   id  Int @id @default(autoincrement())
+  reservationDate DateTime @map("reservation_date")
+  startTime DateTime @map("start_time")
+  endTime DateTime @map("end_time")
+  partySize Int @map("party_size")
+  status String
 
   userId Int
   user User @relation(fields: [userId], references: [id])
@@ -84,6 +102,11 @@ model GameReservation {
 
 model GameIssue {
   id  Int @id @default(autoincrement())
+  reportedBy String @map("reported_by")
+  issueType String @map("issue_type")
+  notes String
+  reportedAt DateTime @default(now()) @map("reported_at")
+  resolved Boolean @default(false)
 
   gameId Int
   game Game @relation(fields: [gameId], references: [id])
@@ -95,7 +118,11 @@ model GameIssue {
 
 model StaffAction {
   id  Int @id @default(autoincrement())
+  actionType String @map("action_type")
+  timestamp Int
 
+  userId Int
+  user User @relation(fields: [userId], references: [id])
   gameIssueId Int
   gameIssue GameIssue @relation(fields: [gameIssueId], references: [id])
 
@@ -104,6 +131,9 @@ model StaffAction {
 
 model OperatingHours {
   id  Int @id @default(autoincrement())
+  dayOfWeek String @map("day_of_week")
+  openTime Int
+  closeTime Int
 
   restaurantId Int
   restaurant Restaurant @relation(fields: [restaurantId], references: [id])
