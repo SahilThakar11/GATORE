@@ -1,0 +1,142 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  role String
+  
+  reservations Reservation[]
+  staffActions StaffAction[]
+
+  @@map("users")
+}
+
+model Restaurant {
+  id  Int @id @default(autoincrement())
+  name String
+  address String
+  website String
+
+  tables Table[]
+  games Game[]
+  operatingHours OperatingHours[]
+
+  @@map("restaurant")
+}
+
+model Table {
+  id  Int @id @default(autoincrement())
+  name String
+  capacity Int
+  status String
+
+  restaurantId Int
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id])
+
+  reservations Reservation[]
+
+  @@map("table")
+}
+
+model Game {
+  id  Int @id @default(autoincrement())
+  name String
+  minPlayers Int @map("min_players")
+  maxPlayers Int @map("max_players")
+  estimatedPlayTime Int @map("estimated_play_time")
+  status String
+
+  restaurantId Int
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id])
+
+  gameReservations GameReservation[]
+  gameIssues GameIssue[]
+
+  @@map("game")
+}
+
+model Reservation {
+  id  Int @id @default(autoincrement())
+  reservationDate DateTime @map("reservation_date")
+  startTime DateTime @map("start_time")
+  endTime DateTime @map("end_time")
+  partySize Int @map("party_size")
+  status String
+
+  userId Int
+  user User @relation(fields: [userId], references: [id])
+  tableId Int
+  table Table @relation(fields: [tableId], references: [id])
+
+  gameReservations GameReservation[]
+
+  @@map("reservation")
+}
+
+model GameReservation {
+  id  Int @id @default(autoincrement())
+
+  reservationId Int
+  reservation Reservation @relation(fields: [reservationId], references: [id])
+  gameId Int
+  game Game @relation(fields: [gameId], references: [id])
+
+  @@map("game_reservation")
+}
+
+model GameIssue {
+  id  Int @id @default(autoincrement())
+  reportedBy String @map("reported_by")
+  issueType String @map("issue_type")
+  notes String
+  reportedAt DateTime @default(now()) @map("reported_at")
+  resolved Boolean @default(false)
+
+  gameId Int
+  game Game @relation(fields: [gameId], references: [id])
+
+  staffActions StaffAction[]
+
+  @@map("game_issue")
+}
+
+model StaffAction {
+  id  Int @id @default(autoincrement())
+  actionType String @map("action_type")
+  timestamp Int
+
+  userId Int
+  user User @relation(fields: [userId], references: [id])
+  gameIssueId Int
+  gameIssue GameIssue @relation(fields: [gameIssueId], references: [id])
+
+  @@map("staff_action")
+}
+
+model OperatingHours {
+  id  Int @id @default(autoincrement())
+  dayOfWeek String @map("day_of_week")
+  openTime Int
+  closeTime Int
+
+  restaurantId Int
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id])
+
+  @@map("operating_hours")
+}
