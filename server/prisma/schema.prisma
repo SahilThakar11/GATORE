@@ -19,7 +19,7 @@ model User {
   email     String   @unique
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
-  role String
+  role String @default("user")
   
   reservations Reservation[]
   staffActions StaffAction[]
