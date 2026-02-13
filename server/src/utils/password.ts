@@ -2,10 +2,12 @@ import bcrypt from "bcryptjs";
 
 const SALT_ROUNDS = 10;
 
+// This function takes a plain text password and returns a hashed version of it using bcrypt
 export const hashPassword = async (password: string): Promise<string> => {
   return await bcrypt.hash(password, SALT_ROUNDS);
 };
 
+// This function compares a plain text password with a hashed password and returns true if they match, false otherwise
 export const comparePassword = async (
   password: string,
   hashedPassword: string,
@@ -13,6 +15,7 @@ export const comparePassword = async (
   return await bcrypt.compare(password, hashedPassword);
 };
 
+// This function checks if the password meets certain strength criteria
 export const validatePasswordStrength = (
   password: string,
 ): {
