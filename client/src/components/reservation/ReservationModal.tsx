@@ -30,6 +30,7 @@ import {
   isValidCVV,
   formatCurrency,
 } from "../../utils/validation";
+import { handleConfirmReservation } from "../../utils/createReservation";
 
 interface ReservationModalProps {
   isOpen: boolean;
@@ -118,6 +119,7 @@ export const ReservationModal: React.FC<ReservationModalProps> = ({
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [passwordError, setPasswordError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (isOpen && venue) {
@@ -729,10 +731,13 @@ export const ReservationModal: React.FC<ReservationModalProps> = ({
                 </Button>
                 <Button
                   variant="primary"
-                  disabled={!canProceed}
-                  onClick={nextStep}
+                  disabled={!canProceed || loading}
+                  onClick={
+                    currentStep === 5 ? () => handleConfirmReservation(data, nextStep, setLoading) : nextStep
+                  }
+                  className={loading ? "opacity-75" : ""}
                 >
-                  {currentStep === 5 ? "Confirm" : "Continue"}
+                  {loading ? "Creating..." : currentStep === 5 ? "Confirm" : "Continue"}
                 </Button>
               </div>
               <div className="text-center text-xs text-gray-500">

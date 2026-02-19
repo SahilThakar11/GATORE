@@ -28,6 +28,17 @@ export const validateSignup = [
     ),
 ];
 
+export const validateGuestSignup = [
+  body("email")
+    .trim()
+    .notEmpty()
+    .withMessage("Email is required")
+    .isEmail()
+    .withMessage("Invalid email format")
+    .normalizeEmail(),
+];
+
+
 export const validateSignin = [
   body("email")
     .trim()
