@@ -6,9 +6,11 @@ import {
   signin,
   getCurrentUser,
   logout,
+  guestSignup,
 } from "../controllers/authController";
 import {
   validateSignup,
+  validateGuestSignup,
   validateSignin,
   validateVerifyOTP,
   validateResendOTP,
@@ -20,6 +22,7 @@ const router = Router();
 
 // Public routes
 router.post("/signup", validateSignup, handleValidationErrors, signup);
+router.post("/guest-signup", validateGuestSignup, handleValidationErrors, guestSignup);
 router.post(
   "/verify-otp",
   validateVerifyOTP,

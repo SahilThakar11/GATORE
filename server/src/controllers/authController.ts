@@ -10,10 +10,59 @@ import {
 } from "../utils/jwt";
 import { sendOTPEmail } from "../services/emailService";
 
+// Guest Sign Up - Create guest user
+export const guestSignup = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { email } = req.body;
+    // Create guest user
+
+    // Check if Guest user already exists
+    const existingUser = await prisma.user.findUnique({
+      where: { email, isGuest: true },
+    });
+
+    if (existingUser) {
+        res.status(201).json({
+          success: true,
+          message: "Email already registered",
+          data: {
+            user: existingUser,
+          }
+        });
+        return;
+      }
+    
+    const user = await prisma.user.create({
+      data: {
+        name: "Guest User",
+        email,
+        isGuest: true,
+        emailVerified: false,
+        isActive: true,
+        password: "GuestPassword123!", // This password won't be used for authentication, but is required by the schema
+      },
+    });
+
+    res.status(201).json({
+      success: true,
+      message: "Guest user created successfully.",
+      data: {
+        user,
+      },
+    });
+  } catch (error) {
+    console.error("Guest signup error:", error);
+    res.status(500).json({
+      success: false,
+      message: "An error occurred during guest signup. Please try again.",
+    });
+  }
+};
+
 // Sign Up - Create user and send OTP
 export const signup = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password} = req.body;
 
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
