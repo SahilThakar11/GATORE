@@ -47,7 +47,8 @@ const TIME_SLOTS = [
   "8:30 PM",
 ];
 
-const GAME_IDS = ["266192", "397598", "169786"]; // Example BGG game IDs for Wingspan, Gloomhaven, and Catan
+//const GAME_IDS = ["266192", "397598", "169786"]; // Example BGG game IDs for Wingspan, Gloomhaven, and Catan
+const GAME_IDS = ["119506","23540","43307","37111","202426"]; // Example BGG game IDs for Freedom The Underground Railroad, Shikoku 1889, Baltimore & Ohio, Battlestar Galactica The Board Game and Sidereal Confluence
 
 // const MOCK_GAMES: Game[] = [
 //   {
