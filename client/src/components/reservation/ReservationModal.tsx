@@ -419,8 +419,8 @@ export const ReservationModal: React.FC<ReservationModalProps> = ({
 
               <div className="space-y-3">
 
-                {gamesLoading && <div className="text-sm text-gray-600">Loading games…</div>} // Show loading state while fetching games
-                {gamesError && <div className="text-sm text-red-600">{gamesError}</div>} // Show error if games failed to load
+                {gamesLoading && <div className="text-sm text-gray-600">Loading games…</div>} 
+                {gamesError && <div className="text-sm text-red-600">{gamesError}</div>} 
 
                 {filteredGames.map((game) => {
                   const isSelected = selectedGameId === game.id;
