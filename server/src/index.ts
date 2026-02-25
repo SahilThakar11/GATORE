@@ -6,6 +6,7 @@ import { apiLimiter } from "./middleware/rateLimiter";
 import authRoutes from "./routes/auth";
 import prisma from "./config/prisma";
 
+
 const app: Application = express();
 const PORT = process.env.PORT;
 
