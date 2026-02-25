@@ -5,10 +5,12 @@ import cors from "cors";
 import { apiLimiter } from "./middleware/rateLimiter";
 import authRoutes from "./routes/auth";
 import prisma from "./config/prisma";
-
+import bggRouter from "./routes/bgg"; // Import the BGG router
 
 const app: Application = express();
 const PORT = process.env.PORT;
+
+app.use("/api/bgg", bggRouter); // Use the BGG router for /api/bgg routes
 
 // Middleware
 app.use(
