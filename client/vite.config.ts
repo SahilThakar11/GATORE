@@ -8,17 +8,8 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": {
-        target: "http://127.0.0.1:3000", // Proxy to the backend server
+        target: "http://localhost:3000",
         changeOrigin: true,
-        secure: false,
-        configure: (proxy) => {
-        proxy.on("error", (err, _req, _res) => {
-          console.log("proxy error", err);
-        });
-        proxy.on("proxyReq", (proxyReq, req, _res) => {
-          console.log("proxying", req.method, req.url, "->", proxyReq.getHeader("host"));
-        });
-      },
       },
     },
   },
