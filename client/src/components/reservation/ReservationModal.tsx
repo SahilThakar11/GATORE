@@ -138,9 +138,6 @@ export const ReservationModal: React.FC<ReservationModalProps> = ({
       setGamesError(null);
 
       const idsParam = GAME_IDS.join(",");
-      // const res = await fetch(`/api/bgg/games?ids=${encodeURIComponent(idsParam)}`, {
-      //   signal: controller.signal,
-      // });
       const res = await fetch(`/api/bgg/games?ids=${encodeURIComponent(idsParam)}`);
 
 
@@ -254,10 +251,6 @@ export const ReservationModal: React.FC<ReservationModalProps> = ({
   };
 
   if (!isOpen) return null;
-
-  // const filteredGames = complexityFilter
-  //   ? MOCK_GAMES.filter((game) => game.complexity === complexityFilter)
-  //   : MOCK_GAMES;
 
   const filteredGames = complexityFilter
   ? games.filter((game) => game.complexity === complexityFilter)

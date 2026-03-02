@@ -14,11 +14,6 @@ router.get("/games", async (req, res) => {
       ids
     )}&type=boardgame`;
 
-    // const response = await fetch(url);
-    // if (!response.ok) {
-    //   return res.status(502).json({ error: "BGG request failed" });
-    // }
-
     const token = process.env.BGG_TOKEN;
 if (!token) return res.status(500).json({ error: "Missing BGG_TOKEN in server env" });
 
