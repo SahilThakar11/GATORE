@@ -47,6 +47,10 @@ const TIME_SLOTS = [
   "8:30 PM",
 ];
 
+const GAME_IDS = ["266192", "397598", "169786"] // Wingspan, Catan, Carcassonne
+//const GAME_IDS = ["119506","23540","43307","37111","202426"]
+
+// right now MOCK_GAMES is not being used beacuse GAME_IDS is being used to fetch real game data from BGG. We can switch to MOCK_GAMES for testing or if the BGG API is down.
 const MOCK_GAMES: Game[] = [
   {
     id: "1",
@@ -119,6 +123,66 @@ export const ReservationModal: React.FC<ReservationModalProps> = ({
   const [showPassword, setShowPassword] = useState(false);
   const [passwordError, setPasswordError] = useState("");
 
+  const [games, setGames] = useState<Game[]>([]); // Games loaded from backend
+  const [gamesLoading, setGamesLoading] = useState(false); // Loading state for games
+  const [gamesError, setGamesError] = useState<string | null>(null); // Error state for games
+
+  useEffect(() => {
+  if (!isOpen) return;
+
+  const controller = new AbortController();
+
+  (async () => {
+    try {
+      setGamesLoading(true);
+      setGamesError(null);
+
+      const idsParam = GAME_IDS.join(",");
+      const res = await fetch(`/api/bgg/games?ids=${encodeURIComponent(idsParam)}`);
+
+
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(`Failed to load games (${res.status}): ${text.slice(0, 120)}`);
+      }
+
+      //const data = await res.json();
+
+       const data: Array<{
+         id: string;
+        name: string;
+        image: string;
+        players: string;
+         duration: string;
+       }> = await res.json();
+
+      // Convert to your Game type
+      const mapped: Game[] = data.map((g) => ({
+        id: g.id,
+        name: g.name,
+        image: g.image,
+        players: g.players,
+        duration: g.duration,
+
+        // keep these for now; we can enhance later
+        complexity: "Medium",
+        price: 3,
+        tags: ["BGG"],
+      }));
+
+      setGames(mapped);
+    } catch (err: any) {
+      if (err?.name === "AbortError") return;
+      setGamesError(err?.message ?? "Failed to load games");
+      setGames([]);
+    } finally {
+      setGamesLoading(false);
+    }
+  })();
+
+  return () => controller.abort();
+}, [isOpen]);
+
   useEffect(() => {
     if (isOpen && venue) {
       updateBooking({ venue } as any);
@@ -189,8 +253,8 @@ export const ReservationModal: React.FC<ReservationModalProps> = ({
   if (!isOpen) return null;
 
   const filteredGames = complexityFilter
-    ? MOCK_GAMES.filter((game) => game.complexity === complexityFilter)
-    : MOCK_GAMES;
+  ? games.filter((game) => game.complexity === complexityFilter)
+  : games;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
@@ -348,6 +412,9 @@ export const ReservationModal: React.FC<ReservationModalProps> = ({
               </div>
 
               <div className="space-y-3">
+                {gamesLoading && <div className="text-sm text-gray-600">Loading games…</div>}
+                {gamesError && <div className="text-sm text-red-600">{gamesError}</div>}
+
                 {filteredGames.map((game) => {
                   const isSelected = selectedGameId === game.id;
                   return (
