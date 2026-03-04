@@ -6,4 +6,17 @@
   --color-warm-200: #f5e6d8;
   --color-warm-100: #fef7f0;
   --color-warm-50: #fffbf7;
+  --color-neutral-600: #57534e;
+  --color-neutral-800: #292524;
+}
+@layer base {
+  @apply font-sans;
+
+  html {
+    @font-face {
+      font-family: "DM Sans";
+      src: url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap");
+    }
+    font-family: "DM Sans", sans-serif;
+  }
 }

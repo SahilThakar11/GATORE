@@ -1,37 +1,22 @@
-import React, { useState } from "react";
-import { ReservationModal } from "./components/reservation/ReservationModal";
-import type { Venue } from "./types/reservation.types";
+import { Routes, Route } from "react-router-dom";
+import Header from "./components/Header";
+import Home from "./pages/Home";
+import FindCafe from "./pages/FindCafe";
+import HowItWorks from "./pages/HowItWorks";
+import ForCafeOwners from "./pages/ForCafeOwners";
+import FindGame from "./pages/FindGame";
 
-const mockVenue: Venue = {
-  id: "1",
-  name: "Adventurers Guild",
-  logo: "/images/cafe.png",
-  address: "178 University Ave W, Waterloo, Ontario",
-  rating: 4.5,
-  reviewCount: 125,
-  location: "Waterloo, ON",
-  poster: "/images/poster.png",
-};
-
-function App() {
-  const [isOpen, setIsOpen] = useState(false);
-
+export default function App() {
   return (
-    <div>
-      <button
-        onClick={() => setIsOpen(true)}
-        className="px-6 py-3 bg-teal-500 text-white rounded-lg"
-      >
-        Make a Reservation
-      </button>
-
-      <ReservationModal
-        isOpen={isOpen}
-        onClose={() => setIsOpen(false)}
-        venue={mockVenue}
-      />
+    <div className="min-h-screen bg-white">
+      <Header />
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/find-a-cafe" element={<FindCafe />} />
+        <Route path="/how-it-works" element={<HowItWorks />} />
+        <Route path="/for-cafe-owners" element={<ForCafeOwners />} />
+        <Route path="/find-a-game" element={<FindGame />} />
+      </Routes>
     </div>
   );
 }
-
-export default App;
