@@ -20,7 +20,8 @@ model User {
   refreshTokens RefreshToken[]
   reservations  Reservation[]
   staffActions  StaffAction[]
-
+  googleId      String?        @unique
+  authProvider  String         @default("email")
   @@map("users")
 }
 

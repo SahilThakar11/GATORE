@@ -1,17 +1,20 @@
 import { Router } from "express";
 import {
-  signup,
+  signupInit,
+  signupComplete,
   verifyOTP,
   resendOTP,
   signin,
   getCurrentUser,
   logout,
+  googleAuth,
 } from "../controllers/authController";
 import {
-  validateSignup,
   validateSignin,
   validateVerifyOTP,
   validateResendOTP,
+  validateSignupInit,
+  validateSignupComplete,
   handleValidationErrors,
 } from "../middleware/validation";
 import { authenticate } from "../middleware/auth";
@@ -19,7 +22,13 @@ import { authenticate } from "../middleware/auth";
 const router = Router();
 
 // Public routes
-router.post("/signup", validateSignup, handleValidationErrors, signup);
+router.post("/signup", validateSignupInit, handleValidationErrors, signupInit);
+router.post(
+  "/signup/complete",
+  validateSignupComplete,
+  handleValidationErrors,
+  signupComplete,
+);
 router.post(
   "/verify-otp",
   validateVerifyOTP,
@@ -37,5 +46,8 @@ router.post("/signin", validateSignin, handleValidationErrors, signin);
 // Protected routes
 router.get("/me", authenticate, getCurrentUser);
 router.post("/logout", authenticate, logout);
+
+// Google OAuth route
+router.post("/google", googleAuth);
 
 export default router;
