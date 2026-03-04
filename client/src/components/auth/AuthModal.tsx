@@ -138,6 +138,7 @@ export function AuthModal({ isOpen, onClose, auth }: AuthModalProps) {
               updateData={updateData}
               onContinue={submitProfile}
               onBack={goBack}
+              loading={loading}
             />
           )}
           {step === "preferences" && (

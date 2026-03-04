@@ -8,6 +8,7 @@ import {
   getCurrentUser,
   logout,
   googleAuth,
+  saveProfile,
 } from "../controllers/authController";
 import {
   validateSignin,
@@ -29,6 +30,8 @@ router.post(
   handleValidationErrors,
   signupComplete,
 );
+router.post("/signup/profile", saveProfile);
+
 router.post(
   "/verify-otp",
   validateVerifyOTP,

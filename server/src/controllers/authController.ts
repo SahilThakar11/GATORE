@@ -555,6 +555,60 @@ export const googleAuth = async (
   }
 };
 
+// Save name/phone after Google signup — no password involved
+export const saveProfile = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  try {
+    const { email, name } = req.body;
+
+    const user = await prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (!user) {
+      res.status(404).json({
+        success: false,
+        message: "User not found.",
+      });
+      return;
+    }
+
+    if (!user.emailVerified) {
+      res.status(403).json({
+        success: false,
+        message: "Email not verified.",
+      });
+      return;
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { email },
+      data: { name },
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Profile saved successfully.",
+      data: {
+        user: {
+          id: updatedUser.id,
+          name: updatedUser.name,
+          email: updatedUser.email,
+          role: updatedUser.role,
+        },
+      },
+    });
+  } catch (error) {
+    console.error("Save profile error:", error);
+    res.status(500).json({
+      success: false,
+      message: "An error occurred. Please try again.",
+    });
+  }
+};
+
 // ─── Get Current User ────────────────────────────────────────────────────────
 
 export const getCurrentUser = async (
