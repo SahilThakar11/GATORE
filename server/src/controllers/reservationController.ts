@@ -36,3 +36,32 @@ export const createReservation = async (req: Request, res: Response): Promise<vo
         });
     }
 };
+
+export const getReservations = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const reservations = await prisma.reservation.findMany({
+            where: { 
+                reservationDate: req.query.date ? new Date(req.query.date as string) : undefined,
+                table: {
+                    restaurantId: req.query.restaurantId ? parseInt(req.query.restaurantId as string) : undefined,
+                }
+            },
+            include: {
+                table: true,
+            },
+        });
+
+        res.json({
+
+            success: true,
+            message: "Reservations retrieved successfully",
+            data: reservations,
+        });
+    } catch (error) {
+        console.error("Get reservations error:", error);
+        res.status(500).json({
+            success: false,
+            message: "An error occurred while retrieving reservations.",
+        });
+    }
+};
