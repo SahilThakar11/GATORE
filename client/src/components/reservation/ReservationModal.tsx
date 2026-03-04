@@ -30,7 +30,6 @@ import {
   isValidCVV,
   formatCurrency,
 } from "../../utils/validation";
-import { handleConfirmReservation } from "../../utils/createReservation";
 
 interface ReservationModalProps {
   isOpen: boolean;
@@ -733,7 +732,7 @@ export const ReservationModal: React.FC<ReservationModalProps> = ({
                   variant="primary"
                   disabled={!canProceed || loading}
                   onClick={
-                    currentStep === 5 ? () => handleConfirmReservation(data, nextStep, setLoading) : nextStep
+                    currentStep === 5 ? () => {} : nextStep
                   }
                   className={loading ? "opacity-75" : ""}
                 >

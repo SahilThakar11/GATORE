@@ -1,6 +1,7 @@
 import Router from "express";
 import {
   createReservation,
+  getReservations,
   //getReservations,
   //updateReservation,
   //cancelReservation,
@@ -12,6 +13,7 @@ const router = Router();
 
 // Public routes
 router.post("/", /*validateCreateReservation, handleValidationErrors,*/ createReservation);
+router.get("/", getReservations);
 
 // Protected routes (require authentication)
 //router.get("/", authenticate, getReservations);
