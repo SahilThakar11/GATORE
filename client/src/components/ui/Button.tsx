@@ -21,17 +21,17 @@ export const Button: React.FC<ButtonProps> = ({
 
   const variants = {
     primary: disabled
-      ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-      : "bg-teal-500 text-white hover:bg-teal-600 focus:ring-teal-500",
+      ? "bg-warm-200 text-neutral-600 cursor-not-allowed"
+      : "bg-teal-500 text-white hover:bg-teal-600 focus:ring-teal-500 cursor-pointer",
     secondary: disabled
       ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-      : "bg-amber-900 text-white hover:bg-amber-950 focus:ring-amber-900",
+      : "bg-amber-900 text-white hover:bg-amber-950 focus:ring-amber-900 cursor-pointer",
     outline: disabled
-      ? "border-2 border-gray-200 text-gray-400 cursor-not-allowed"
-      : "border-2 border-gray-300 text-gray-700 hover:bg-gray-50 focus:ring-gray-300",
+      ? "border-2 border-warm-200 bg-white text-neutral-600 cursor-not-allowed"
+      : "border-2 border-warm-200 bg-white text-neutral-600 focus:ring-warm-300 cursor-pointer",
     ghost: disabled
       ? "text-gray-400 cursor-not-allowed"
-      : "text-gray-600 hover:text-gray-900 hover:bg-gray-100 focus:ring-gray-300",
+      : "text-gray-600 hover:text-gray-900 focus:ring-warm-300 cursor-pointer",
   };
 
   const sizes = {
