@@ -7,6 +7,7 @@ interface Props {
   updateData: (patch: Partial<AuthFormData>) => void;
   onContinue: () => void;
   onBack: () => void;
+  loading: boolean;
 }
 
 export function StepProfile({
@@ -14,6 +15,7 @@ export function StepProfile({
   updateData,
   onContinue,
   onBack,
+  loading,
 }: Props) {
   const isValid = formData.name.trim().length > 0;
 
@@ -59,9 +61,9 @@ export function StepProfile({
           variant="primary"
           fullWidth
           onClick={onContinue}
-          disabled={!isValid}
+          disabled={!formData.name.trim() || loading}
         >
-          Continue
+          {loading ? "Saving..." : "Continue"}
         </Button>
       </div>
     </>

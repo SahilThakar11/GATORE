@@ -240,36 +240,68 @@ export function useAuthModal() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`${BASE_URL}/signup/complete`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password,
-          name: formData.name,
-        }),
-      });
+      if (formData.isGoogleAuth) {
+        // ─── Google user — just save name, no password involved
+        const res = await fetch(`${BASE_URL}/signup/profile`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: formData.email,
+            name: formData.name,
+          }),
+        });
 
-      const json = await res.json();
-      if (!res.ok) {
-        setError(json.message);
-        return;
+        const json = await res.json();
+        if (!res.ok) {
+          setError(json.message);
+          return;
+        }
+
+        // Update context with saved name
+        const accessToken = localStorage.getItem("accessToken")!;
+        const refreshToken = localStorage.getItem("refreshToken")!;
+        setAuth(
+          {
+            id: json.data.user.id,
+            email: json.data.user.email,
+            name: json.data.user.name,
+            role: json.data.user.role,
+          },
+          accessToken,
+          refreshToken,
+        );
+      } else {
+        const res = await fetch(`${BASE_URL}/signup/complete`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: formData.email,
+            password: formData.password,
+            name: formData.name,
+          }),
+        });
+
+        const json = await res.json();
+        if (!res.ok) {
+          setError(json.message);
+          return;
+        }
+
+        // Now store auth — user is fully set up
+        const accessToken = localStorage.getItem("accessToken")!;
+        const refreshToken = localStorage.getItem("refreshToken")!;
+        setAuth(
+          {
+            id: json.data?.user?.id ?? "",
+            ...json.data?.user,
+            name: formData.name,
+            email: formData.email,
+            role: "user",
+          },
+          accessToken,
+          refreshToken,
+        );
       }
-
-      // Now store auth — user is fully set up
-      const accessToken = localStorage.getItem("accessToken")!;
-      const refreshToken = localStorage.getItem("refreshToken")!;
-      setAuth(
-        {
-          id: json.data?.user?.id ?? "",
-          ...json.data?.user,
-          name: formData.name,
-          email: formData.email,
-          role: "user",
-        },
-        accessToken,
-        refreshToken,
-      );
 
       setStepState((prev) => ({ ...prev, passwordSet: true }));
       setStep("preferences");
@@ -278,7 +310,7 @@ export function useAuthModal() {
     } finally {
       setLoading(false);
     }
-  }, [formData.email, formData.password, formData.name]);
+  }, [formData.email, formData.password, formData.name, formData.isGoogleAuth]);
 
   const submitPreferences = useCallback(() => {
     setError(null);
