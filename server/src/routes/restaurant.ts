@@ -1,27 +1,41 @@
-import Router from "express";
+import { Router } from "express";
 import {
-  createReservation,
-  getGames,
-  getReservations,
-  getRestaurant,
-  //getReservations,
-  //updateReservation,
-  //cancelReservation,
-} from "../controllers/reservationController";
-import { authenticate } from "../middleware/auth";
-//import { validateCreateReservation, handleValidationErrors } from "../middleware/validation";
+  getRestaurants,
+  getRestaurantById,
+  getRestaurantGames,
+  getRestaurantTables,
+  getRestaurantAvailability,
+  getRestaurantReservations,
+} from "../controllers/restaurantController";
+import { authenticate, requireRole } from "../middleware/auth";
 
 const router = Router();
 
-// Public routes
-router.get("/by-id/:id", getRestaurant);
-router.post("/reservations", /*validateCreateReservation, handleValidationErrors,*/ createReservation);
-router.get("/reservations", getReservations);
-router.get("/games", getGames);
+// ─── PUBLIC ───────────────────────────────────────────────────────────────────
 
-// Protected routes (require authentication)
-//router.get("/", authenticate, getReservations);
-//router.put("/:id", authenticate, validateCreateReservation, handleValidationErrors, updateReservation);
-//router.delete("/:id", authenticate, cancelReservation);
+// GET /api/restaurants?city=Waterloo
+router.get("/", getRestaurants);
+
+// GET /api/restaurants/:id
+router.get("/:id", getRestaurantById);
+
+// GET /api/restaurants/:id/games?category=Strategy&status=available
+router.get("/:id/games", getRestaurantGames);
+
+// GET /api/restaurants/:id/tables?partySize=4
+router.get("/:id/tables", getRestaurantTables);
+
+// GET /api/restaurants/:id/availability?date=2026-03-10&partySize=4
+router.get("/:id/availability", getRestaurantAvailability);
+
+// ─── BUSINESS / ADMIN ONLY ────────────────────────────────────────────────────
+
+// GET /api/restaurants/:id/reservations?date=2026-03-10&status=confirmed
+router.get(
+  "/:id/reservations",
+  authenticate,
+  requireRole("business", "admin") as any,
+  getRestaurantReservations,
+);
 
 export default router;

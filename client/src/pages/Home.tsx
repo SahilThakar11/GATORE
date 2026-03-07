@@ -10,7 +10,7 @@ const Home = () => {
     <div className="bg-[#faf8f4]">
       <HeroSection />
       <FilterBar />
-      <FeaturedCafes city="Waterloo" />
+      <FeaturedCafes city="Toronto" limit={6} />
       <HowItWorks />
       <ReadyToRoll />
     </div>

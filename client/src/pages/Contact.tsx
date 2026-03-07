@@ -8,7 +8,7 @@ const CONTACT_INFO = [
   {
     icon: Mail,
     label: "Email us",
-    value: "hello@gatore.ca",
+    value: "noreplygatore@gmail.com",
     sub: "We respond within 1 business day",
   },
   {

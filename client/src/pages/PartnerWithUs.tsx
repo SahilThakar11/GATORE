@@ -83,7 +83,7 @@ export default function PartnerWithUs() {
           {FEATURES.map(({ icon: Icon, title, desc }) => (
             <div
               key={title}
-              className="bg-white rounded-xl border border-gray-100 p-6 hover:shadow-md hover:border-teal-200 transition-all duration-200"
+              className="bg-warm-100 rounded-xl border border-warm-300 p-6 hover:shadow-md hover:border-teal-200 transition-all duration-200"
             >
               <div className="w-10 h-10 rounded-lg bg-teal-50 flex items-center justify-center mb-4">
                 <Icon size={20} className="text-teal-600" />
@@ -98,7 +98,7 @@ export default function PartnerWithUs() {
       </section>
 
       {/* How it works for owners */}
-      <section className="bg-white border-t border-b border-gray-100 py-16 px-7">
+      <section className="bg-warm-50 border-t border-b border-warm-300 py-16 px-7">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-10">
             <h2 className="text-2xl font-bold text-gray-900">How it works</h2>

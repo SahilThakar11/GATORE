@@ -81,7 +81,7 @@ const FAQS = [
   },
   {
     q: "Do I need to pay upfront?",
-    a: "No payment is required to reserve. You pay the café directly when you arrive. Some cafés may charge a small deposit for large groups.",
+    a: "You can choose to pay online for a seamless experience or pay at the café when you arrive. Some cafés may require a deposit for larger groups.",
   },
   {
     q: "What if the café doesn't have the game I want?",

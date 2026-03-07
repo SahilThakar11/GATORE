@@ -1,19 +1,9 @@
-import { Clock, MapPin, Star } from "lucide-react";
+import { MapPin } from "lucide-react";
 import { Link } from "react-router-dom";
-
-export interface Cafe {
-  id: string;
-  name: string;
-  address: string;
-  rating: number;
-  reviewCount: number;
-  gameCount: number;
-  logoSrc?: string;
-  timeSlots: string[];
-}
+import type { CafeSummary } from "../../hooks/useCafe";
 
 interface CafeCardProps {
-  cafe: Cafe;
+  cafe: CafeSummary;
 }
 
 export function CafeCard({ cafe }: CafeCardProps) {
@@ -24,10 +14,10 @@ export function CafeCard({ cafe }: CafeCardProps) {
     >
       {/* Top row — logo + info */}
       <div className="flex items-start gap-3">
-        <div className=" rounded-lg overflow-hidden bg-gray-100 shrink-0 ">
-          {cafe.logoSrc ? (
+        <div className="w-30 h-30 rounded-lg overflow-hidden bg-gray-100 shrink-0 ">
+          {cafe.logoUrl ? (
             <img
-              src={cafe.logoSrc}
+              src={cafe.logoUrl}
               alt={cafe.name}
               className="w-full h-full object-cover"
             />
@@ -63,26 +53,10 @@ export function CafeCard({ cafe }: CafeCardProps) {
           </div>
           <div className="mt-1">
             <span className="text-xs bg-warm-300 text-neutral-800 px-3 py-1 rounded-full font-medium">
-              {cafe.gameCount} games
+              {cafe._count.restaurantGames} games
             </span>
           </div>
         </div>
-      </div>
-
-      {/* Time slots */}
-      <div className="flex items-center gap-2 mt-3 flex-wrap">
-        {cafe.timeSlots.map((slot) => (
-          <button
-            key={slot}
-            onClick={(e) => {
-              e.preventDefault(); // don't navigate on slot click
-            }}
-            className="flex items-center gap-1.5 text-xs font-medium text-neutral-800 bg-teal-100 border border-teal-500 px-2.5 py-1.5 rounded-lg hover:bg-teal-100 transition-colors"
-          >
-            <Clock size={11} />
-            {slot}
-          </button>
-        ))}
       </div>
     </Link>
   );
