@@ -3,6 +3,7 @@ import {
   createReservation,
   getGames,
   getReservations,
+  getRestaurant,
   //getReservations,
   //updateReservation,
   //cancelReservation,
@@ -13,7 +14,8 @@ import { authenticate } from "../middleware/auth";
 const router = Router();
 
 // Public routes
-router.post("/", /*validateCreateReservation, handleValidationErrors,*/ createReservation);
+router.get("/by-id/:id", getRestaurant);
+router.post("/reservations", /*validateCreateReservation, handleValidationErrors,*/ createReservation);
 router.get("/reservations", getReservations);
 router.get("/games", getGames);
 

@@ -61,6 +61,38 @@ const MOCK_CAFE = {
   ],
 };
 
+function useCafe(id: string) {
+  const [cafe, setCafe] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!id) {
+      setLoading(false);
+      return;
+    }
+
+    const fetchCafe = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await fetch(`/api/restaurant/by-id/${id}`);
+        if (!res.ok) throw new Error(`Failed to fetch cafe: ${res.status}`);
+        const result = await res.json();
+        setCafe(result.data);
+      } catch (e: any) {
+        setError(e?.message ?? "Failed to load cafe");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCafe();
+  }, [id]);
+
+  return { cafe, loading, error };
+}
+
 // ─── Hook: fetch BGG games by ID list ────────────────────────────────────────
 function useCafeGames(ids: string[]) {
   const [games, setGames] = useState<BGGGame[]>([]);
@@ -116,7 +148,12 @@ export default function CafeDetailPage() {
   const { isAuthenticated } = useAuth();
   const reservation = useReservationFlow();
 
-  const cafe = MOCK_CAFE; // TODO: fetch by `id`
+  const cafe = MOCK_CAFE; // replace with real fetch later
+  const { 
+    cafe: fetchedCafe, 
+    loading: cafeLoading, 
+    error: cafeError 
+  } = useCafe(id || "");
 
   const {
     games,
@@ -175,12 +212,12 @@ export default function CafeDetailPage() {
               {cafe.logoSrc ? (
                 <img
                   src={cafe.logoSrc}
-                  alt={cafe.name}
+                  alt={cafeLoading ? "…" : fetchedCafe.name}
                   className="w-full h-full object-cover"
                 />
               ) : (
                 <div className="w-full h-full bg-teal-700 flex items-center justify-center text-white text-2xl font-black">
-                  {cafe.name[0]}
+                  {cafeLoading ? "…" : fetchedCafe.name}
                 </div>
               )}
             </div>
@@ -189,7 +226,7 @@ export default function CafeDetailPage() {
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <h1 className="text-2xl font-black text-gray-900">
-                    {cafe.name}
+                    {cafeLoading ? "…" : fetchedCafe?.name}
                   </h1>
                   <p className="text-sm text-gray-500 mt-0.5">{cafe.tagline}</p>
                   <div className="flex items-center gap-3 mt-2 flex-wrap">
@@ -212,7 +249,7 @@ export default function CafeDetailPage() {
                     <span className="text-gray-200">·</span>
                     <div className="flex items-center gap-1 text-gray-400">
                       <MapPin size={12} />
-                      <span className="text-xs">{cafe.address}</span>
+                      <span className="text-xs">{cafeLoading ? "…" : fetchedCafe.address}</span>
                     </div>
                   </div>
                 </div>

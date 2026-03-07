@@ -1,6 +1,34 @@
 import prisma from "../config/prisma";
 import { Request, Response } from "express";
 
+export const getRestaurant = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const {id} = req.params;
+
+        const restaurant = await prisma.restaurant.findUnique({
+            where: { id: parseInt(id as string) },
+        });
+        if (!restaurant) {
+            res.status(404).json({
+                success: false,
+                message: "Restaurant not found",
+            });
+            return;
+        }
+        res.json({
+            success: true,
+            message: "Restaurant retrieved successfully",
+            data: restaurant,
+        });
+    } catch (error) {
+        console.error("Get restaurant error:", error);
+        res.status(500).json({
+            success: false,
+            message: "An error occurred while retrieving the restaurant.",
+        });
+    }
+};
+
 export const createReservation = async (req: Request, res: Response): Promise<void> => {
     try {
         const { 
@@ -42,13 +70,11 @@ export const getReservations = async (req: Request, res: Response): Promise<void
 
         const { date, restaurantId } = req.body;
 
-        console.log("Query parameters:", date as string);
-
         const reservations = await prisma.reservation.findMany({
             where: { 
-                reservationDate: date ? new Date(date as string) : undefined,
+                reservationDate: new Date(date as string),
                 table: {
-                    restaurantId: restaurantId ? parseInt(restaurantId as string) : undefined,
+                    restaurantId: parseInt(restaurantId as string),
                 },
             },
             include: {
@@ -80,7 +106,7 @@ export const getGames = async (req: Request, res: Response): Promise<void> => {
     try {
         const games = await prisma.game.findMany({
             where: {
-                restaurantId: req.query.restaurantId ? parseInt(req.query.restaurantId as string) : undefined,
+                restaurantId: parseInt(req.body.restaurantId as string),
             }
         });
         res.json({
