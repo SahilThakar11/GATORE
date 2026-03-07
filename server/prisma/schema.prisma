@@ -15,6 +15,7 @@ model User {
   role          String         @default("user")
   emailVerified Boolean        @default(false)
   isActive      Boolean        @default(false)
+  isGuest       Boolean        @default(false)
   password      String
   otpCodes      OtpCode[]
   refreshTokens RefreshToken[]

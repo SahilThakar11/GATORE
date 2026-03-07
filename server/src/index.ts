@@ -4,6 +4,7 @@ import express, { Application, Request, Response } from "express";
 import cors from "cors";
 import { apiLimiter } from "./middleware/rateLimiter";
 import authRoutes from "./routes/auth";
+import restaurantRoutes from "./routes/restaurant";
 import prisma from "./config/prisma";
 import bggRouter from "./routes/bgg"; // Import the BGG router
 
@@ -30,6 +31,7 @@ app.use("/api", apiLimiter);
 
 // Routes
 app.use("/api/auth", authRoutes);
+app.use("/api/restaurant", restaurantRoutes);
 
 // Health check
 app.get("/", (req: Request, res: Response) => {

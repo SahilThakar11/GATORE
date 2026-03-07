@@ -122,6 +122,7 @@ export const ReservationModal: React.FC<ReservationModalProps> = ({
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [passwordError, setPasswordError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const [games, setGames] = useState<Game[]>([]); // Games loaded from backend
   const [gamesLoading, setGamesLoading] = useState(false); // Loading state for games
@@ -796,10 +797,13 @@ export const ReservationModal: React.FC<ReservationModalProps> = ({
                 </Button>
                 <Button
                   variant="primary"
-                  disabled={!canProceed}
-                  onClick={nextStep}
+                  disabled={!canProceed || loading}
+                  onClick={
+                    currentStep === 5 ? () => {} : nextStep
+                  }
+                  className={loading ? "opacity-75" : ""}
                 >
-                  {currentStep === 5 ? "Confirm" : "Continue"}
+                  {loading ? "Creating..." : currentStep === 5 ? "Confirm" : "Continue"}
                 </Button>
               </div>
               <div className="text-center text-xs text-gray-500">
