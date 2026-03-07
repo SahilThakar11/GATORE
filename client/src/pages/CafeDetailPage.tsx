@@ -171,7 +171,7 @@ export default function CafeDetailPage() {
         <div className="bg-white rounded-2xl border border-gray-100 shadow-md -mt-16 relative z-10 p-6">
           <div className="flex items-start gap-5">
             {/* Logo */}
-            <div className="w-20 h-20 rounded-xl overflow-hidden bg-gray-100 border border-gray-200 shrink-0 -mt-10 shadow-sm">
+            <div className="w-40 h-40 rounded-xl overflow-hidden bg-gray-100 border border-gray-200 shrink-0 -mt-10 shadow-sm">
               {cafe.logoSrc ? (
                 <img
                   src={cafe.logoSrc}
