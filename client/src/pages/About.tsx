@@ -86,7 +86,7 @@ export default function About() {
             {VALUES.map(({ title, desc }) => (
               <div
                 key={title}
-                className="flex gap-4 p-6 rounded-xl border border-gray-100 bg-[#faf8f4] hover:border-teal-200 transition-colors"
+                className="flex gap-4 p-6 rounded-xl border border-warm-300 bg-warm-100 hover:border-teal-200 transition-colors"
               >
                 <div className="w-2 shrink-0 rounded-full bg-teal-500 self-stretch" />
                 <div>
@@ -108,15 +108,15 @@ export default function About() {
         <div className="text-center mb-10">
           <h2 className="text-2xl font-bold text-gray-900">The team</h2>
           <div className="w-10 h-0.5 bg-teal-500 mx-auto mt-3" />
-          <p className="text-sm text-gray-500 mt-3">
-            Team Crimson Underline — INFO3190, University of Waterloo
+          <p className="text-xl font-bold text-neutral-600 mt-3">
+            Team Crimson Underline
           </p>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
           {TEAM.map(({ name, role, initials }) => (
             <div
               key={name}
-              className="bg-white rounded-xl border border-gray-100 p-6 flex flex-col items-center gap-3 hover:shadow-md hover:border-teal-200 transition-all"
+              className="bg-warm-100 rounded-xl border border-warm-300 p-6 flex flex-col items-center gap-3 hover:shadow-md hover:border-teal-200 transition-all"
             >
               <div className="w-14 h-14 rounded-full bg-teal-600 flex items-center justify-center">
                 <span className="text-lg font-bold text-white tracking-wide">

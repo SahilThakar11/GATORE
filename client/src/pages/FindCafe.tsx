@@ -12,117 +12,11 @@ import {
   Clock,
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useCafes, type CafeSummary, formatMinutes } from "../hooks/useCafe";
 
-interface Cafe {
-  id: string;
-  name: string;
-  tagline: string;
-  address: string;
-  city: string;
-  rating: number;
-  reviewCount: number;
-  gameCount: number;
-  openNow: boolean;
-  hours: string;
-  amenities: string[];
-  tags: string[];
-  logoSrc?: string;
-  timeSlots: string[];
-}
-
-const ALL_CAFES: Cafe[] = [
-  {
-    id: "adventurers-guild",
-    name: "Adventurers Guild",
-    tagline: "Waterloo's premier board game café & tavern",
-    address: "148 University Ave W",
-    city: "Waterloo",
-    rating: 4.5,
-    reviewCount: 125,
-    gameCount: 156,
-    openNow: true,
-    hours: "12pm – 11pm",
-    amenities: ["WiFi", "Full menu", "Parking"],
-    tags: ["Strategy", "Family", "Party"],
-    timeSlots: ["5:30 PM", "6:00 PM", "6:30 PM"],
-  },
-  {
-    id: "dice-and-drafts",
-    name: "Dice & Drafts",
-    tagline: "Craft beer and board games under one roof",
-    address: "55 Brewer's Lane",
-    city: "Kitchener",
-    rating: 4.4,
-    reviewCount: 89,
-    gameCount: 132,
-    openNow: true,
-    hours: "3pm – 12am",
-    amenities: ["WiFi", "Full bar", "Parking"],
-    tags: ["Party", "Strategy", "Co-op"],
-    timeSlots: ["6:00 PM", "6:30 PM", "7:00 PM"],
-  },
-  {
-    id: "mystic-tavern",
-    name: "Mystic Tavern",
-    tagline: "Where legends gather for epic game nights",
-    address: "82 Magic Ave",
-    city: "Waterloo",
-    rating: 4.8,
-    reviewCount: 200,
-    gameCount: 210,
-    openNow: true,
-    hours: "12pm – 12am",
-    amenities: ["WiFi", "Full menu"],
-    tags: ["RPG", "Strategy", "Co-op"],
-    timeSlots: ["5:00 PM", "5:30 PM", "7:00 PM"],
-  },
-  {
-    id: "heroic-tabletop",
-    name: "Hero's Rest",
-    tagline: "A cozy haven for tabletop adventurers",
-    address: "22 Hero Way",
-    city: "Cambridge",
-    rating: 4.2,
-    reviewCount: 80,
-    gameCount: 98,
-    openNow: false,
-    hours: "2pm – 10pm",
-    amenities: ["WiFi", "Snacks"],
-    tags: ["Family", "Party", "Puzzle"],
-    timeSlots: ["5:15 PM", "6:00 PM", "6:45 PM"],
-  },
-  {
-    id: "wyverns-hoard",
-    name: "The Wyvern's Hoard",
-    tagline: "Hoard of games, hoard of fun",
-    address: "12 Dragonstone Lane",
-    city: "Kitchener",
-    rating: 4.6,
-    reviewCount: 112,
-    gameCount: 175,
-    openNow: true,
-    hours: "11am – 11pm",
-    amenities: ["WiFi", "Full menu", "Parking"],
-    tags: ["Strategy", "Tableau", "Card Games"],
-    timeSlots: ["5:00 PM", "5:30 PM", "7:00 PM"],
-  },
-  {
-    id: "tabletop-tea",
-    name: "Tabletop & Tea",
-    tagline: "Gentle brews, clever moves",
-    address: "9 Chamomile Crescent",
-    city: "Cambridge",
-    rating: 4.3,
-    reviewCount: 61,
-    gameCount: 87,
-    openNow: false,
-    hours: "10am – 9pm",
-    amenities: ["WiFi", "Café menu"],
-    tags: ["Family", "Puzzle", "Party"],
-    timeSlots: ["2:00 PM", "3:30 PM", "5:00 PM"],
-  },
-];
-
+// ─── Amenity icon map ─────────────────────────────────────────────────────────
+// Our DB doesn't have structured amenities yet — derive simple labels from
+// what we know (phone = contact, website = online presence). Extend as needed.
 const AMENITY_ICONS: Record<string, any> = {
   WiFi: Wifi,
   "Full menu": Coffee,
@@ -131,12 +25,6 @@ const AMENITY_ICONS: Record<string, any> = {
   Snacks: Coffee,
   Parking: ParkingCircle,
 };
-
-const ALL_CITIES = [
-  "All",
-  ...Array.from(new Set(ALL_CAFES.map((c) => c.city))).sort(),
-];
-const PAGE_SIZE = 4;
 
 function useDebounce(value: string, delay: number) {
   const [debounced, setDebounced] = useState(value);
@@ -147,16 +35,54 @@ function useDebounce(value: string, delay: number) {
   return debounced;
 }
 
-function CafeCard({ cafe }: { cafe: Cafe }) {
+// ─── Skeleton ─────────────────────────────────────────────────────────────────
+function CafeCardSkeleton() {
+  return (
+    <div className="bg-white border border-gray-100 rounded-xl p-5 animate-pulse">
+      <div className="flex gap-5">
+        <div className="w-16 h-16 rounded-xl bg-gray-100 shrink-0" />
+        <div className="flex-1 flex flex-col gap-2.5">
+          <div className="h-4 bg-gray-100 rounded w-2/3" />
+          <div className="h-3 bg-gray-100 rounded w-1/2" />
+          <div className="h-3 bg-gray-100 rounded w-3/4" />
+          <div className="flex gap-2 mt-1">
+            <div className="h-7 w-20 bg-gray-100 rounded-lg" />
+            <div className="h-7 w-20 bg-gray-100 rounded-lg" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Cafe Card ────────────────────────────────────────────────────────────────
+function CafeCard({ cafe }: { cafe: CafeSummary }) {
+  const now = new Date();
+  const todayName = now.toLocaleDateString("en-US", { weekday: "long" });
+  const nowMinutes = now.getHours() * 60 + now.getMinutes();
+  const todayHours = cafe.operatingHours.find((h) => h.dayOfWeek === todayName);
+  const openNow =
+    todayHours &&
+    !todayHours.isClosed &&
+    nowMinutes >= todayHours.openTime &&
+    nowMinutes < todayHours.closeTime;
+
+  const hoursLabel = todayHours
+    ? todayHours.isClosed
+      ? "Closed today"
+      : `${formatMinutes(todayHours.openTime)} – ${formatMinutes(todayHours.closeTime)}`
+    : "Hours unavailable";
+
   return (
     <Link
       to={`/cafe/${cafe.id}`}
-      className="group flex flex-col sm:flex-row items-start gap-5 bg-white border border-gray-100 rounded-xl p-5 hover:shadow-md hover:border-teal-200 transition-all duration-200"
+      className="group flex flex-col sm:flex-row items-start gap-5 bg-warm-100 border border-warm-300 rounded-xl p-5 hover:shadow-md hover:border-teal-200 transition-all duration-200"
     >
-      <div className="w-16 h-16 rounded-xl overflow-hidden bg-gray-100 border border-gray-100 shrink-0">
-        {cafe.logoSrc ? (
+      {/* Logo */}
+      <div className="w-30 h-30 rounded-xl overflow-hidden bg-gray-100 border border-gray-100 shrink-0">
+        {cafe.logoUrl ? (
           <img
-            src={cafe.logoSrc}
+            src={cafe.logoUrl}
             alt={cafe.name}
             className="w-full h-full object-cover"
           />
@@ -177,12 +103,12 @@ function CafeCard({ cafe }: { cafe: Cafe }) {
           </div>
           <span
             className={`text-xs font-semibold px-2.5 py-1 rounded-full shrink-0 ${
-              cafe.openNow
+              openNow
                 ? "bg-green-50 text-green-600 border border-green-200"
                 : "bg-gray-100 text-gray-400 border border-gray-200"
             }`}
           >
-            {cafe.openNow ? "● Open now" : "○ Closed"}
+            {openNow ? "● Open now" : "○ Closed"}
           </span>
         </div>
 
@@ -196,61 +122,49 @@ function CafeCard({ cafe }: { cafe: Cafe }) {
           <div className="flex items-center gap-1">
             <Star size={12} className="text-amber-400 fill-amber-400" />
             <span className="text-xs font-bold text-gray-700">
-              {cafe.rating}
+              {Number(cafe.rating).toFixed(1)}
             </span>
             <span className="text-xs text-gray-400">({cafe.reviewCount})</span>
           </div>
-          <div className="flex items-center gap-1 text-gray-400">
-            <Gamepad2 size={12} />
-            <span className="text-xs">{cafe.gameCount} games</span>
-          </div>
-          <div className="flex items-center gap-1 text-gray-400">
-            <Clock size={12} />
-            <span className="text-xs">{cafe.hours}</span>
-          </div>
         </div>
-
-        <div className="flex items-center flex-wrap gap-2 mt-3">
-          {cafe.amenities.map((a) => {
-            const Icon = AMENITY_ICONS[a] ?? Wifi;
-            return (
-              <span
-                key={a}
-                className="flex items-center gap-1 text-xs text-gray-500 bg-gray-50 border border-gray-100 px-2 py-1 rounded-lg"
-              >
-                <Icon size={11} className="text-teal-500" /> {a}
-              </span>
-            );
-          })}
+        <div className="flex items-center gap-1 text-gray-400 mt-1">
+          <Gamepad2 size={12} />
+          <span className="text-xs">{cafe._count.restaurantGames} games</span>
         </div>
-
-        <div className="flex items-center gap-2 mt-3 flex-wrap">
-          {cafe.timeSlots.map((slot) => (
-            <span
-              key={slot}
-              className="flex items-center gap-1.5 text-xs font-semibold text-teal-700 bg-teal-50 border border-teal-100 px-3 py-1.5 rounded-lg"
-            >
-              <Clock size={11} /> {slot}
-            </span>
-          ))}
+        <div className="flex items-center gap-1 text-gray-400 mt-1">
+          <Clock size={12} />
+          <span className="text-xs">{hoursLabel}</span>
         </div>
       </div>
     </Link>
   );
 }
 
-export default function FindCafe() {
+// ─── Page ─────────────────────────────────────────────────────────────────────
+const PAGE_SIZE = 6;
+
+export default function FindCafePage() {
   const [inputValue, setInputValue] = useState("");
   const [activeCity, setActiveCity] = useState("All");
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const inputRef = useRef<HTMLInputElement>(null);
   const debouncedQuery = useDebounce(inputValue, 300);
 
+  // Fetch all cafés — no city param so we get everything, then filter client-side
+  const { cafes, loading, error } = useCafes();
+
+  // Derive city list from real data
+  const allCities = [
+    "All",
+    ...Array.from(new Set(cafes.map((c) => c.city))).sort(),
+  ];
+
+  // Reset pagination when filters change
   useEffect(() => {
     setVisibleCount(PAGE_SIZE);
   }, [debouncedQuery, activeCity]);
 
-  const filtered = ALL_CAFES.filter((cafe) => {
+  const filtered = cafes.filter((cafe) => {
     const q = debouncedQuery.toLowerCase();
     const matchesQuery =
       !q ||
@@ -294,7 +208,7 @@ export default function FindCafe() {
           {inputValue && (
             <button
               onClick={() => setInputValue("")}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
+              className="text-gray-400 hover:text-gray-600"
             >
               <X size={16} />
             </button>
@@ -303,7 +217,7 @@ export default function FindCafe() {
 
         {/* City filter pills */}
         <div className="flex gap-2 flex-wrap mb-5">
-          {ALL_CITIES.map((city) => (
+          {allCities.map((city) => (
             <button
               key={city}
               onClick={() => setActiveCity(city)}
@@ -320,73 +234,97 @@ export default function FindCafe() {
         </div>
 
         {/* Results count */}
-        <p className="text-xs text-gray-400 mb-4">
-          {filtered.length} café{filtered.length !== 1 ? "s" : ""} found
-          {activeCity !== "All" && (
-            <>
-              {" "}
-              · <span className="text-teal-600 font-medium">{activeCity}</span>
-            </>
-          )}
-          {debouncedQuery && (
-            <>
-              {" "}
-              · matching{" "}
-              <span className="text-gray-600 font-medium">
-                "{debouncedQuery}"
-              </span>
-            </>
-          )}
-        </p>
+        {!loading && (
+          <p className="text-xs text-gray-400 mb-4">
+            {filtered.length} café{filtered.length !== 1 ? "s" : ""} found
+            {activeCity !== "All" && (
+              <>
+                {" "}
+                ·{" "}
+                <span className="text-teal-600 font-medium">{activeCity}</span>
+              </>
+            )}
+            {debouncedQuery && (
+              <>
+                {" "}
+                · matching{" "}
+                <span className="text-gray-600 font-medium">
+                  "{debouncedQuery}"
+                </span>
+              </>
+            )}
+          </p>
+        )}
+
+        {/* Error */}
+        {error && (
+          <div className="text-center py-10 text-red-400">
+            <p className="text-sm font-medium">Failed to load cafés</p>
+            <p className="text-xs mt-1">{error}</p>
+          </div>
+        )}
+
+        {/* Loading skeletons */}
+        {loading && (
+          <div className="flex flex-col gap-4">
+            {[...Array(4)].map((_, i) => (
+              <CafeCardSkeleton key={i} />
+            ))}
+          </div>
+        )}
 
         {/* List */}
-        {visible.length > 0 ? (
+        {!loading && !error && (
           <>
-            <div className="flex flex-col gap-4">
-              {visible.map((cafe) => (
-                <CafeCard key={cafe.id} cafe={cafe} />
-              ))}
-            </div>
+            {visible.length > 0 ? (
+              <>
+                <div className="flex flex-col gap-4">
+                  {visible.map((cafe) => (
+                    <CafeCard key={cafe.id} cafe={cafe} />
+                  ))}
+                </div>
 
-            {hasMore && (
-              <div className="flex flex-col items-center gap-2 mt-8">
-                <p className="text-xs text-gray-400">
-                  Showing {visible.length} of {filtered.length} cafés
+                {hasMore && (
+                  <div className="flex flex-col items-center gap-2 mt-8">
+                    <p className="text-xs text-gray-400">
+                      Showing {visible.length} of {filtered.length} cafés
+                    </p>
+                    <button
+                      onClick={() => setVisibleCount((n) => n + PAGE_SIZE)}
+                      className="flex items-center gap-2 border border-gray-200 bg-white hover:border-teal-400 hover:text-teal-700 text-sm font-semibold text-gray-600 px-6 py-2.5 rounded-lg transition-all"
+                    >
+                      <ChevronDown size={15} /> Load more cafés
+                    </button>
+                  </div>
+                )}
+
+                {!hasMore && filtered.length > PAGE_SIZE && (
+                  <p className="text-center text-xs text-gray-400 mt-6">
+                    All {filtered.length} cafés shown
+                  </p>
+                )}
+              </>
+            ) : (
+              <div className="text-center py-16 text-gray-400">
+                <Search size={32} className="mx-auto mb-3 opacity-30" />
+                <p className="text-sm font-semibold text-gray-500">
+                  No cafés found
+                </p>
+                <p className="text-xs mt-1">
+                  Try a different search or clear the filters
                 </p>
                 <button
-                  onClick={() => setVisibleCount((n) => n + PAGE_SIZE)}
-                  className="flex items-center gap-2 border border-gray-200 bg-white hover:border-teal-400 hover:text-teal-700 text-sm font-semibold text-gray-600 px-6 py-2.5 rounded-lg transition-all"
+                  onClick={() => {
+                    setInputValue("");
+                    setActiveCity("All");
+                  }}
+                  className="mt-4 text-xs text-teal-600 font-medium hover:underline"
                 >
-                  <ChevronDown size={15} /> Load more cafés
+                  Clear filters
                 </button>
               </div>
             )}
-
-            {!hasMore && filtered.length > PAGE_SIZE && (
-              <p className="text-center text-xs text-gray-400 mt-6">
-                All {filtered.length} cafés shown
-              </p>
-            )}
           </>
-        ) : (
-          <div className="text-center py-16 text-gray-400">
-            <Search size={32} className="mx-auto mb-3 opacity-30" />
-            <p className="text-sm font-semibold text-gray-500">
-              No cafés found
-            </p>
-            <p className="text-xs mt-1">
-              Try a different search or clear the filters
-            </p>
-            <button
-              onClick={() => {
-                setInputValue("");
-                setActiveCity("All");
-              }}
-              className="mt-4 text-xs text-teal-600 font-medium hover:underline"
-            >
-              Clear filters
-            </button>
-          </div>
         )}
       </div>
     </div>
