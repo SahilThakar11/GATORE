@@ -10,13 +10,15 @@ import {
   ParkingCircle,
   ChevronLeft,
   Search,
-  Filter,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useReservationFlow } from "../hooks/useReservationFlow";
 import { useAuth } from "../context/AuthContext";
+import { type BGGGame } from "../hooks/useBGG";
+import { GameCard } from "../components/searchGames/GameCard";
+import { GameDetailModal } from "../components/searchGames/GameDetailModal";
 
-// ─── Mock data — swap with API call using `id` param ─────────────────────────
+// ─── Each café stores BGG game IDs — swap with DB fetch later ────────────────
 const MOCK_CAFE = {
   id: "adventurers-guild",
   name: "Adventurers Guild",
@@ -40,146 +42,114 @@ const MOCK_CAFE = {
   description:
     "Adventurers Guild is Waterloo's original board game café and tavern. With over 156 games in our library, craft beers on tap, and a full food menu — we're the perfect spot for a casual game night or a serious strategy session. Our knowledgeable staff will help you find the perfect game for your group.",
   timeSlots: ["5:00 PM", "5:30 PM", "6:00 PM", "6:30 PM", "7:00 PM", "7:30 PM"],
-  logoSrc: undefined,
+  logoSrc: "/adventures_guild_logo.png",
+
+  // BGG IDs for this café's game library — replace with DB field later
+  gameIds: [
+    "13", // Catan
+    "9209", // Ticket to Ride
+    "178900", // Codenames
+    "30549", // Pandemic
+    "68448", // 7 Wonders
+    "230802", // Azul
+    "36218", // Dominion
+    "37111", // Agricola
+    "172818", // Betrayal at House on the Hill
+    "161936", // Pandemic Legacy
+    "266192", // Wingspan
+    "91514", // Forbidden Island
+  ],
 };
 
-const MOCK_GAMES = [
-  {
-    id: "1",
-    name: "Catan",
-    category: "Strategy",
-    players: "3–4",
-    duration: "60–120 min",
-    available: true,
-  },
-  {
-    id: "2",
-    name: "Ticket to Ride",
-    category: "Strategy",
-    players: "2–5",
-    duration: "45–75 min",
-    available: true,
-  },
-  {
-    id: "3",
-    name: "Codenames",
-    category: "Party",
-    players: "4–8+",
-    duration: "15–30 min",
-    available: true,
-  },
-  {
-    id: "4",
-    name: "Pandemic",
-    category: "Co-op",
-    players: "2–4",
-    duration: "45–60 min",
-    available: false,
-  },
-  {
-    id: "5",
-    name: "7 Wonders",
-    category: "Strategy",
-    players: "2–7",
-    duration: "30–45 min",
-    available: true,
-  },
-  {
-    id: "6",
-    name: "Azul",
-    category: "Puzzle",
-    players: "2–4",
-    duration: "30–45 min",
-    available: true,
-  },
-  {
-    id: "7",
-    name: "Dominion",
-    category: "Card Games",
-    players: "2–4",
-    duration: "30 min",
-    available: true,
-  },
-  {
-    id: "8",
-    name: "Betrayal at House",
-    category: "RPG",
-    players: "3–6",
-    duration: "60 min",
-    available: true,
-  },
-  {
-    id: "9",
-    name: "Dixit",
-    category: "Party",
-    players: "3–6",
-    duration: "30 min",
-    available: false,
-  },
-  {
-    id: "10",
-    name: "Root",
-    category: "Strategy",
-    players: "2–4",
-    duration: "60–90 min",
-    available: true,
-  },
-  {
-    id: "11",
-    name: "Wingspan",
-    category: "Tableau",
-    players: "1–5",
-    duration: "40–70 min",
-    available: true,
-  },
-  {
-    id: "12",
-    name: "Mysterium",
-    category: "Co-op",
-    players: "2–7",
-    duration: "42 min",
-    available: true,
-  },
-];
+// ─── Hook: fetch BGG games by ID list ────────────────────────────────────────
+function useCafeGames(ids: string[]) {
+  const [games, setGames] = useState<BGGGame[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-const CATEGORY_COLORS: Record<string, string> = {
-  Strategy: "bg-pink-100 text-pink-700",
-  Party: "bg-purple-100 text-purple-700",
-  "Co-op": "bg-yellow-100 text-yellow-700",
-  Puzzle: "bg-blue-100 text-blue-700",
-  "Card Games": "bg-teal-100 text-teal-700",
-  RPG: "bg-rose-100 text-rose-700",
-  Tableau: "bg-orange-100 text-orange-700",
-};
+  useEffect(() => {
+    if (!ids.length) {
+      setLoading(false);
+      return;
+    }
 
-const ALL_CATEGORIES = [
-  "All",
-  ...Array.from(new Set(MOCK_GAMES.map((g) => g.category))),
-];
+    const fetchGames = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await fetch(`/api/bgg/games?ids=${ids.join(",")}`);
+        if (!res.ok) throw new Error(`Failed to fetch games: ${res.status}`);
+        const data: BGGGame[] = await res.json();
+        setGames(data);
+      } catch (e: any) {
+        setError(e?.message ?? "Failed to load games");
+      } finally {
+        setLoading(false);
+      }
+    };
 
+    fetchGames();
+  }, [ids.join(",")]);
+
+  return { games, loading, error };
+}
+
+// ─── Game library skeleton ────────────────────────────────────────────────────
+function GameSkeleton() {
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+      {[...Array(6)].map((_, i) => (
+        <div
+          key={i}
+          className="h-32 bg-gray-100 rounded-xl animate-pulse"
+          style={{ animationDelay: `${i * 60}ms` }}
+        />
+      ))}
+    </div>
+  );
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
 export default function CafeDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   const reservation = useReservationFlow();
 
-  const [gameQuery, setGameQuery] = useState("");
-  const [activeCategory, setActiveCategory] = useState("All");
-
   const cafe = MOCK_CAFE; // TODO: fetch by `id`
 
-  const filteredGames = MOCK_GAMES.filter((g) => {
+  const {
+    games,
+    loading: gamesLoading,
+    error: gamesError,
+  } = useCafeGames(cafe.gameIds);
+
+  const [gameQuery, setGameQuery] = useState("");
+  const [activeCategory, setActiveCategory] = useState("All");
+  const [detailGame, setDetailGame] = useState<BGGGame | null>(null);
+
+  // Derive categories from real fetched games
+  const allCategories = [
+    "All",
+    ...Array.from(
+      new Set(games.flatMap((g) => g.categories).filter(Boolean)),
+    ).sort(),
+  ];
+
+  const filteredGames = games.filter((g) => {
     const matchesQuery = g.name.toLowerCase().includes(gameQuery.toLowerCase());
     const matchesCategory =
-      activeCategory === "All" || g.category === activeCategory;
+      activeCategory === "All" || g.categories.includes(activeCategory);
     return matchesQuery && matchesCategory;
   });
 
-  const handleReserveClick = () => {};
+  const handleReserveClick = () => {
+    // TODO: wire up reservation modal
+  };
 
   return (
     <div className="bg-[#faf8f4] min-h-screen">
-      {/* ─── Hero banner ──────────────────────────────────────────────────── */}
+      {/* ─── Hero banner ────────────────────────────────────────────────── */}
       <div
         className="w-full h-52 relative"
         style={{
@@ -188,25 +158,16 @@ export default function CafeDetailPage() {
           backgroundPosition: "center",
         }}
       >
-        <div
-          className="absolute inset-0 opacity-20"
-          style={{
-            backgroundImage: "url('/hero-wood.jpg')",
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-          }}
-        />
-        {/* Back button */}
         <button
           onClick={() => navigate(-1)}
-          className="absolute top-5 left-7 flex items-center gap-1.5 text-white/80 hover:text-white text-sm font-medium transition-colors"
+          className="absolute top-5 left-7 flex items-center gap-1.5 text-white/80 hover:text-white text-sm font-medium transition-colors z-10"
         >
           <ChevronLeft size={18} /> Back
         </button>
       </div>
 
       <div className="max-w-7xl mx-auto px-7">
-        {/* ─── Café identity card — overlaps hero ───────────────────────── */}
+        {/* ─── Identity card ──────────────────────────────────────────────── */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-md -mt-16 relative z-10 p-6">
           <div className="flex items-start gap-5">
             {/* Logo */}
@@ -224,7 +185,6 @@ export default function CafeDetailPage() {
               )}
             </div>
 
-            {/* Info */}
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between gap-4">
                 <div>
@@ -233,7 +193,6 @@ export default function CafeDetailPage() {
                   </h1>
                   <p className="text-sm text-gray-500 mt-0.5">{cafe.tagline}</p>
                   <div className="flex items-center gap-3 mt-2 flex-wrap">
-                    {/* Rating */}
                     <div className="flex items-center gap-1">
                       <Star
                         size={14}
@@ -247,31 +206,26 @@ export default function CafeDetailPage() {
                       </span>
                     </div>
                     <span className="text-gray-200">·</span>
-                    {/* Game count */}
                     <span className="text-xs bg-[#f5ede0] text-[#a07850] px-2.5 py-1 rounded-full font-semibold">
                       {cafe.gameCount} games
                     </span>
                     <span className="text-gray-200">·</span>
-                    {/* Address */}
                     <div className="flex items-center gap-1 text-gray-400">
                       <MapPin size={12} />
                       <span className="text-xs">{cafe.address}</span>
                     </div>
                   </div>
                 </div>
-
-                {/* Reserve CTA */}
                 <button
                   onClick={handleReserveClick}
-                  className="bg-teal-600 hover:bg-teal-700 text-white text-sm font-bold px-6 py-3 rounded-xl transition-colors duration-150 shrink-0 shadow-sm shadow-teal-200"
+                  className="bg-teal-600 hover:bg-teal-700 text-white text-sm font-bold px-6 py-3 rounded-xl transition-colors shrink-0 shadow-sm shadow-teal-200"
                 >
-                  Reserve a Game
+                  Reserve a table
                 </button>
               </div>
             </div>
           </div>
 
-          {/* Amenities */}
           <div className="flex items-center gap-5 mt-5 pt-4 border-t border-gray-100">
             {cafe.amenities.map(({ icon: Icon, label }) => (
               <div
@@ -285,9 +239,9 @@ export default function CafeDetailPage() {
           </div>
         </div>
 
-        {/* ─── Main content ─────────────────────────────────────────────── */}
+        {/* ─── Main content ───────────────────────────────────────────────── */}
         <div className="flex gap-8 mt-8 pb-16">
-          {/* Left — main content */}
+          {/* Left */}
           <div className="flex-1 min-w-0 flex flex-col gap-6">
             {/* About */}
             <div className="bg-white rounded-xl border border-gray-100 p-6">
@@ -297,7 +251,7 @@ export default function CafeDetailPage() {
               </p>
             </div>
 
-            {/* Available time slots */}
+            {/* Time slots */}
             <div className="bg-white rounded-xl border border-gray-100 p-6">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-base font-bold text-gray-900">
@@ -322,104 +276,102 @@ export default function CafeDetailPage() {
               </div>
             </div>
 
-            {/* Game library */}
+            {/* ─── Game library ─────────────────────────────────────────── */}
             <div className="bg-white rounded-xl border border-gray-100 p-6">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-base font-bold text-gray-900">
                   Game library{" "}
                   <span className="text-gray-400 font-normal text-sm">
-                    ({cafe.gameCount} games)
+                    ({gamesLoading ? "…" : games.length} games)
                   </span>
                 </h2>
               </div>
 
-              {/* Search + filter */}
-              <div className="flex gap-3 mb-4">
-                <div className="relative flex-1">
-                  <Search
-                    size={14}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-                  />
-                  <input
-                    type="text"
-                    placeholder="Search games..."
-                    value={gameQuery}
-                    onChange={(e) => setGameQuery(e.target.value)}
-                    className="w-full pl-8 pr-4 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-700 bg-[#faf8f4] focus:ring-2 focus:ring-teal-500 outline-none"
-                  />
-                </div>
+              {/* Search */}
+              <div className="relative mb-4">
+                <Search
+                  size={14}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                />
+                <input
+                  type="text"
+                  placeholder="Search games..."
+                  value={gameQuery}
+                  onChange={(e) => setGameQuery(e.target.value)}
+                  className="w-full pl-8 pr-4 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-700 bg-[#faf8f4] focus:ring-2 focus:ring-teal-500 outline-none"
+                />
               </div>
 
-              {/* Category pills */}
-              <div className="flex gap-2 flex-wrap mb-4">
-                {ALL_CATEGORIES.map((cat) => (
-                  <button
-                    key={cat}
-                    onClick={() => setActiveCategory(cat)}
-                    className={`text-xs font-semibold px-3 py-1.5 rounded-full border transition-all ${
-                      activeCategory === cat
-                        ? "bg-teal-600 border-teal-600 text-white"
-                        : "bg-white border-gray-200 text-gray-600 hover:border-teal-300"
-                    }`}
-                  >
-                    {cat}
-                  </button>
-                ))}
-              </div>
-
-              {/* Games grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                {filteredGames.map((game) => (
-                  <div
-                    key={game.id}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-xl border ${
-                      game.available
-                        ? "bg-white border-gray-100 hover:border-teal-200 transition-colors"
-                        : "bg-gray-50 border-gray-100 opacity-60"
-                    }`}
-                  >
-                    {/* Availability dot */}
-                    <div
-                      className={`w-2 h-2 rounded-full shrink-0 ${
-                        game.available ? "bg-teal-500" : "bg-gray-300"
+              {/* Category pills — derived from real BGG categories */}
+              {!gamesLoading && allCategories.length > 1 && (
+                <div className="flex gap-2 flex-wrap mb-5">
+                  {allCategories.map((cat) => (
+                    <button
+                      key={cat}
+                      onClick={() => setActiveCategory(cat)}
+                      className={`text-xs font-semibold px-3 py-1.5 rounded-full border transition-all ${
+                        activeCategory === cat
+                          ? "bg-teal-600 border-teal-600 text-white"
+                          : "bg-white border-gray-200 text-gray-600 hover:border-teal-300"
                       }`}
-                    />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-gray-800 truncate">
-                        {game.name}
-                      </p>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        <span
-                          className={`text-xs px-1.5 py-0.5 rounded font-medium ${
-                            CATEGORY_COLORS[game.category] ??
-                            "bg-gray-100 text-gray-600"
-                          }`}
-                        >
-                          {game.category}
-                        </span>
-                        <span className="text-xs text-gray-400">
-                          {game.players}
-                        </span>
-                        <span className="text-xs text-gray-300">·</span>
-                        <span className="text-xs text-gray-400">
-                          {game.duration}
-                        </span>
-                      </div>
+                    >
+                      {cat}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* Loading */}
+              {gamesLoading && <GameSkeleton />}
+
+              {/* Error */}
+              {gamesError && !gamesLoading && (
+                <div className="text-center py-8 text-gray-400">
+                  <p className="text-sm font-medium text-gray-500">
+                    Failed to load games
+                  </p>
+                  <p className="text-xs mt-1">{gamesError}</p>
+                </div>
+              )}
+
+              {/* Games grid — uses same GameCard as FindByGamePage */}
+              {!gamesLoading && !gamesError && (
+                <>
+                  {filteredGames.length > 0 ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                      {filteredGames.map((game) => (
+                        <GameCard
+                          key={game.id}
+                          game={game}
+                          onClick={() => {}} // no selection behaviour on detail page
+                          onViewDetails={setDetailGame}
+                        />
+                      ))}
                     </div>
-                    {!game.available && (
-                      <span className="text-xs text-gray-400 shrink-0">
-                        Out
-                      </span>
-                    )}
-                  </div>
-                ))}
-              </div>
+                  ) : (
+                    <div className="text-center py-10 text-gray-400">
+                      <Search size={24} className="mx-auto mb-2 opacity-30" />
+                      <p className="text-sm font-medium text-gray-500">
+                        No games match your search
+                      </p>
+                      <button
+                        onClick={() => {
+                          setGameQuery("");
+                          setActiveCategory("All");
+                        }}
+                        className="mt-2 text-xs text-teal-600 font-medium hover:underline"
+                      >
+                        Clear filters
+                      </button>
+                    </div>
+                  )}
+                </>
+              )}
             </div>
           </div>
 
           {/* Right sidebar */}
           <div className="w-72 shrink-0 flex flex-col gap-5">
-            {/* Quick reserve card */}
             <div className="bg-teal-700 rounded-xl p-5 text-center flex flex-col gap-3 sticky top-24">
               <p className="text-white font-bold text-base">Ready to play?</p>
               <p className="text-teal-200 text-xs leading-relaxed">
@@ -434,8 +386,7 @@ export default function CafeDetailPage() {
               </button>
               {!isAuthenticated && (
                 <p className="text-teal-300 text-xs">
-                  You'll need to sign in or use guest checkout to make a
-                  reservation.
+                  You'll need to sign in first
                 </p>
               )}
             </div>
@@ -487,6 +438,9 @@ export default function CafeDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* ─── Game detail popup ──────────────────────────────────────────────── */}
+      <GameDetailModal game={detailGame} onClose={() => setDetailGame(null)} />
     </div>
   );
 }

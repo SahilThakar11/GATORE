@@ -21,13 +21,15 @@ export function DifficultyDots({ difficulty, dots }: Props) {
           <span
             key={i}
             className={`w-2 h-2 rounded-full ${
-              i < filled ? color : "bg-white"
+              i < filled ? color : "bg-warm-300"
             }`}
           />
         ))}
       </div>
       {difficulty && (
-        <span className="text-xs text-white font-medium">{difficulty}</span>
+        <span className="text-xs text-neutral-600 font-medium">
+          {difficulty}
+        </span>
       )}
     </div>
   );
