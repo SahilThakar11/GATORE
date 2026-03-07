@@ -11,18 +11,19 @@ model User {
   name          String
   email         String         @unique
   createdAt     DateTime       @default(now()) @map("created_at")
-  updatedAt     DateTime       @updatedAt @map("updated_at")
+  updatedAt     DateTime       @default(now()) @updatedAt @map("updated_at")
   role          String         @default("user")
   emailVerified Boolean        @default(false)
   isActive      Boolean        @default(false)
-  isGuest       Boolean        @default(false)
   password      String
+  authProvider  String         @default("email")
+  googleId      String?        @unique
+  isGuest       Boolean        @default(false)
   otpCodes      OtpCode[]
   refreshTokens RefreshToken[]
   reservations  Reservation[]
   staffActions  StaffAction[]
-  googleId      String?        @unique
-  authProvider  String         @default("email")
+
   @@map("users")
 }
 
@@ -51,43 +52,86 @@ model RefreshToken {
 }
 
 model Restaurant {
-  id             Int              @id @default(autoincrement())
-  name           String
-  address        String
-  website        String
-  games          Game[]
-  operatingHours OperatingHours[]
-  tables         Table[]
+  id              Int                     @id @default(autoincrement())
+  name            String
+  tagline         String
+  description     String
+  address         String
+  city            String
+  province        String                  @default("ON")
+  postalCode      String?                 @map("postal_code")
+  phone           String?
+  logoUrl         String?                 @map("logo_url")
+  rating          Decimal                 @default(0) @db.Decimal(3, 2)
+  reviewCount     Int                     @default(0) @map("review_count")
+  createdAt       DateTime                @default(now()) @map("created_at")
+  updatedAt       DateTime                @default(now()) @updatedAt @map("updated_at")
+  website         String?
+  accessRequests  BusinessAccessRequest[]
+  operatingHours  OperatingHours[]
+  restaurantGames RestaurantGame[]
+  tables          Table[]
 
-  @@map("restaurant")
+  @@map("restaurants")
+}
+
+model OperatingHours {
+  id           Int        @id @default(autoincrement())
+  dayOfWeek    String     @map("day_of_week")
+  closeTime    Int        @map("close_time")
+  isClosed     Boolean    @default(false) @map("is_closed")
+  openTime     Int        @map("open_time")
+  restaurantId Int        @map("restaurant_id")
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@map("operating_hours")
 }
 
 model Table {
   id           Int           @id @default(autoincrement())
   name         String
   capacity     Int
-  status       String
-  restaurantId Int
+  minCapacity  Int           @default(1) @map("min_capacity")
+  status       String        @default("available")
+  description  String?
+  restaurantId Int           @map("restaurant_id")
   reservations Reservation[]
-  restaurant   Restaurant    @relation(fields: [restaurantId], references: [id])
+  restaurant   Restaurant    @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
 
-  @@map("table")
+  @@map("tables")
 }
 
 model Game {
   id                Int               @id @default(autoincrement())
+  bggId             String            @unique @map("bgg_id")
   name              String
   minPlayers        Int               @map("min_players")
   maxPlayers        Int               @map("max_players")
   estimatedPlayTime Int               @map("estimated_play_time")
-  status            String
-  restaurantId      Int
-  restaurant        Restaurant        @relation(fields: [restaurantId], references: [id])
+  imageUrl          String?           @map("image_url")
+  category          String?
+  difficulty        String?
+  ageRating         String?           @map("age_rating")
+  description       String?
+  bggRating         Decimal?          @map("bgg_rating") @db.Decimal(4, 2)
+  createdAt         DateTime          @default(now()) @map("created_at")
   gameIssues        GameIssue[]
   gameReservations  GameReservation[]
-  bgg_id            String            @unique
+  restaurantGames   RestaurantGame[]
 
-  @@map("game")
+  @@map("games")
+}
+
+model RestaurantGame {
+  id           Int        @id @default(autoincrement())
+  restaurantId Int        @map("restaurant_id")
+  gameId       Int        @map("game_id")
+  status       String     @default("available")
+  game         Game       @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@unique([restaurantId, gameId])
+  @@map("restaurant_games")
 }
 
 model Reservation {
@@ -96,24 +140,27 @@ model Reservation {
   startTime        DateTime          @map("start_time")
   endTime          DateTime          @map("end_time")
   partySize        Int               @map("party_size")
-  status           String
-  userId           Int
-  tableId          Int
+  status           String            @default("pending")
+  specialRequests  String?           @map("special_requests")
+  notes            String?
+  createdAt        DateTime          @default(now()) @map("created_at")
+  userId           Int               @map("user_id")
+  tableId          Int               @map("table_id")
   gameReservations GameReservation[]
   table            Table             @relation(fields: [tableId], references: [id])
   user             User              @relation(fields: [userId], references: [id])
 
-  @@map("reservation")
+  @@map("reservations")
 }
 
 model GameReservation {
   id            Int         @id @default(autoincrement())
-  reservationId Int
-  gameId        Int
+  reservationId Int         @map("reservation_id")
+  gameId        Int         @map("game_id")
   game          Game        @relation(fields: [gameId], references: [id])
   reservation   Reservation @relation(fields: [reservationId], references: [id])
 
-  @@map("game_reservation")
+  @@map("game_reservations")
 }
 
 model GameIssue {
@@ -123,32 +170,39 @@ model GameIssue {
   notes        String
   reportedAt   DateTime      @default(now()) @map("reported_at")
   resolved     Boolean       @default(false)
-  gameId       Int
+  gameId       Int           @map("game_id")
   game         Game          @relation(fields: [gameId], references: [id])
   staffActions StaffAction[]
 
-  @@map("game_issue")
+  @@map("game_issues")
 }
 
 model StaffAction {
   id          Int       @id @default(autoincrement())
   actionType  String    @map("action_type")
-  timestamp   Int
-  userId      Int
-  gameIssueId Int
+  notes       String?
+  timestamp   DateTime  @default(now())
+  userId      Int       @map("user_id")
+  gameIssueId Int       @map("game_issue_id")
   gameIssue   GameIssue @relation(fields: [gameIssueId], references: [id])
   user        User      @relation(fields: [userId], references: [id])
 
-  @@map("staff_action")
+  @@map("staff_actions")
 }
 
-model OperatingHours {
-  id           Int        @id @default(autoincrement())
-  dayOfWeek    String     @map("day_of_week")
-  openTime     Int
-  closeTime    Int
-  restaurantId Int
-  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+model BusinessAccessRequest {
+  id           Int         @id @default(autoincrement())
+  cafeName     String      @map("cafe_name")
+  ownerName    String      @map("owner_name")
+  email        String
+  phone        String?
+  city         String
+  message      String?
+  status       String      @default("pending")
+  reviewedAt   DateTime?   @map("reviewed_at")
+  createdAt    DateTime    @default(now()) @map("created_at")
+  restaurantId Int?        @map("restaurant_id")
+  restaurant   Restaurant? @relation(fields: [restaurantId], references: [id])
 
-  @@map("operating_hours")
+  @@map("business_access_requests")
 }
