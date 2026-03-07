@@ -85,6 +85,7 @@ model Game {
   restaurant        Restaurant        @relation(fields: [restaurantId], references: [id])
   gameIssues        GameIssue[]
   gameReservations  GameReservation[]
+  bgg_id            String            @unique
 
   @@map("game")
 }
