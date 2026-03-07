@@ -17,8 +17,8 @@ export const createReservation = async (req: Request, res: Response): Promise<vo
                 startTime: new Date(reservationDate + " " + startTime),
                 endTime: new Date(reservationDate + " " + endTime), // This should be calculated based on the restaurant's reservation duration policy
                 partySize: parseInt(partySize),
-                userId: 9,
-                tableId: 2,
+                userId: parseInt(userId),
+                tableId: parseInt(tableId),
                 status: "PENDING",
             },
         });
@@ -39,15 +39,25 @@ export const createReservation = async (req: Request, res: Response): Promise<vo
 
 export const getReservations = async (req: Request, res: Response): Promise<void> => {
     try {
+
+        const { date, restaurantId } = req.body;
+
+        console.log("Query parameters:", date as string);
+
         const reservations = await prisma.reservation.findMany({
             where: { 
-                reservationDate: req.query.date ? new Date(req.query.date as string) : undefined,
+                reservationDate: date ? new Date(date as string) : undefined,
                 table: {
-                    restaurantId: req.query.restaurantId ? parseInt(req.query.restaurantId as string) : undefined,
-                }
+                    restaurantId: restaurantId ? parseInt(restaurantId as string) : undefined,
+                },
             },
             include: {
                 table: true,
+                gameReservations: {
+                    include: {
+                        game: true,
+                    }
+                }
             },
         });
 
@@ -62,6 +72,27 @@ export const getReservations = async (req: Request, res: Response): Promise<void
         res.status(500).json({
             success: false,
             message: "An error occurred while retrieving reservations.",
+        });
+    }
+};
+
+export const getGames = async (req: Request, res: Response): Promise<void> => {
+    try {
+        const games = await prisma.game.findMany({
+            where: {
+                restaurantId: req.query.restaurantId ? parseInt(req.query.restaurantId as string) : undefined,
+            }
+        });
+        res.json({
+            success: true,
+            message: "Games retrieved successfully",
+            data: games,
+        });
+    } catch (error) {
+        console.error("Get games error:", error);
+        res.status(500).json({
+            success: false,
+            message: "An error occurred while retrieving games.",
         });
     }
 };
