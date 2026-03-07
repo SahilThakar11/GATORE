@@ -5,13 +5,13 @@ import cors from "cors";
 import { apiLimiter } from "./middleware/rateLimiter";
 import authRoutes from "./routes/auth";
 import restaurantRoutes from "./routes/restaurant";
+import reservationRoutes from "./routes/reservation";
+import gameRoutes from "./routes/games";
 import prisma from "./config/prisma";
-import bggRouter from "./routes/bgg"; // Import the BGG router
+import bggRouter from "./routes/bgg";
 
 const app: Application = express();
 const PORT = process.env.PORT;
-
-app.use("/api/bgg", bggRouter); // Use the BGG router for /api/bgg routes
 
 // Middleware
 app.use(
@@ -31,7 +31,10 @@ app.use("/api", apiLimiter);
 
 // Routes
 app.use("/api/auth", authRoutes);
-app.use("/api/restaurant", restaurantRoutes);
+app.use("/api/restaurants", restaurantRoutes);
+app.use("/api/reservations", reservationRoutes);
+app.use("/api/games", gameRoutes);
+app.use("/api/bgg", bggRouter);
 
 // Health check
 app.get("/", (req: Request, res: Response) => {
