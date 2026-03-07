@@ -11,6 +11,58 @@ import {
 import { sendOTPEmail } from "../services/emailService";
 import { getGoogleUserInfo } from "../utils/google";
 
+// Guest Sign Up - Create guest user
+export const guestSignup = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  try {
+    const { email } = req.body;
+    // Create guest user
+
+    // Check if Guest user already exists
+    const existingUser = await prisma.user.findUnique({
+      where: { email, isGuest: true },
+    });
+
+    if (existingUser) {
+      res.status(201).json({
+        success: true,
+        message: "Email already registered",
+        data: {
+          user: existingUser,
+        },
+      });
+      return;
+    }
+
+    const user = await prisma.user.create({
+      data: {
+        name: "Guest User",
+        email,
+        isGuest: true,
+        emailVerified: false,
+        isActive: true,
+        password: "GuestPassword123!", // This password won't be used for authentication, but is required by the schema
+      },
+    });
+
+    res.status(201).json({
+      success: true,
+      message: "Guest user created successfully.",
+      data: {
+        user,
+      },
+    });
+  } catch (error) {
+    console.error("Guest signup error:", error);
+    res.status(500).json({
+      success: false,
+      message: "An error occurred during guest signup. Please try again.",
+    });
+  }
+};
+
 // ─── Signup Init ────────────────────────────────────────────────────────────
 // Step 1 — email only, creates placeholder user and sends OTP
 

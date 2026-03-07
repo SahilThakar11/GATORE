@@ -18,6 +18,17 @@ export const validateSignupComplete = [
     .withMessage("Password must be at least 8 characters"),
 ];
 
+export const validateGuestSignup = [
+  body("email")
+    .trim()
+    .notEmpty()
+    .withMessage("Email is required")
+    .isEmail()
+    .withMessage("Invalid email format")
+    .normalizeEmail(),
+];
+
+
 export const validateSignin = [
   body("email")
     .trim()

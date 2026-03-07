@@ -7,10 +7,12 @@ import {
   signin,
   getCurrentUser,
   logout,
+  guestSignup,
   googleAuth,
   saveProfile,
 } from "../controllers/authController";
 import {
+  validateGuestSignup,
   validateSignin,
   validateVerifyOTP,
   validateResendOTP,
@@ -32,6 +34,12 @@ router.post(
 );
 router.post("/signup/profile", saveProfile);
 
+router.post(
+  "/guest-signup",
+  validateGuestSignup,
+  handleValidationErrors,
+  guestSignup,
+);
 router.post(
   "/verify-otp",
   validateVerifyOTP,
