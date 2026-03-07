@@ -71,7 +71,7 @@ export function AuthModal({ isOpen, onClose, auth }: AuthModalProps) {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="relative w-full max-w-[480px] bg-white rounded-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden">
+      <div className="relative w-full max-w-[700px] bg-white rounded-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden">
         {/* Close button */}
         <button
           onClick={onClose}
