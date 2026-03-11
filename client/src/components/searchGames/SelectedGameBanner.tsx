@@ -24,7 +24,11 @@ export function SelectedGameBanner({ game, onClose }: Props) {
       label: "DIFFICULTY",
       value: (
         <span className="flex items-center gap-2">
-          <DifficultyDots difficulty={game.difficulty} dots={game.weightDots} />
+          <DifficultyDots
+            difficulty={game.difficulty}
+            dots={game.weightDots}
+            isTextWhite={true}
+          />
         </span>
       ),
     },
@@ -49,12 +53,8 @@ export function SelectedGameBanner({ game, onClose }: Props) {
         />
         <div className="flex flex-col ">
           <h2 className="text-lg font-bold text-white">{game.name}</h2>
-          <p className="text-sm text-teal-200 mb-2 ml-1">
-            {/* hardcoded for now — will come from backend later */}4 cafés have
-            this game
-          </p>
           {game.rating && (
-            <div className="flex items-center gap-2 mb-3">
+            <div className="flex items-center gap-2 mb-3 mt-2">
               <div className="flex items-center gap-1 bg-white/20 rounded-full px-2.5 py-1">
                 <Star size={12} className="text-amber-300 fill-amber-300" />
                 <span className="text-sm font-bold text-white">

@@ -18,7 +18,7 @@ export const BookingSummary: React.FC<BookingSummaryProps> = ({
   const total = gamePrice + reservationFee;
 
   return (
-    <Card variant="default" padding="md" className="space-y-4">
+    <Card variant="default" padding="md" className="space-y-4 text-left">
       {/* Venue */}
       <div className="flex items-start gap-3">
         <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center flex-shrink-0">
