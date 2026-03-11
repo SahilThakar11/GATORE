@@ -2,8 +2,6 @@ import { useState, useEffect } from "react";
 import type { BGGGame } from "./useBGG";
 import { useAuth } from "../context/AuthContext";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
-
 // ─── Curated BGG IDs per preference category ─────────────────────────────────
 // Each list contains well-known, highly-rated games in that category.
 const CATEGORY_IDS: Record<string, string[]> = {
@@ -14,7 +12,7 @@ const CATEGORY_IDS: Record<string, string[]> = {
     "233078", // Twilight Imperium
     "182028", // Through the Ages
     "187645", // Star Wars: Rebellion
-    "12333",  // Twilight Struggle
+    "12333", // Twilight Struggle
   ],
   party: [
     "178900", // Codenames
@@ -26,12 +24,12 @@ const CATEGORY_IDS: Record<string, string[]> = {
     "150658", // Skull
   ],
   card: [
-    "68448",  // 7 Wonders
+    "68448", // 7 Wonders
     "266192", // Wingspan
     "224517", // Brass: Birmingham
     "161970", // Alchemists
     "205637", // Arkham Horror LCG
-    "31260",  // Race for the Galaxy
+    "31260", // Race for the Galaxy
     "103885", // Star Realms
   ],
   puzzle: [
@@ -39,8 +37,8 @@ const CATEGORY_IDS: Record<string, string[]> = {
     "284083", // The Crew
     "172081", // Burgle Bros
     "284435", // So Clover!
-    "40765",  // Hanabi
-    "42215",  // Ubongo
+    "40765", // Hanabi
+    "42215", // Ubongo
     "175640", // Castles of Mad King Ludwig
   ],
   coop: [
@@ -63,18 +61,18 @@ const CATEGORY_IDS: Record<string, string[]> = {
   ],
   educational: [
     "119890", // Stockpile
-    "42215",  // Ubongo
-    "13",     // Settlers of Catan
+    "42215", // Ubongo
+    "13", // Settlers of Catan
     "128882", // Concept
     "244992", // Just One
-    "40765",  // Hanabi
+    "40765", // Hanabi
     "131357", // Timeline
   ],
   tableau: [
     "266192", // Wingspan
     "167791", // Terraforming Mars
     "220308", // Gaia Project
-    "31260",  // Race for the Galaxy
+    "31260", // Race for the Galaxy
     "169786", // Scythe
     "161970", // Alchemists
     "182028", // Through the Ages
@@ -92,8 +90,18 @@ const CATEGORY_IDS: Record<string, string[]> = {
 
 // Default popular games (used when user has no preferences)
 const POPULAR_IDS = [
-  "174430", "169786", "266192", "13", "30549", "68448",
-  "167791", "161936", "224517", "220308", "233078", "182028",
+  "174430",
+  "169786",
+  "266192",
+  "13",
+  "30549",
+  "68448",
+  "167791",
+  "161936",
+  "224517",
+  "220308",
+  "233078",
+  "182028",
 ];
 
 interface UserPreferences {
@@ -133,7 +141,7 @@ function buildRecommendedIds(prefs: UserPreferences): string[] {
 }
 
 export function useRecommendedGames() {
-  const { user } = useAuth();
+  const { user, accessToken } = useAuth();
   const [games, setGames] = useState<BGGGame[]>([]);
   const [loading, setLoading] = useState(true);
   const [isPersonalized, setIsPersonalized] = useState(false);
@@ -147,8 +155,8 @@ export function useRecommendedGames() {
       // Try to fetch user preferences if logged in
       if (user) {
         try {
-          const token = localStorage.getItem("accessToken");
-          const res = await fetch(`${API_URL}/auth/preferences`, {
+          const token = accessToken;
+          const res = await fetch(`/api/auth/preferences`, {
             headers: { Authorization: `Bearer ${token}` },
           });
           if (res.ok) {
@@ -178,7 +186,7 @@ export function useRecommendedGames() {
     };
 
     run();
-  }, [user]);
+  }, [user, accessToken]);
 
   return { games, loading, isPersonalized };
 }

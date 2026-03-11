@@ -37,12 +37,10 @@ export const createReservation = async (
     if (isGuest) {
       // Guest flow — find or create a guest user row
       if (!guestName || !guestEmail) {
-        res
-          .status(400)
-          .json({
-            success: false,
-            message: "Guest name and email are required.",
-          });
+        res.status(400).json({
+          success: false,
+          message: "Guest name and email are required.",
+        });
         return;
       }
 
@@ -68,7 +66,7 @@ export const createReservation = async (
       userId = guestUser.id;
     } else {
       // Authenticated user — id comes from JWT middleware
-      const rawId = (req as any).user?.id;
+      const rawId = (req as any).user?.userId;
       userId = typeof rawId === "number" ? rawId : parseInt(rawId);
 
       if (!userId || isNaN(userId)) {
@@ -186,6 +184,160 @@ export const createReservation = async (
     });
   }
 };
+// ─── PUT /api/reservations/:id ────────────────────────────────────────────────
+// Update a pending reservation — only the owner can do this
+export const updateReservation = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  try {
+    const id = parseInt(req.params.id as string);
+    const userId = (req as any).user?.userId;
+
+    if (!userId || isNaN(id)) {
+      res
+        .status(401)
+        .json({ success: false, message: "Authentication required." });
+      return;
+    }
+
+    const existing = await prisma.reservation.findUnique({
+      where: { id },
+      include: { gameReservations: true },
+    });
+
+    if (!existing) {
+      res
+        .status(404)
+        .json({ success: false, message: "Reservation not found." });
+      return;
+    }
+
+    if (existing.userId !== parseInt(userId)) {
+      res.status(403).json({ success: false, message: "Access denied." });
+      return;
+    }
+
+    if (!["pending"].includes(existing.status)) {
+      res.status(400).json({
+        success: false,
+        message: "Only pending reservations can be edited.",
+      });
+      return;
+    }
+
+    const { reservationDate, startTime, endTime, partySize, tableId, gameId } =
+      req.body;
+
+    if (!reservationDate || !startTime || !endTime || !partySize || !tableId) {
+      res.status(400).json({
+        success: false,
+        message:
+          "reservationDate, startTime, endTime, partySize, and tableId are required.",
+      });
+      return;
+    }
+
+    const [rYear, rMonth, rDay] = reservationDate.split("-").map(Number);
+    const parsedDate = new Date(rYear, rMonth - 1, rDay);
+    const parsedStart = new Date(startTime);
+    const parsedEnd = new Date(endTime);
+    const parsedTable = parseInt(tableId);
+    const parsedParty = parseInt(partySize);
+
+    if (parsedEnd <= parsedStart) {
+      res
+        .status(400)
+        .json({ success: false, message: "endTime must be after startTime." });
+      return;
+    }
+
+    // Table validation
+    const table = await prisma.table.findUnique({ where: { id: parsedTable } });
+    if (!table) {
+      res.status(404).json({ success: false, message: "Table not found." });
+      return;
+    }
+    if (parsedParty > table.capacity || parsedParty < table.minCapacity) {
+      res.status(400).json({
+        success: false,
+        message: `Party size must be between ${table.minCapacity} and ${table.capacity} for this table.`,
+      });
+      return;
+    }
+
+    // Conflict check (exclude this reservation itself)
+    const conflict = await prisma.reservation.findFirst({
+      where: {
+        tableId: parsedTable,
+        id: { not: id },
+        status: { in: ["pending", "confirmed"] },
+        startTime: { lt: parsedEnd },
+        endTime: { gt: parsedStart },
+      },
+    });
+    if (conflict) {
+      res.status(409).json({
+        success: false,
+        message: "This table is already reserved for the selected time slot.",
+      });
+      return;
+    }
+
+    // Resolve new game
+    const resolvedGameId = gameId ? parseInt(gameId) : null;
+    if (resolvedGameId) {
+      const gameExists = await prisma.game.findUnique({
+        where: { id: resolvedGameId },
+      });
+      if (!gameExists) {
+        res.status(404).json({ success: false, message: "Game not found." });
+        return;
+      }
+    }
+
+    // Delete old game reservations and update the reservation
+    await prisma.gameReservation.deleteMany({ where: { reservationId: id } });
+
+    const updated = await prisma.reservation.update({
+      where: { id },
+      data: {
+        reservationDate: parsedDate,
+        startTime: parsedStart,
+        endTime: parsedEnd,
+        partySize: parsedParty,
+        tableId: parsedTable,
+        ...(resolvedGameId
+          ? { gameReservations: { create: [{ gameId: resolvedGameId }] } }
+          : {}),
+      },
+      include: {
+        table: {
+          include: {
+            restaurant: { select: { id: true, name: true, address: true } },
+          },
+        },
+        gameReservations: {
+          include: {
+            game: { select: { id: true, name: true, imageUrl: true } },
+          },
+        },
+      },
+    });
+
+    res.json({
+      success: true,
+      message: "Reservation updated successfully",
+      data: updated,
+    });
+  } catch (error) {
+    console.error("Update reservation error:", error);
+    res.status(500).json({
+      success: false,
+      message: "An error occurred while updating the reservation.",
+    });
+  }
+};
 // ─── GET /api/reservations/my ─────────────────────────────────────────────────
 // Logged-in user's own reservations
 export const getMyReservations = async (
@@ -193,7 +345,7 @@ export const getMyReservations = async (
   res: Response,
 ): Promise<void> => {
   try {
-    const userId = (req as any).user?.id;
+    const userId = (req as any).user?.userId;
     const { status } = req.query;
 
     const reservations = await prisma.reservation.findMany({
@@ -248,7 +400,7 @@ export const getReservationById = async (
 ): Promise<void> => {
   try {
     const id = parseInt(req.params.id as string);
-    const userId = (req as any).user?.id;
+    const userId = (req as any).user?.userId;
     const userRole = (req as any).user?.role;
 
     if (isNaN(id)) {
@@ -320,7 +472,7 @@ export const cancelReservation = async (
 ): Promise<void> => {
   try {
     const id = parseInt(req.params.id as string);
-    const userId = (req as any).user?.id;
+    const userId = (req as any).user?.userId;
 
     if (isNaN(id)) {
       res

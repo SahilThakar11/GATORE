@@ -4,16 +4,21 @@ import {
   getMyReservations,
   getReservationById,
   cancelReservation,
+  updateReservation,
   updateReservationStatus,
 } from "../controllers/reservationController";
-import { authenticate, requireRole } from "../middleware/auth";
+import {
+  authenticate,
+  optionalAuthenticate,
+  requireRole,
+} from "../middleware/auth";
 
 const router = Router();
 
 // ─── USER ─────────────────────────────────────────────────────────────────────
 
 // POST /api/reservations
-router.post("/", createReservation);
+router.post("/", optionalAuthenticate as any, createReservation);
 
 // GET /api/reservations/my?status=confirmed
 router.get("/my", authenticate, getMyReservations);
@@ -23,6 +28,9 @@ router.get("/:id", authenticate, getReservationById);
 
 // PATCH /api/reservations/:id/cancel
 router.patch("/:id/cancel", authenticate, cancelReservation);
+
+// PUT /api/reservations/:id
+router.put("/:id", authenticate, updateReservation);
 
 // ─── BUSINESS / ADMIN ONLY ────────────────────────────────────────────────────
 

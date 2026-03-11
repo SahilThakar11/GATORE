@@ -10,6 +10,7 @@ import Pricing from "./pages/Pricing";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import CafeDetailPage from "./pages/CafeDetailPage";
+import Reservations from "./pages/Reservations";
 import BusinessDashboard from "./pages/BusinessDashboard";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { useAuth } from "./context/AuthContext";
@@ -53,6 +54,14 @@ export default function App() {
                   <Route path="/about" element={<About />} />
                   <Route path="/contact" element={<Contact />} />
                   <Route path="/cafe/:id" element={<CafeDetailPage />} />
+                  <Route
+                    path="/reservations"
+                    element={
+                      <ProtectedRoute>
+                        <Reservations />
+                      </ProtectedRoute>
+                    }
+                  />
                 </Routes>
                 <Footer />
               </>
