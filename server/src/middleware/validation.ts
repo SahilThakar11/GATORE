@@ -70,6 +70,45 @@ export const validateResendOTP = [
     .normalizeEmail(),
 ];
 
+export const validateBusinessAccessRequest = [
+  body("cafeName")
+    .trim()
+    .notEmpty()
+    .withMessage("Café name is required")
+    .isLength({ min: 2, max: 100 })
+    .withMessage("Café name must be between 2 and 100 characters"),
+
+  body("ownerName")
+    .trim()
+    .notEmpty()
+    .withMessage("Owner name is required")
+    .isLength({ min: 2, max: 100 })
+    .withMessage("Owner name must be between 2 and 100 characters"),
+
+  body("email")
+    .trim()
+    .notEmpty()
+    .withMessage("Email is required")
+    .isEmail()
+    .withMessage("Invalid email format")
+    .normalizeEmail(),
+
+  body("phone").optional({ values: "falsy" }).trim(),
+
+  body("city")
+    .trim()
+    .notEmpty()
+    .withMessage("City is required")
+    .isLength({ min: 2, max: 100 })
+    .withMessage("City must be between 2 and 100 characters"),
+
+  body("message")
+    .optional({ values: "falsy" })
+    .trim()
+    .isLength({ max: 1000 })
+    .withMessage("Message must be under 1000 characters"),
+];
+
 // Middleware to handle validation errors
 export const handleValidationErrors = (
   req: Request,

@@ -10,22 +10,19 @@ import { authenticate, requireRole } from "../middleware/auth";
 
 const router = Router();
 
-// All reservation routes require a logged-in user
-router.use(authenticate);
-
 // ─── USER ─────────────────────────────────────────────────────────────────────
 
 // POST /api/reservations
 router.post("/", createReservation);
 
 // GET /api/reservations/my?status=confirmed
-router.get("/my", getMyReservations);
+router.get("/my", authenticate, getMyReservations);
 
 // GET /api/reservations/:id
-router.get("/:id", getReservationById);
+router.get("/:id", authenticate, getReservationById);
 
 // PATCH /api/reservations/:id/cancel
-router.patch("/:id/cancel", cancelReservation);
+router.patch("/:id/cancel", authenticate, cancelReservation);
 
 // ─── BUSINESS / ADMIN ONLY ────────────────────────────────────────────────────
 
