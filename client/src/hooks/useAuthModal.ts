@@ -312,10 +312,29 @@ export function useAuthModal() {
     }
   }, [formData.email, formData.password, formData.name, formData.isGoogleAuth]);
 
-  const submitPreferences = useCallback(() => {
+  const submitPreferences = useCallback(async () => {
     setError(null);
+    try {
+      const token = localStorage.getItem("accessToken");
+      if (token) {
+        await fetch(`${BASE_URL}/preferences`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            gameTypes: formData.gameTypes,
+            groupSize: formData.groupSize,
+            complexity: formData.complexity,
+          }),
+        });
+      }
+    } catch {
+      // Preferences are optional — don't block signup if save fails
+    }
     setStep("success");
-  }, []);
+  }, [formData.gameTypes, formData.groupSize, formData.complexity]);
 
   // ─── Google ─────────────────────────────────────────────────────────────────
   const googleSignIn = useCallback((user: GoogleUser) => {

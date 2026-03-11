@@ -447,6 +447,17 @@ export const signin = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
+    // Block business users from signing in via the client portal
+    if (user.role === "business") {
+      res.status(403).json({
+        success: false,
+        message:
+          "This account is registered as a business account. Please sign in through the Business Portal.",
+      });
+      return;
+    }
+
+
     // Block Google-only users from password signin
     if (user.authProvider === "google" && user.password === "") {
       res.status(403).json({

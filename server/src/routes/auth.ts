@@ -21,6 +21,10 @@ import {
   handleValidationErrors,
 } from "../middleware/validation";
 import { authenticate } from "../middleware/auth";
+import {
+  savePreferences,
+  getPreferences,
+} from "../controllers/preferencesController";
 
 const router = Router();
 
@@ -60,5 +64,9 @@ router.post("/logout", authenticate, logout);
 
 // Google OAuth route
 router.post("/google", googleAuth);
+
+// Preferences routes (authenticated)
+router.post("/preferences", authenticate, savePreferences as any);
+router.get("/preferences", authenticate, getPreferences as any);
 
 export default router;

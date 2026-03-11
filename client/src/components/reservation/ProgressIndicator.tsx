@@ -37,7 +37,7 @@ const ProgressIndicator: React.FC<ProgressIndicatorProps> = ({
       <MoveRight className="text-warm-300" />
 
       <StepIcon
-        isCurrentStep={currentStep > 2}
+        isCurrentStep={currentStep >= 2 && currentStep <= 4}
         isStepCompleted={currentStep > 4}
         text={steps[2].text}
       >

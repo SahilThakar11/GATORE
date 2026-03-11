@@ -1,6 +1,7 @@
 interface Props {
   difficulty: string | null;
   dots: number;
+  isTextWhite?: boolean;
 }
 
 const COLOR: Record<string, string> = {
@@ -10,7 +11,7 @@ const COLOR: Record<string, string> = {
   "Very Hard": "bg-red-500",
 };
 
-export function DifficultyDots({ difficulty, dots }: Props) {
+export function DifficultyDots({ difficulty, dots, isTextWhite }: Props) {
   const filled = Math.min(Math.max(Math.round(dots), 0), 5);
   const color = COLOR[difficulty ?? ""] ?? "bg-gray-400";
 
@@ -27,7 +28,11 @@ export function DifficultyDots({ difficulty, dots }: Props) {
         ))}
       </div>
       {difficulty && (
-        <span className="text-xs text-white font-medium">{difficulty}</span>
+        <span
+          className={`text-xs ${isTextWhite ? "text-white" : "text-neutral-600"} font-medium`}
+        >
+          {difficulty}
+        </span>
       )}
     </div>
   );
