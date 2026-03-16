@@ -10,7 +10,7 @@ import Pricing from "./pages/Pricing";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import CafeDetailPage from "./pages/CafeDetailPage";
-import ReservationManagement from "./pages/ReservationManagement";
+import { ReservationManagement } from "./pages/ReservationManagement";
 import Reservations from "./pages/Reservations";
 import BusinessDashboard from "./pages/BusinessDashboard";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
@@ -32,6 +32,12 @@ export default function App() {
             <ProtectedRoute requiredRole="business">
               <BusinessDashboard />
             </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/reservation-management"
+          element={
+              <ReservationManagement />
           }
         />
 
