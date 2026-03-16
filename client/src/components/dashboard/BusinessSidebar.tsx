@@ -7,6 +7,7 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
+  Building2,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 
@@ -30,15 +31,8 @@ export default function BusinessSidebar() {
     >
       {/* ─── Logo / Business Name ───────────────────────────── */}
       <div className="flex items-center gap-3 px-4 pt-6 pb-5">
-        <div className="w-9 h-9 rounded-lg bg-white/15 flex items-center justify-center shrink-0">
-          <img
-            src="/logo.png"
-            alt="Logo"
-            className="w-6 h-6 object-contain"
-            onError={(e) => {
-              (e.target as HTMLImageElement).style.display = "none";
-            }}
-          />
+        <div className="w-9 h-9 rounded-lg bg-teal-800 flex items-center justify-center shrink-0 border border-teal-700/50 shadow-inner">
+          <Building2 size={16} className="text-teal-200" />
         </div>
         {!collapsed && (
           <div className="overflow-hidden">

@@ -9,9 +9,14 @@ import {
   Upload,
   Link,
   Search,
-  FileText,
   PlusCircle,
   ClipboardList,
+  Clock,
+  Zap,
+  CreditCard,
+  Calendar,
+  Users,
+  Settings,
 } from "lucide-react";
 import { StepProgress } from "../auth/StepProgress";
 import { Input } from "../ui/Input";
@@ -27,7 +32,9 @@ type WizardStep =
   | "tables"
   | "hours"
   | "games"
-  | "menu";
+  | "menu"
+  | "pricing"
+  | "success";
 
 const STEP_MAP: Record<WizardStep, { stepNum: number; total: number }> = {
   "business-info": { stepNum: 1, total: 3 },
@@ -35,6 +42,8 @@ const STEP_MAP: Record<WizardStep, { stepNum: number; total: number }> = {
   hours: { stepNum: 2, total: 3 },
   games: { stepNum: 2, total: 3 },
   menu: { stepNum: 2, total: 3 },
+  pricing: { stepNum: 2, total: 3 },
+  success: { stepNum: 3, total: 3 },
 };
 
 const DAYS = [
@@ -595,6 +604,257 @@ function StepMenu({
 }
 
 /* ═══════════════════════════════════════════════════════════════════
+   STEP 6 — PRICING
+   ═══════════════════════════════════════════════════════════════════ */
+
+function StepPricing({
+  onContinue,
+  onBack,
+}: {
+  onContinue: () => void;
+  onBack: () => void;
+}) {
+  const [pricingType, setPricingType] = useState("hourly");
+  const [enableThreshold, setEnableThreshold] = useState(true);
+
+  const pricingOptions = [
+    {
+      key: "hourly",
+      icon: Clock,
+      title: "Hourly Rate",
+      desc: "Charge customers based on how long they play",
+    },
+    {
+      key: "flat",
+      icon: CreditCard,
+      title: "Flat Cover Fee",
+      desc: "One-time fee per person, unlimited play time",
+    },
+    {
+      key: "hybrid",
+      icon: Zap,
+      title: "Hybrid",
+      desc: "Combine cover fee with hourly rate",
+    },
+  ];
+
+  return (
+    <div className="px-7 py-6 flex flex-col gap-5">
+      <div>
+        <h2 className="text-xl font-bold text-gray-900">Pricing Model</h2>
+        <p className="text-sm text-gray-400 mt-0.5">
+          Choose how you want to charge customers for table reservations
+        </p>
+      </div>
+
+      <div className="grid grid-cols-2 gap-6">
+        {/* Pricing Type */}
+        <div>
+          <h3 className="text-sm font-bold text-gray-900 mb-3">Pricing Type</h3>
+          <div className="flex flex-col gap-3 mb-6">
+            {pricingOptions.map((opt) => {
+              const Icon = opt.icon;
+              const active = pricingType === opt.key;
+              return (
+                <button
+                  key={opt.key}
+                  onClick={() => setPricingType(opt.key)}
+                  className={`flex items-start gap-3 p-4 rounded-xl border-2 text-left transition-all cursor-pointer ${
+                    active
+                      ? "border-teal-500 bg-teal-50/60"
+                      : "border-gray-200 hover:border-gray-300"
+                  }`}
+                >
+                  <div
+                    className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${
+                      active ? "bg-teal-600 text-white" : "bg-teal-50 text-teal-600"
+                    }`}
+                  >
+                    <Icon size={18} />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-gray-900 flex items-center gap-1.5">
+                      {opt.title}
+                      {active && <Check size={14} className="text-teal-600" />}
+                    </p>
+                    <p className="text-[11px] text-gray-400 mt-0.5 leading-tight">
+                      {opt.desc}
+                    </p>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="flex flex-col gap-4">
+            <Input label="Hourly Rate" placeholder="$ 8.00" />
+            <p className="text-[11px] text-gray-400 -mt-2">
+              Amount charged per hour of play time
+            </p>
+
+            {/* Threshold checkbox */}
+            <label className="flex items-center gap-2 cursor-pointer mt-2">
+              <button
+                onClick={() => setEnableThreshold((v) => !v)}
+                className={`w-5 h-5 rounded flex items-center justify-center border-2 transition-colors ${
+                  enableThreshold
+                    ? "bg-teal-600 border-teal-600"
+                    : "border-gray-300"
+                }`}
+              >
+                {enableThreshold && <Check size={13} className="text-white" />}
+              </button>
+              <span className="text-sm font-medium text-gray-800">
+                Enable spending threshold
+              </span>
+            </label>
+
+            {enableThreshold && (
+              <>
+                <Input label="Minimum Spend Amount" placeholder="$ 15.00" />
+                <div className="bg-[#eef2ff] border border-blue-200 rounded-lg p-3 flex gap-2">
+                  <span className="text-blue-500 shrink-0 font-bold border border-blue-500 rounded-full w-4 h-4 flex items-center justify-center text-[10px] mt-0.5">i</span>
+                  <p className="text-xs text-blue-800 leading-snug">
+                    If customers spend{" "}
+                    <span className="font-bold">$15.00</span> or more on
+                    food/drinks, the table fee will be waived automatically.
+                  </p>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Customer Preview */}
+        <div>
+          <h3 className="text-sm font-bold text-gray-900 mb-3">
+            Customer Preview
+          </h3>
+          <div className="border border-gray-200 rounded-xl p-5 shadow-sm bg-white">
+            <p className="text-base font-bold text-gray-900">Table Pricing</p>
+            <p className="text-sm text-gray-500 mb-4">
+              Per hour of play time
+            </p>
+            <hr className="mb-4 border-gray-100" />
+            <p className="text-2xl font-black text-gray-900 mb-4">
+              $8.00<span className="text-sm font-normal text-gray-500">/hour</span>
+            </p>
+            <div className="flex flex-col gap-2 text-sm text-gray-600">
+              <span>✓ 1 hour: $8.00</span>
+              <span>✓ 2 hours: $16.00</span>
+              <span>✓ 3 hours: $24.00</span>
+              <span className="text-teal-600 font-medium">
+                ✓ Free with $15.00+ purchase
+              </span>
+            </div>
+          </div>
+          <p className="text-[11px] text-gray-500 mt-4 leading-snug p-3 bg-warm-50 border border-warm-100 rounded-lg">
+            This is how your pricing will appear to customers when they make a reservation.
+          </p>
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div className="flex gap-3 mt-4">
+        <Button variant="outline" fullWidth onClick={onBack}>
+          Back
+        </Button>
+        <Button variant="primary" fullWidth onClick={onContinue}>
+          Continue
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   STEP 7 — SUCCESS
+   ═══════════════════════════════════════════════════════════════════ */
+
+function StepSuccess({
+  onFinish,
+}: {
+  onFinish: () => void;
+}) {
+  return (
+    <div className="px-7 py-8 flex flex-col gap-6 items-center">
+      <div className="w-16 h-16 rounded-full bg-teal-100 flex items-center justify-center mb-1">
+        <div className="w-12 h-12 rounded-full bg-teal-600 flex items-center justify-center">
+          <Check size={24} className="text-white" strokeWidth={3} />
+        </div>
+      </div>
+      
+      <div className="text-center w-full">
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">You're all set!</h2>
+        <p className="text-sm text-gray-500">
+          Your business account is ready to start accepting reservations
+        </p>
+      </div>
+
+      <div className="w-full bg-warm-50 border border-warm-200 rounded-xl p-6">
+        <h3 className="text-sm font-bold text-gray-900 mb-4">What you've completed:</h3>
+        <ul className="flex flex-col gap-3">
+          {[
+            "Business profile and contact information",
+            "Table configuration and seating capacity",
+            "Operating hours and schedule",
+            "Game Library",
+            "Menu Setup",
+            "Pricing Model"
+          ].map((item, i) => (
+            <li key={i} className="flex items-center gap-2.5 text-sm text-gray-600">
+              <div className="w-4 h-4 rounded-full border border-teal-500 flex items-center justify-center shrink-0">
+                <Check size={10} className="text-teal-600" strokeWidth={3} />
+              </div>
+              {item}
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div className="w-full border border-gray-200 rounded-xl p-6">
+        <h3 className="text-sm font-bold text-gray-900 mb-5">What's next?</h3>
+        <div className="flex flex-col gap-5">
+          <div className="flex gap-4 items-start">
+            <div className="w-10 h-10 rounded-lg bg-teal-50 flex items-center justify-center shrink-0">
+              <Calendar size={20} className="text-teal-600" />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-gray-900">Start accepting reservations</p>
+              <p className="text-xs text-gray-500 mt-0.5">Your customers can now book tables at your café</p>
+            </div>
+          </div>
+          <div className="flex gap-4 items-start">
+            <div className="w-10 h-10 rounded-lg bg-teal-50 flex items-center justify-center shrink-0">
+              <Users size={20} className="text-teal-600" />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-gray-900">Invite your team</p>
+              <p className="text-xs text-gray-500 mt-0.5">Add staff members to help manage reservations</p>
+            </div>
+          </div>
+          <div className="flex gap-4 items-start">
+            <div className="w-10 h-10 rounded-lg bg-teal-50 flex items-center justify-center shrink-0">
+              <Settings size={20} className="text-teal-600" />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-gray-900">Customize your settings</p>
+              <p className="text-xs text-gray-500 mt-0.5">Fine-tune reservation rules, notifications, and more</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="w-full mt-2">
+        <Button variant="primary" fullWidth onClick={onFinish} className="py-3.5 text-[15px]">
+          Go to Dashboard
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════
    MAIN WIZARD MODAL
    ═══════════════════════════════════════════════════════════════════ */
 
@@ -627,6 +887,8 @@ export default function CafeSetupWizard({
     "hours",
     "games",
     "menu",
+    "pricing",
+    "success",
   ];
 
   const goNext = () => {
@@ -670,14 +932,14 @@ export default function CafeSetupWizard({
                 GATORE
               </p>
               <p className="text-sm text-neutral-700 leading-snug">
-                Set up your café in minutes
+                {step === "success" ? "Your café's home base" : "Set up your café in minutes"}
               </p>
             </div>
           </div>
         </div>
 
         {/* Step progress */}
-        <StepProgress current={stepNum} total={total} />
+        {step !== "success" && <StepProgress current={stepNum} total={total} />}
 
         {/* Step content — scrollable */}
         <div className="flex-1 overflow-y-auto">
@@ -694,7 +956,13 @@ export default function CafeSetupWizard({
             <StepGames onContinue={goNext} onBack={goBack} />
           )}
           {step === "menu" && (
-            <StepMenu onFinish={onClose} onBack={goBack} />
+            <StepMenu onFinish={goNext} onBack={goBack} />
+          )}
+          {step === "pricing" && (
+            <StepPricing onContinue={goNext} onBack={goBack} />
+          )}
+          {step === "success" && (
+            <StepSuccess onFinish={onClose} />
           )}
         </div>
 

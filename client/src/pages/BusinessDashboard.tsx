@@ -13,10 +13,12 @@ import {
   CalendarDays,
   TrendingUp,
   Activity,
+  ArrowRight,
 } from "lucide-react";
 import BusinessLayout from "../components/dashboard/BusinessLayout";
 import NewReservationModal from "../components/dashboard/NewReservationModal";
 import CafeSetupWizard from "../components/dashboard/CafeSetupWizard";
+import { Button } from "../components/ui/Button";
 
 /* ═══════════════════════════════════════════════════════════════════
    MOCK DATA
@@ -350,27 +352,32 @@ export default function BusinessDashboard() {
       <div className="max-w-[1100px] mx-auto px-8 py-8">
         {/* ── Setup Banner (first-time users) ─────────────────── */}
         {needsSetup && (
-          <div className="mb-6 rounded-2xl overflow-hidden border border-teal-200 bg-gradient-to-r from-teal-50 via-white to-amber-50 p-5 flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-teal-100 flex items-center justify-center">
-                <span className="text-2xl">🏪</span>
-              </div>
+          <div className="mb-8 rounded-2xl bg-white border-2 border-teal-100 shadow-sm p-6 flex items-center justify-between relative overflow-hidden">
+            {/* Subtle background decoration */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-teal-50 rounded-full blur-3xl -mr-32 -mt-32 opacity-60 pointer-events-none" />
+            
+            <div className="flex items-center gap-5 relative z-10">
               <div>
-                <h3 className="text-sm font-bold text-gray-900">
-                  Welcome! Let's set up your café
+                <h3 className="text-lg font-bold text-gray-900">
+                  Welcome to Gatore! Let's set up your café
                 </h3>
-                <p className="text-xs text-gray-500 mt-0.5">
-                  Complete your business profile to start receiving reservations
-                  and managing your venue.
+                <p className="text-sm text-gray-500 mt-1 max-w-lg leading-snug">
+                  Complete your business profile, add your game library, and configure your tables so customers can start booking reservations.
                 </p>
               </div>
             </div>
-            <button
-              onClick={() => setShowSetupWizard(true)}
-              className="flex items-center gap-2 bg-teal-700 hover:bg-teal-800 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors shrink-0 cursor-pointer shadow-sm"
-            >
-              Complete Setup
-            </button>
+            
+            <div className="relative z-10 shrink-0 ml-6">
+               <button
+                  onClick={() => setShowSetupWizard(true)}
+                  className="flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-bold px-6 py-3 rounded-xl transition-all shadow-sm hover:shadow-md cursor-pointer"
+                >
+                  <span className="flex items-center gap-2">
+                    Complete Setup
+                    <ArrowRight size={16} />
+                  </span>
+                </button>
+            </div>
           </div>
         )}
 
@@ -393,13 +400,14 @@ export default function BusinessDashboard() {
               </span>
             </div>
           </div>
-          <button
+          <Button
+            variant="primary"
             onClick={() => setShowNewReservation(true)}
-            className="flex items-center gap-2 bg-teal-700 hover:bg-teal-800 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors shrink-0 cursor-pointer shadow-sm"
+            className="flex items-center gap-2 px-5 py-2.5 shrink-0 bg-teal-700"
           >
             <Plus size={16} />
             Quick Book
-          </button>
+          </Button>
         </div>
 
         {/* ── Stat Cards ───────────────────────────────────────── */}
