@@ -59,6 +59,7 @@ export interface CafeDetail extends CafeSummary {
 export interface TimeSlot {
   time: string; // ISO string
   available: boolean;
+  reservedGameIds: number[];
 }
 
 export interface AvailabilityResult {

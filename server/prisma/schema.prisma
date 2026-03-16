@@ -23,6 +23,7 @@ model User {
   refreshTokens RefreshToken[]
   reservations  Reservation[]
   staffActions  StaffAction[]
+  preference    UserPreference?
 
   @@map("users")
 }
@@ -205,4 +206,15 @@ model BusinessAccessRequest {
   restaurant   Restaurant? @relation(fields: [restaurantId], references: [id])
 
   @@map("business_access_requests")
+}
+
+model UserPreference {
+  id         Int    @id @default(autoincrement())
+  userId     Int    @unique @map("user_id")
+  gameTypes  String @default("") @map("game_types")
+  groupSize  String @default("any") @map("group_size")
+  complexity String @default("any")
+  user       User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_preferences")
 }

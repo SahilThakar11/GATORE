@@ -20,9 +20,18 @@ export function StepPassword({
   const [showPw, setShowPw] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
+  const pw = formData.password;
+  const rules = [
+    { label: "At least 8 characters", pass: pw.length >= 8 },
+    { label: "One uppercase letter", pass: /[A-Z]/.test(pw) },
+    { label: "One lowercase letter", pass: /[a-z]/.test(pw) },
+    { label: "One number", pass: /\d/.test(pw) },
+    { label: "One special character", pass: /[!@#$%^&*(),.?":{}|<>]/.test(pw) },
+  ];
+  const allPassed = rules.every((r) => r.pass);
+
   const isValid =
-    formData.password.length >= 8 &&
-    formData.password === formData.confirmPassword;
+    allPassed && formData.password === formData.confirmPassword;
 
   return (
     <div className="px-5 pt-5 pb-4 flex flex-col gap-5 flex-1">
@@ -58,6 +67,20 @@ export function StepPassword({
           </button>
         }
       />
+
+      {/* Password strength rules */}
+      {pw.length > 0 && (
+        <div className="grid grid-cols-2 gap-x-4 gap-y-1 -mt-3">
+          {rules.map((r) => (
+            <p
+              key={r.label}
+              className={`text-xs flex items-center gap-1 ${r.pass ? "text-teal-600" : "text-gray-400"}`}
+            >
+              <span>{r.pass ? "✓" : "○"}</span> {r.label}
+            </p>
+          ))}
+        </div>
+      )}
 
       <Input
         label="Confirm password"
@@ -97,3 +120,4 @@ export function StepPassword({
     </div>
   );
 }
+

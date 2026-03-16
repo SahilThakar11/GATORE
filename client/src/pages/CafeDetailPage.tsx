@@ -12,11 +12,12 @@ import {
   Search,
 } from "lucide-react";
 import { useState, useEffect } from "react";
-import { useReservationFlow } from "../hooks/useReservationFlow";
 import { useAuth } from "../context/AuthContext";
 import { type BGGGame } from "../hooks/useBGG";
 import { GameCard } from "../components/searchGames/GameCard";
 import { GameDetailModal } from "../components/searchGames/GameDetailModal";
+import { ReservationModal } from "../components/reservation/ReservationModal";
+import { type Venue } from "../hooks/useReservationFlow";
 import {
   useCafe,
   useCafeGames,
@@ -24,19 +25,17 @@ import {
   formatMinutes,
 } from "../hooks/useCafe";
 
-// ─── Hook: fetch full BGG data for a list of bggIds ──────────────────────────
 function useBGGGamesByIds(ids: string[]) {
   const [games, setGames] = useState<BGGGame[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
   useEffect(() => {
     if (!ids.length) {
       setGames([]);
       return;
     }
     let cancelled = false;
-    const fetchGames = async () => {
+    (async () => {
       setLoading(true);
       setError(null);
       try {
@@ -49,24 +48,20 @@ function useBGGGamesByIds(ids: string[]) {
       } finally {
         if (!cancelled) setLoading(false);
       }
-    };
-    fetchGames();
+    })();
     return () => {
       cancelled = true;
     };
   }, [ids.join(",")]);
-
   return { games, loading, error };
 }
 
-// ─── Amenity icons ────────────────────────────────────────────────────────────
 const DEFAULT_AMENITIES = [
   { icon: Wifi, label: "Free WiFi" },
   { icon: Coffee, label: "Full café menu" },
   { icon: ParkingCircle, label: "Parking nearby" },
 ];
 
-// ─── Skeletons ────────────────────────────────────────────────────────────────
 function GameSkeleton() {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -96,43 +91,37 @@ function DetailSkeleton() {
   );
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
 export default function CafeDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
-  const reservation = useReservationFlow();
-
   const todayStr = new Date().toISOString().split("T")[0];
 
   const { cafe, loading: cafeLoading, error: cafeError } = useCafe(id);
-
-  // Step 1: get bggIds from our DB
   const { games: dbGames, loading: dbGamesLoading } = useCafeGames(id);
 
-  // Step 2: extract bggIds once DB games are loaded
-  const bggIds = dbGames.map((g) => g.bggId);
+  const cafeBggIds = dbGames.map((g) => g.bggId);
+  const bggIdToDbId: Record<string, number> = {};
+  dbGames.forEach((g) => {
+    bggIdToDbId[g.bggId] = g.id;
+  });
 
-  // Step 3: fetch rich BGG data (images, categories, ratings) using those IDs
   const {
     games,
     loading: bggLoading,
     error: gamesError,
-  } = useBGGGamesByIds(bggIds);
-
+  } = useBGGGamesByIds(cafeBggIds);
   const { availability, loading: availLoading } = useCafeAvailability(
     id,
     todayStr,
   );
-
-  // Combined loading state — show skeleton until both fetches complete
   const gamesLoading = dbGamesLoading || bggLoading;
 
+  const [reservationOpen, setReservationOpen] = useState(false);
   const [gameQuery, setGameQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
   const [detailGame, setDetailGame] = useState<BGGGame | null>(null);
 
-  // Category pills derived from real BGG categories
   const allCategories = [
     "All",
     ...Array.from(
@@ -147,37 +136,43 @@ export default function CafeDetailPage() {
     return matchesQuery && matchesCategory;
   });
 
-  // Operating hours display
   const todayName = new Date().toLocaleDateString("en-US", { weekday: "long" });
   const formattedHours =
     cafe?.operatingHours.reduce(
       (acc, h) => {
-        const label = h.isClosed
+        acc[h.dayOfWeek] = h.isClosed
           ? "Closed"
           : `${formatMinutes(h.openTime)} – ${formatMinutes(h.closeTime)}`;
-        acc[h.dayOfWeek] = label;
         return acc;
       },
       {} as Record<string, string>,
     ) ?? {};
 
-  // Available time slots
-  const availableSlots =
-    availability?.slots
-      .filter((s) => s.available)
-      .map((s) => {
-        const d = new Date(s.time);
-        return d.toLocaleTimeString("en-US", {
+  const allSlots =
+    availability?.slots.map((s) => {
+      const d = new Date(s.time);
+      return {
+        label: d.toLocaleTimeString("en-US", {
           hour: "numeric",
           minute: "2-digit",
-        });
-      }) ?? [];
+        }),
+        available: s.available,
+      };
+    }) ?? [];
 
-  const handleReserveClick = () => {
-    // TODO: open reservation modal with cafe.id pre-filled
-  };
+  const venueForModal: Venue | null = cafe
+    ? {
+        id: cafe.id,
+        name: cafe.name,
+        logo: cafe.logoUrl ?? "",
+        address: cafe.address,
+        city: cafe.city,
+        rating: Number(cafe.rating),
+        reviewCount: cafe.reviewCount,
+        poster: "/images/hero_wood_texture.png",
+      }
+    : null;
 
-  // ─── Error state ───────────────────────────────────────────────────────────
   if (cafeError && !cafeLoading) {
     return (
       <div className="bg-[#faf8f4] min-h-screen flex items-center justify-center">
@@ -196,7 +191,6 @@ export default function CafeDetailPage() {
 
   return (
     <div className="bg-[#faf8f4] min-h-screen">
-      {/* ─── Hero banner ──────────────────────────────────────────────────── */}
       <div
         className="w-full h-52 relative"
         style={{
@@ -214,13 +208,11 @@ export default function CafeDetailPage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-7">
-        {/* ─── Identity card ────────────────────────────────────────────── */}
         {cafeLoading ? (
           <DetailSkeleton />
         ) : cafe ? (
           <div className="bg-white rounded-2xl border border-gray-100 shadow-md -mt-16 relative z-10 p-6">
             <div className="flex items-start gap-5">
-              {/* Logo */}
               <div className="w-40 h-40 rounded-xl overflow-hidden bg-gray-100 border border-gray-200 shrink-0 -mt-10 shadow-sm">
                 {cafe.logoUrl ? (
                   <img
@@ -234,7 +226,6 @@ export default function CafeDetailPage() {
                   </div>
                 )}
               </div>
-
               <div className="flex-1 min-w-0">
                 <div className="flex items-start justify-between gap-4">
                   <div>
@@ -258,7 +249,6 @@ export default function CafeDetailPage() {
                         </span>
                       </div>
                       <span className="text-gray-200">·</span>
-                      {/* Use dbGames.length — accurate count from our DB */}
                       <span className="text-xs bg-[#f5ede0] text-[#a07850] px-2.5 py-1 rounded-full font-semibold">
                         {dbGamesLoading ? "…" : dbGames.length} games
                       </span>
@@ -271,10 +261,15 @@ export default function CafeDetailPage() {
                       </div>
                     </div>
                   </div>
+                  <button
+                    onClick={() => setReservationOpen(true)}
+                    className="bg-teal-600 hover:bg-teal-700 text-white text-sm font-bold px-6 py-3 rounded-xl transition-colors shrink-0 shadow-sm shadow-teal-200"
+                  >
+                    Reserve a table
+                  </button>
                 </div>
               </div>
             </div>
-
             <div className="flex items-center gap-5 mt-5 pt-4 border-t border-gray-100">
               {DEFAULT_AMENITIES.map(({ icon: Icon, label }) => (
                 <div
@@ -289,11 +284,8 @@ export default function CafeDetailPage() {
           </div>
         ) : null}
 
-        {/* ─── Main content ─────────────────────────────────────────────── */}
         <div className="flex gap-8 mt-8 pb-16">
-          {/* Left column */}
           <div className="flex-1 min-w-0 flex flex-col gap-6">
-            {/* About */}
             {cafe && (
               <div className="bg-white rounded-xl border border-gray-100 p-6">
                 <h2 className="text-base font-bold text-gray-900 mb-3">
@@ -305,7 +297,6 @@ export default function CafeDetailPage() {
               </div>
             )}
 
-            {/* Available time slots */}
             <div className="bg-white rounded-xl border border-gray-100 p-6">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-base font-bold text-gray-900">
@@ -316,7 +307,6 @@ export default function CafeDetailPage() {
                   <span className="text-xs font-medium">Walk-ins welcome</span>
                 </div>
               </div>
-
               {availLoading ? (
                 <div className="flex gap-2 flex-wrap">
                   {[...Array(5)].map((_, i) => (
@@ -326,16 +316,21 @@ export default function CafeDetailPage() {
                     />
                   ))}
                 </div>
-              ) : availableSlots.length > 0 ? (
+              ) : allSlots.length > 0 ? (
                 <div className="flex flex-wrap gap-2">
-                  {availableSlots.map((slot) => (
+                  {allSlots.map((slot) => (
                     <button
-                      key={slot}
-                      onClick={handleReserveClick}
-                      className="flex items-center gap-1.5 text-sm font-semibold text-teal-700 bg-teal-50 border border-teal-100 px-4 py-2.5 rounded-xl hover:bg-teal-100 hover:border-teal-300 transition-all"
+                      key={slot.label}
+                      onClick={() => slot.available && setReservationOpen(true)}
+                      disabled={!slot.available}
+                      className={`flex items-center gap-1.5 text-sm font-semibold px-4 py-2.5 rounded-xl transition-all ${
+                        slot.available
+                          ? "text-teal-700 bg-teal-50 border border-teal-100 hover:bg-teal-100 hover:border-teal-300 cursor-pointer"
+                          : "text-red-400 bg-red-50 border border-red-100 cursor-not-allowed line-through"
+                      }`}
                     >
                       <Clock size={13} />
-                      {slot}
+                      {slot.label}
                     </button>
                   ))}
                 </div>
@@ -346,7 +341,6 @@ export default function CafeDetailPage() {
               )}
             </div>
 
-            {/* ─── Game library (BGG-powered) ───────────────────────────── */}
             <div className="bg-white rounded-xl border border-gray-100 p-6">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-base font-bold text-gray-900">
@@ -356,8 +350,6 @@ export default function CafeDetailPage() {
                   </span>
                 </h2>
               </div>
-
-              {/* Search */}
               <div className="relative mb-4">
                 <Search
                   size={14}
@@ -371,28 +363,20 @@ export default function CafeDetailPage() {
                   className="w-full pl-8 pr-4 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-700 bg-[#faf8f4] focus:ring-2 focus:ring-teal-500 outline-none"
                 />
               </div>
-
-              {/* Category pills — from real BGG categories */}
               {!gamesLoading && allCategories.length > 1 && (
                 <div className="flex gap-2 flex-wrap mb-5">
                   {allCategories.map((cat) => (
                     <button
                       key={cat}
                       onClick={() => setActiveCategory(cat)}
-                      className={`text-xs font-semibold px-3 py-1.5 rounded-full border transition-all ${
-                        activeCategory === cat
-                          ? "bg-teal-600 border-teal-600 text-white"
-                          : "bg-white border-gray-200 text-gray-600 hover:border-teal-300"
-                      }`}
+                      className={`text-xs font-semibold px-3 py-1.5 rounded-full border transition-all ${activeCategory === cat ? "bg-teal-600 border-teal-600 text-white" : "bg-white border-gray-200 text-gray-600 hover:border-teal-300"}`}
                     >
                       {cat}
                     </button>
                   ))}
                 </div>
               )}
-
               {gamesLoading && <GameSkeleton />}
-
               {gamesError && !gamesLoading && (
                 <div className="text-center py-8 text-gray-400">
                   <p className="text-sm font-medium text-gray-500">
@@ -401,7 +385,6 @@ export default function CafeDetailPage() {
                   <p className="text-xs mt-1">{gamesError}</p>
                 </div>
               )}
-
               {!gamesLoading &&
                 !gamesError &&
                 (filteredGames.length > 0 ? (
@@ -435,9 +418,7 @@ export default function CafeDetailPage() {
             </div>
           </div>
 
-          {/* Right sidebar */}
           <div className="w-72 shrink-0 flex flex-col gap-5">
-            {/* CTA */}
             <div className="bg-teal-700 rounded-xl p-5 text-center flex flex-col gap-3 sticky top-24">
               <p className="text-white font-bold text-base">Ready to play?</p>
               <p className="text-teal-200 text-xs leading-relaxed">
@@ -445,19 +426,18 @@ export default function CafeDetailPage() {
                 everything ready when you arrive.
               </p>
               <button
-                onClick={handleReserveClick}
+                onClick={() => setReservationOpen(true)}
                 className="w-full bg-white text-teal-700 hover:bg-teal-50 text-sm font-bold py-3 rounded-lg transition-colors cursor-pointer"
               >
-                Reserve a Game
+                Reserve a table
               </button>
               {!isAuthenticated && (
                 <p className="text-teal-300 text-xs">
-                  You'll need to sign in or use guest checkout to reserve.
+                  Sign in or continue as guest
                 </p>
               )}
             </div>
 
-            {/* Hours */}
             {cafe && (
               <div className="bg-white rounded-xl border border-gray-100 p-5">
                 <h3 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
@@ -485,7 +465,6 @@ export default function CafeDetailPage() {
               </div>
             )}
 
-            {/* Contact */}
             {cafe && (
               <div className="bg-white rounded-xl border border-gray-100 p-5">
                 <h3 className="text-sm font-bold text-gray-900 mb-3">
@@ -532,6 +511,17 @@ export default function CafeDetailPage() {
       </div>
 
       <GameDetailModal game={detailGame} onClose={() => setDetailGame(null)} />
+
+      {venueForModal && (
+        <ReservationModal
+          isOpen={reservationOpen}
+          onClose={() => setReservationOpen(false)}
+          venue={venueForModal}
+          cafeBggIds={cafeBggIds}
+          cafeTables={cafe?.tables ?? []}
+          bggIdToDbId={bggIdToDbId}
+        />
+      )}
     </div>
   );
 }

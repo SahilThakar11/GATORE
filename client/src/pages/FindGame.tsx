@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { Search, Loader2, X, ChevronDown, MapPin, Star } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useBGGPopular, useBGGSearch, type BGGGame } from "../hooks/useBGG";
+import { useBGGSearch, type BGGGame } from "../hooks/useBGG";
 import { useCafesByGame, type CafeSummary } from "../hooks/useCafe";
+import { useRecommendedGames } from "../hooks/useRecommendedGames";
 import { GameCard } from "../components/searchGames/GameCard";
 import { SelectedGameBanner } from "../components/searchGames/SelectedGameBanner";
 import { GameDetailModal } from "../components/searchGames/GameDetailModal";
@@ -96,7 +97,11 @@ export default function FindByGamePage() {
   const inputRef = useRef<HTMLInputElement>(null);
   const debouncedQuery = useDebounce(inputValue, 500);
 
-  const { games: popularGames, loading: popularLoading } = useBGGPopular();
+  const {
+    games: recommendedGames,
+    loading: recommendedLoading,
+    isPersonalized,
+  } = useRecommendedGames();
   const {
     games: searchGames,
     query: activeQuery,
@@ -142,10 +147,12 @@ export default function FindByGamePage() {
     inputRef.current?.focus();
   };
 
-  const displayGames = isSearchMode ? searchGames : popularGames;
+  const displayGames = isSearchMode ? searchGames : recommendedGames;
   const sectionTitle = isSearchMode
     ? `Results for "${activeQuery}" (${totalResults} games found)`
-    : "Popular Games";
+    : isPersonalized
+      ? "Recommended for You"
+      : "Popular Games";
 
   return (
     <>
@@ -261,7 +268,7 @@ export default function FindByGamePage() {
               )}
             </div>
 
-            {(popularLoading && !isSearchMode) ||
+            {(recommendedLoading && !isSearchMode) ||
             (searchLoading && searchGames.length === 0) ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {[...Array(6)].map((_, i) => (
