@@ -10,6 +10,7 @@ import Pricing from "./pages/Pricing";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import CafeDetailPage from "./pages/CafeDetailPage";
+import ReservationManagement from "./business/ReservationManagement";
 
 export default function App() {
   return (
@@ -26,6 +27,7 @@ export default function App() {
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/cafe/:id" element={<CafeDetailPage />} />
+        <Route path="/reservation-management" element={<ReservationManagement />} />
       </Routes>
       <Footer />
     </div>
