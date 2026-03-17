@@ -1,8 +1,6 @@
 // This file contains constants that are used across the application.
 
 const NAV_LINKS = [
-  { label: "Find a café", to: "/find-a-cafe" },
-  { label: "Find a game", to: "/find-a-game" },
   { label: "How it works", to: "/how-it-works" },
   { label: "For café owners", to: "/for-cafe-owners" },
 ];

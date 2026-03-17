@@ -34,7 +34,7 @@ export function FeaturedCafes({ city, limit = 6 }: FeaturedCafesProps) {
 
   return (
     <section className="max-w-7xl mx-auto px-4 sm:px-7 py-10">
-      <h2 className="text-xl font-bold text-gray-900 mb-1">Featured cafés</h2>
+      <h2 className="text-2xl font-bold text-gray-800 mb-1">Featured cafés</h2>
       <div className="w-20 h-1 bg-warm-400 mb-6 rounded-full" />
 
       {error && (

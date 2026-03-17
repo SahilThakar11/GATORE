@@ -10,9 +10,13 @@ import {
   Coffee,
   ParkingCircle,
   Clock,
+  Users,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { useCafes, type CafeSummary, formatMinutes } from "../hooks/useCafe";
+import { Dropdown } from "../components/ui/Dropdown";
+import { PrimaryButton } from "../components/ui/PrimaryButton";
+import { Input } from "../components/ui/Input";
 
 // ─── Amenity icon map ─────────────────────────────────────────────────────────
 // Our DB doesn't have structured amenities yet — derive simple labels from
@@ -25,6 +29,16 @@ const AMENITY_ICONS: Record<string, any> = {
   Snacks: Coffee,
   Parking: ParkingCircle,
 };
+
+const TIME_OPTIONS = [
+  "5:00 PM", "5:30 PM", "6:00 PM", "6:30 PM",
+  "7:00 PM", "7:30 PM", "8:00 PM", "8:30 PM",
+];
+
+const PLAYER_OPTIONS = [
+  "1 player", "2 players", "3 players", "4 players",
+  "5 players", "6 players", "7 players",
+];
 
 function useDebounce(value: string, delay: number) {
   const [debounced, setDebounced] = useState(value);
@@ -81,11 +95,7 @@ function CafeCard({ cafe }: { cafe: CafeSummary }) {
       {/* Logo */}
       <div className="w-30 h-30 rounded-xl overflow-hidden bg-gray-100 border border-gray-100 shrink-0">
         {cafe.logoUrl ? (
-          <img
-            src={cafe.logoUrl}
-            alt={cafe.name}
-            className="w-full h-full object-cover"
-          />
+          <img src={cafe.logoUrl} alt={cafe.name} className="w-full h-full object-cover" />
         ) : (
           <div className="w-full h-full bg-teal-700 flex items-center justify-center text-white font-black text-2xl">
             {cafe.name[0]}
@@ -115,15 +125,11 @@ function CafeCard({ cafe }: { cafe: CafeSummary }) {
         <div className="flex items-center flex-wrap gap-x-4 gap-y-1.5 mt-2.5">
           <div className="flex items-center gap-1 text-gray-400">
             <MapPin size={12} />
-            <span className="text-xs">
-              {cafe.address}, {cafe.city}
-            </span>
+            <span className="text-xs">{cafe.address}, {cafe.city}</span>
           </div>
           <div className="flex items-center gap-1">
             <Star size={12} className="text-amber-400 fill-amber-400" />
-            <span className="text-xs font-bold text-gray-700">
-              {Number(cafe.rating).toFixed(1)}
-            </span>
+            <span className="text-xs font-bold text-gray-700">{Number(cafe.rating).toFixed(1)}</span>
             <span className="text-xs text-gray-400">({cafe.reviewCount})</span>
           </div>
         </div>
@@ -144,10 +150,16 @@ function CafeCard({ cafe }: { cafe: CafeSummary }) {
 const PAGE_SIZE = 6;
 
 export default function FindCafePage() {
-  const [inputValue, setInputValue] = useState("");
+  const [searchParams] = useSearchParams();
+  const initialQuery = searchParams.get("q") ?? "";
+
+  const [inputValue, setInputValue] = useState(initialQuery);
   const [activeCity, setActiveCity] = useState("All");
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [date, setDate] = useState("");
+  const [time, setTime] = useState("6:00 PM");
+  const [players, setPlayers] = useState("4 players");
+
   const debouncedQuery = useDebounce(inputValue, 300);
 
   // Fetch all cafés — no city param so we get everything, then filter client-side
@@ -188,78 +200,120 @@ export default function FindCafePage() {
 
   return (
     <div className="bg-[#faf8f4] min-h-screen">
-      <div className="max-w-4xl mx-auto px-7 py-10">
-        <div className="mb-6">
-          <h1 className="text-3xl font-black text-gray-900">Find a café</h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Discover board game cafés near you and book your table
-          </p>
-        </div>
 
-        {/* Search */}
-        <div
-          className={`flex items-center gap-3 bg-white border rounded-xl px-4 py-3.5 shadow-sm mb-5 transition-all ${
-            inputValue
-              ? "border-teal-400 ring-2 ring-teal-100"
-              : "border-gray-200"
-          }`}
-        >
-          <Search size={17} className="text-gray-400 shrink-0" />
-          <input
-            ref={inputRef}
-            type="text"
-            placeholder="Search by café name or city..."
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            className="flex-1 text-sm text-gray-700 placeholder-gray-400 outline-none bg-transparent"
-          />
-          {inputValue && (
-            <button
-              onClick={() => setInputValue("")}
-              className="text-gray-400 hover:text-gray-600"
-            >
-              <X size={16} />
-            </button>
-          )}
-        </div>
+      {/* ── Heading ───────────────────────────────────────────────────────── */}
+      <div className="max-w-4xl mx-auto px-7 pt-10 pb-6">
+        <h1 className="text-3xl font-black text-gray-900">Find a café</h1>
+        <p className="text-sm text-gray-500 mt-1">
+          Discover board game cafés near you and book your table
+        </p>
+      </div>
 
-        {/* City filter pills */}
-        <div className="flex gap-2 flex-wrap mb-5">
-          {allCities.map((city) => (
-            <button
-              key={city}
-              onClick={() => setActiveCity(city)}
-              className={`flex items-center gap-1.5 text-xs font-semibold px-3.5 py-1.5 rounded-full border transition-all ${
-                activeCity === city
-                  ? "bg-teal-600 border-teal-600 text-white"
-                  : "bg-white border-gray-200 text-gray-600 hover:border-teal-300 hover:text-teal-600"
-              }`}
-            >
-              {city !== "All" && <MapPin size={11} />}
-              {city}
-            </button>
-          ))}
+      {/* ── Sticky filter bar ─────────────────────────────────────────────── */}
+      <div className="sticky top-[104px] z-40 w-full bg-[#faf8f4] border-b border-warm-200 shadow-sm">
+        <div className="max-w-4xl mx-auto px-4 sm:px-7 py-4 flex flex-col gap-3">
+
+          {/* Row 1 — Search */}
+          <div
+            className={`flex items-center gap-2 bg-white border px-4 py-3 transition-all ${
+              inputValue ? "border-teal-400 ring-2 ring-teal-100" : "border-warm-300"
+            }`}
+            style={{ borderRadius: 8 }}
+          >
+            <Search size={17} className="text-gray-400 shrink-0" />
+            <input
+              type="text"
+              placeholder="Search by café name or city..."
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              className="flex-1 text-sm text-gray-700 placeholder-gray-400 outline-none bg-transparent"
+              style={{ fontFamily: "'DM Sans', sans-serif" }}
+            />
+            {inputValue && (
+              <button onClick={() => setInputValue("")} className="text-gray-400 hover:text-gray-600">
+                <X size={16} />
+              </button>
+            )}
+          </div>
+
+          {/* Row 2 — Date / Time / Players / CTA */}
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+            {/* Date */}
+            <div className="sm:flex-1">
+              <Input
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                min={new Date().toISOString().split("T")[0]}
+                className="bg-white border-warm-300 focus:ring-teal-500 cursor-pointer"
+              />
+            </div>
+
+            {/* Time */}
+            <div className="sm:flex-1 w-full shadow-[0px_4px_4px_0px_rgba(186,186,186,0.15)]">
+              <Dropdown
+                trigger="label"
+                triggerIcon={<Clock size={16} />}
+                triggerLabel={time}
+                fullWidth
+                items={TIME_OPTIONS.map((opt) => ({ label: opt, onClick: () => setTime(opt) }))}
+              />
+            </div>
+
+            {/* Players */}
+            <div className="sm:flex-1 w-full shadow-[0px_4px_4px_0px_rgba(186,186,186,0.15)]">
+              <Dropdown
+                trigger="label"
+                triggerIcon={<Users size={16} />}
+                triggerLabel={players}
+                fullWidth
+                items={PLAYER_OPTIONS.map((opt) => ({ label: opt, onClick: () => setPlayers(opt) }))}
+              />
+            </div>
+
+            {/* CTA */}
+            <PrimaryButton label="Find tables" onClick={() => {}} size="sm" />
+          </div>
+
+          {/* Divider — or browse by city */}
+          <div className="flex items-center gap-3">
+            <div className="flex-1 h-px bg-warm-300" />
+            <span className="text-xs text-gray-400">or browse by city</span>
+            <div className="flex-1 h-px bg-warm-300" />
+          </div>
+
+          {/* City filter pills */}
+          <div className="flex gap-2 flex-wrap">
+            {allCities.map((city) => (
+              <button
+                key={city}
+                onClick={() => setActiveCity(city)}
+                className={`flex items-center gap-1.5 text-xs font-semibold px-3.5 py-1.5 rounded-full border transition-all ${
+                  activeCity === city
+                    ? "bg-teal-600 border-teal-600 text-white"
+                    : "bg-white border-gray-200 text-gray-600 hover:border-teal-300 hover:text-teal-600"
+                }`}
+              >
+                {city !== "All" && <MapPin size={11} />}
+                {city}
+              </button>
+            ))}
+          </div>
         </div>
+      </div>
+
+      {/* ── Results ───────────────────────────────────────────────────────── */}
+      <div className="max-w-4xl mx-auto px-7 py-6">
 
         {/* Results count */}
         {!loading && (
           <p className="text-xs text-gray-400 mb-4">
             {filtered.length} café{filtered.length !== 1 ? "s" : ""} found
             {activeCity !== "All" && (
-              <>
-                {" "}
-                ·{" "}
-                <span className="text-teal-600 font-medium">{activeCity}</span>
-              </>
+              <> · <span className="text-teal-600 font-medium">{activeCity}</span></>
             )}
             {debouncedQuery && (
-              <>
-                {" "}
-                · matching{" "}
-                <span className="text-gray-600 font-medium">
-                  "{debouncedQuery}"
-                </span>
-              </>
+              <> · matching <span className="text-gray-600 font-medium">"{debouncedQuery}"</span></>
             )}
           </p>
         )}
@@ -315,17 +369,10 @@ export default function FindCafePage() {
             ) : (
               <div className="text-center py-16 text-gray-400">
                 <Search size={32} className="mx-auto mb-3 opacity-30" />
-                <p className="text-sm font-semibold text-gray-500">
-                  No cafés found
-                </p>
-                <p className="text-xs mt-1">
-                  Try a different search or clear the filters
-                </p>
+                <p className="text-sm font-semibold text-gray-500">No cafés found</p>
+                <p className="text-xs mt-1">Try a different search or clear the filters</p>
                 <button
-                  onClick={() => {
-                    setInputValue("");
-                    setActiveCity("All");
-                  }}
+                  onClick={() => { setInputValue(""); setActiveCity("All"); }}
                   className="mt-4 text-xs text-teal-600 font-medium hover:underline"
                 >
                   Clear filters
