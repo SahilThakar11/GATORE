@@ -19,7 +19,7 @@ const FOOTER_LINKS = {
 export default function Footer() {
   return (
     <footer className="bg-[#1C1917] text-white">
-      <div className="max-w-7xl mx-auto px-7 py-14">
+      <div className="max-w-7xl mx-auto px-4 sm:px-7 py-14">
         {/* Top — logo + columns */}
         <div className="flex flex-col items-center gap-10">
           {/* Logo + tagline */}
@@ -41,10 +41,46 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Link columns */}
-          <div className="flex gap-20">
+          {/* Link columns — mobile: centered, grouped */}
+          <div className="flex justify-center gap-16 sm:hidden">
+            <div className="flex flex-col gap-8">
+              {(["For Businesses", "Company"] as const).map((section) => (
+                <div key={section} className="flex flex-col items-start gap-3">
+                  <p className="text-sm font-semibold text-teal-400 tracking-wide">
+                    {section}
+                  </p>
+                  {FOOTER_LINKS[section].map((link) => (
+                    <Link
+                      key={link.to}
+                      to={link.to}
+                      className="text-sm text-neutral-300 hover:text-white transition-colors duration-150"
+                    >
+                      {link.label}
+                    </Link>
+                  ))}
+                </div>
+              ))}
+            </div>
+            <div className="flex flex-col items-start gap-3">
+              <p className="text-sm font-semibold text-teal-400 tracking-wide">
+                Discover
+              </p>
+              {FOOTER_LINKS["Discover"].map((link) => (
+                <Link
+                  key={link.to}
+                  to={link.to}
+                  className="text-sm text-neutral-300 hover:text-white transition-colors duration-150"
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          {/* Link columns — tablet/desktop: flat row, left-aligned */}
+          <div className="hidden sm:flex gap-x-20">
             {Object.entries(FOOTER_LINKS).map(([section, links]) => (
-              <div key={section} className="flex flex-col gap-3">
+              <div key={section} className="flex flex-col items-start gap-3">
                 <p className="text-sm font-semibold text-teal-400 tracking-wide">
                   {section}
                 </p>

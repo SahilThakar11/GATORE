@@ -7,7 +7,7 @@ import { ReadyToRoll } from "../components/home/ReadyToRoll";
 
 const Home = () => {
   return (
-    <div className="bg-[#faf8f4]">
+    <div className="bg-[#FFFBF7]">
       <HeroSection />
       <FilterBar />
       <FeaturedCafes city="Toronto" limit={6} />

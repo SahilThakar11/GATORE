@@ -2,7 +2,7 @@ import { Search } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Input } from "../ui/Input";
-import { Button } from "../ui/Button";
+import { PrimaryButton } from "../ui/PrimaryButton";
 
 export function HeroSection() {
   const [query, setQuery] = useState("");
@@ -34,7 +34,7 @@ export function HeroSection() {
         </p>
 
         {/* Search box */}
-        <div className="lg:w-175 bg-white rounded-xl overflow-hidden mt-2 shadow-lg">
+        <div className="w-full lg:w-175 bg-white rounded-xl overflow-hidden mt-2 shadow-lg">
           <div className="flex flex-col gap-2.5 p-4.5">
             <Input
               type="text"
@@ -45,14 +45,11 @@ export function HeroSection() {
               onKeyDown={(e) => e.key === "Enter" && handleSearch()}
               className="w-full"
             />
-            <Button
+            <PrimaryButton
+              label="Search"
               onClick={handleSearch}
-              variant="primary"
-              className="w-full"
               size="md"
-            >
-              Search
-            </Button>
+            />
           </div>
         </div>
       </div>

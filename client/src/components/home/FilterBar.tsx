@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Calendar, Clock, Users, ChevronDown } from "lucide-react";
 import { Input } from "../ui/Input";
-import { Button } from "../ui/Button";
+import { PrimaryButton } from "../ui/PrimaryButton";
 
 const TIME_OPTIONS = [
   "5:00 PM",
@@ -75,37 +75,42 @@ export function FilterBar({ onSearch }: FilterBarProps) {
 
   return (
     <div className="w-full bg-warm-100 border-b border-warm-300 shadow-sm">
-      <div className="max-w-7xl mx-auto px-7 py-4">
-        <div className="flex items-center gap-3">
-          {/* Date — display only for now */}
-          <Input
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            min={new Date().toISOString().split("T")[0]}
-            className="bg-white shadow-[0px_4px_4px_0px_rgba(186,186,186,0.15)] border-warm-300 focus:ring-teal-500 cursor-pointer"
-          />
+      <div className="max-w-7xl mx-auto px-4 sm:px-7 py-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          {/* Inputs row */}
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+            {/* Date */}
+            <Input
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              min={new Date().toISOString().split("T")[0]}
+              className="bg-white shadow-[0px_4px_4px_0px_rgba(186,186,186,0.15)] border-warm-300 focus:ring-teal-500 cursor-pointer"
+            />
 
-          {/* Time */}
-          <FilterSelect
-            icon={<Clock size={16} />}
-            value={time}
-            options={TIME_OPTIONS}
-            onChange={setTime}
-          />
+            {/* Time */}
+            <FilterSelect
+              icon={<Clock size={16} />}
+              value={time}
+              options={TIME_OPTIONS}
+              onChange={setTime}
+            />
 
-          {/* Players */}
-          <FilterSelect
-            icon={<Users size={16} />}
-            value={players}
-            options={PLAYER_OPTIONS}
-            onChange={setPlayers}
-          />
+            {/* Players */}
+            <FilterSelect
+              icon={<Users size={16} />}
+              value={players}
+              options={PLAYER_OPTIONS}
+              onChange={setPlayers}
+            />
+          </div>
 
           {/* CTA */}
-          <Button onClick={() => onSearch?.({ date, time, players })}>
-            Find tables
-          </Button>
+          <PrimaryButton
+            label="Find tables"
+            onClick={() => onSearch?.({ date, time, players })}
+            size="sm"
+          />
         </div>
       </div>
     </div>
