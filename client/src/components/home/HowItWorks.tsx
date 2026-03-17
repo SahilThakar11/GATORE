@@ -1,6 +1,6 @@
 import { Search, Calendar, Play, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "../ui/Button";
+import { PrimaryButton } from "../ui/PrimaryButton";
 
 const STEPS = [
   {
@@ -24,22 +24,22 @@ export function HowItWorks() {
   const navigate = useNavigate();
 
   return (
-    <section className="max-w-7xl mx-auto px-7 py-14">
-      <div className="flex items-center gap-12">
+    <section className="max-w-7xl mx-auto px-4 sm:px-7 py-14">
+      <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12">
         {/* Left — image */}
-        <div className=" shrink-0 rounded-2xl overflow-hidden shadow-md">
+        <div className="w-full md:w-auto md:shrink-0 md:max-w-[50%] rounded-2xl overflow-hidden shadow-md">
           <img
             src="/images/home_game_simplified.png"
             alt="People playing board games"
-            className="w-135.5 h-98.25"
+            className="w-full md:w-135.5 md:h-98.25 object-cover"
           />
         </div>
 
         {/* Right — content */}
         <div className="flex flex-col gap-6 flex-1">
           <div>
-            <h2 className="text-3xl font-bold text-neutral-900 leading-tight">
-              Your Game Night, <br></br>
+            <h2 className="text-2xl sm:text-3xl font-bold text-neutral-900 leading-tight">
+              Your Game Night, <br />
               <span className="text-teal-500">Simplified</span>
             </h2>
           </div>
@@ -48,7 +48,7 @@ export function HowItWorks() {
           <div className="flex flex-col gap-5">
             {STEPS.map(({ number, icon: Icon, label }) => (
               <div key={number} className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full  bg-teal-100 flex items-center justify-center">
+                <div className="w-12 h-12 shrink-0 rounded-full bg-teal-100 flex items-center justify-center">
                   <Icon size={16} className="text-teal-600" />
                 </div>
 
@@ -65,13 +65,12 @@ export function HowItWorks() {
           </div>
 
           {/* CTA */}
-          <Button
+          <PrimaryButton
+            label="Get Started"
             onClick={() => navigate("/find-a-cafe")}
-            className="self-start flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-semibold px-6 py-3 rounded-lg transition-colors duration-150"
-          >
-            Get Started
-            <ArrowRight size={16} />
-          </Button>
+            size="md"
+            rightIcon={<ArrowRight size={16} />}
+          />
         </div>
       </div>
     </section>
