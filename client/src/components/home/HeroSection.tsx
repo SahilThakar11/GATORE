@@ -43,13 +43,9 @@ export function HeroSection() {
               leftIcon={<Search size={18} className="text-gray-400" />}
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-              className="w-full"
+              className="w-full bg-warm-50"
             />
-            <PrimaryButton
-              label="Search"
-              onClick={handleSearch}
-              size="md"
-            />
+            <PrimaryButton label="Search" onClick={handleSearch} size="md" />
           </div>
         </div>
       </div>

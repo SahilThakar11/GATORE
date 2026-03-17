@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Calendar, Clock, Users, ChevronDown } from "lucide-react";
+import { Clock, Users } from "lucide-react";
 import { Input } from "../ui/Input";
 import { PrimaryButton } from "../ui/PrimaryButton";
+import { Dropdown } from "../ui/Dropdown";
 
 const TIME_OPTIONS = [
   "5:00 PM",
@@ -32,33 +33,25 @@ function formatDate(date: Date) {
   });
 }
 
-interface SelectProps {
+function FilterDropdown({
+  icon,
+  value,
+  options,
+  onChange,
+}: {
   icon: React.ReactNode;
   value: string;
   options: string[];
   onChange: (val: string) => void;
-}
-
-function FilterSelect({ icon, value, options, onChange }: SelectProps) {
+}) {
   return (
-    <div className="relative flex-1 shadow-[0px_4px_4px_0px_rgba(186,186,186,0.15)]">
-      <div className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-800 pointer-events-none">
-        {icon}
-      </div>
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full appearance-none pl-9 pr-8 py-3 text-sm text-neutral-800 bg-white border border-warm-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer"
-      >
-        {options.map((opt) => (
-          <option key={opt} value={opt}>
-            {opt}
-          </option>
-        ))}
-      </select>
-      <ChevronDown
-        size={15}
-        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+    <div className="w-full shadow-[0px_4px_4px_0px_rgba(186,186,186,0.15)]">
+      <Dropdown
+        trigger="label"
+        triggerIcon={icon}
+        triggerLabel={value}
+        fullWidth
+        items={options.map((opt) => ({ label: opt, onClick: () => onChange(opt) }))}
       />
     </div>
   );
@@ -76,33 +69,39 @@ export function FilterBar({ onSearch }: FilterBarProps) {
   return (
     <div className="w-full bg-warm-100 border-b border-warm-300 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-7 py-4">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          {/* Inputs row */}
-          <div className="flex items-center gap-3 flex-1 min-w-0">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          {/* Inputs — 2-col on mobile, inline on sm+ */}
+          <div className="grid grid-cols-2 sm:flex sm:flex-1 gap-3">
             {/* Date */}
-            <Input
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              min={new Date().toISOString().split("T")[0]}
-              className="bg-white shadow-[0px_4px_4px_0px_rgba(186,186,186,0.15)] border-warm-300 focus:ring-teal-500 cursor-pointer"
-            />
+            <div className="sm:flex-1">
+              <Input
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                min={new Date().toISOString().split("T")[0]}
+                className="bg-white shadow-[0px_4px_4px_0px_rgba(186,186,186,0.15)] border-warm-300 focus:ring-teal-500 cursor-pointer"
+              />
+            </div>
 
             {/* Time */}
-            <FilterSelect
-              icon={<Clock size={16} />}
-              value={time}
-              options={TIME_OPTIONS}
-              onChange={setTime}
-            />
+            <div className="sm:flex-1">
+              <FilterDropdown
+                icon={<Clock size={16} />}
+                value={time}
+                options={TIME_OPTIONS}
+                onChange={setTime}
+              />
+            </div>
 
-            {/* Players */}
-            <FilterSelect
-              icon={<Users size={16} />}
-              value={players}
-              options={PLAYER_OPTIONS}
-              onChange={setPlayers}
-            />
+            {/* Players — spans full width on mobile, normal on sm+ */}
+            <div className="col-span-2 sm:col-span-1 sm:flex-1">
+              <FilterDropdown
+                icon={<Users size={16} />}
+                value={players}
+                options={PLAYER_OPTIONS}
+                onChange={setPlayers}
+              />
+            </div>
           </div>
 
           {/* CTA */}
