@@ -14,6 +14,7 @@ export function HeroSection() {
 
   return (
     <section
+      aria-label="Find a café"
       className="relative w-full py-16 px-7 flex flex-col items-center justify-center text-center"
       style={{
         backgroundImage: "url('/images/hero_wood_texture.png')",
@@ -39,6 +40,7 @@ export function HeroSection() {
             <Input
               type="text"
               placeholder="City or café name"
+              aria-label="Search by city or café name"
               value={query}
               leftIcon={<Search size={18} className="text-gray-400" />}
               onChange={(e) => setQuery(e.target.value)}

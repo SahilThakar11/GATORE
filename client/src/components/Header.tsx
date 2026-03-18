@@ -8,6 +8,8 @@ import {
   X,
   UserPlus,
   Building2,
+  Search,
+  Dices,
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { NAV_LINKS } from "../utils/const";
@@ -394,27 +396,33 @@ function FindCafeDropdown() {
       </button>
 
       {open && (
-        <div className="absolute left-0 mt-2 w-40 bg-white border border-gray-200 rounded-xl shadow-lg py-1.5 z-50">
+        <div className="absolute left-0 mt-2 w-40 bg-white rounded-lg shadow-lg py-1 z-50" style={{ border: "1px solid #E8D4C4" }}>
           <Link
             to="/find-a-cafe"
             onClick={() => setOpen(false)}
-            className={`block px-4 py-2.5 text-sm transition-colors hover:bg-teal-50 hover:text-teal-700 ${
+            className={`flex items-center gap-2.5 px-4 py-2.5 text-sm transition-colors hover:bg-teal-50 hover:text-teal-700 ${
               location.pathname === "/find-a-cafe"
                 ? "text-teal-600 font-medium"
                 : "text-neutral-700"
             }`}
           >
+            <span style={{ color: "#57534E", flexShrink: 0, display: "flex" }}>
+              <Search size={16} />
+            </span>
             By name
           </Link>
           <Link
             to="/find-a-game"
             onClick={() => setOpen(false)}
-            className={`block px-4 py-2.5 text-sm transition-colors hover:bg-teal-50 hover:text-teal-700 ${
+            className={`flex items-center gap-2.5 px-4 py-2.5 text-sm transition-colors hover:bg-teal-50 hover:text-teal-700 ${
               location.pathname === "/find-a-game"
                 ? "text-teal-600 font-medium"
                 : "text-neutral-700"
             }`}
           >
+            <span style={{ color: "#57534E", flexShrink: 0, display: "flex" }}>
+              <Dices size={16} />
+            </span>
             By game
           </Link>
         </div>

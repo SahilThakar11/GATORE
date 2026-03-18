@@ -24,7 +24,7 @@ export function HowItWorks() {
   const navigate = useNavigate();
 
   return (
-    <section className="max-w-7xl mx-auto px-4 sm:px-7 py-14">
+    <section aria-labelledby="how-it-works-heading" className="max-w-7xl mx-auto px-4 sm:px-7 py-14">
       <div className="flex flex-col md:flex-row items-center gap-8 md:gap-12">
         {/* Left — image */}
         <div className="w-full md:w-auto md:shrink-0 md:max-w-[50%] rounded-2xl overflow-hidden shadow-md">
@@ -38,7 +38,7 @@ export function HowItWorks() {
         {/* Right — content */}
         <div className="flex flex-col gap-6 flex-1">
           <div>
-            <h2 className="text-2xl sm:text-3xl font-bold text-neutral-900 leading-tight">
+            <h2 id="how-it-works-heading" className="text-2xl sm:text-3xl font-bold text-neutral-900 leading-tight">
               Your Game Night, <br />
               <span className="text-teal-500">Simplified</span>
             </h2>
@@ -49,7 +49,7 @@ export function HowItWorks() {
             {STEPS.map(({ number, icon: Icon, label }) => (
               <div key={number} className="flex items-center gap-4">
                 <div className="w-12 h-12 shrink-0 rounded-full bg-teal-100 flex items-center justify-center">
-                  <Icon size={16} className="text-teal-600" />
+                  <Icon aria-hidden="true" size={16} className="text-teal-600" />
                 </div>
 
                 <div className="flex flex-col items-start">
