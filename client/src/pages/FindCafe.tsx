@@ -18,6 +18,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { useCafes, type CafeSummary, formatMinutes } from "../hooks/useCafe";
 import { Dropdown } from "../components/ui/Dropdown";
 import { PrimaryButton } from "../components/ui/PrimaryButton";
+import { SecondaryButton } from "../components/ui/SecondaryButton";
 import { TertiaryButton } from "../components/ui/TertiaryButton";
 import { Input } from "../components/ui/Input";
 
@@ -479,12 +480,12 @@ export default function FindCafePage() {
                     <p className="text-xs text-gray-600">
                       Showing {visible.length} of {filtered.length} cafés
                     </p>
-                    <button
+                    <SecondaryButton
+                      label="Load more cafés"
                       onClick={() => setVisibleCount((n) => n + PAGE_SIZE)}
-                      className="flex items-center gap-2 border border-gray-200 bg-white hover:border-teal-400 hover:text-teal-700 text-sm font-semibold text-gray-600 px-6 py-2.5 rounded-lg transition-all"
-                    >
-                      <ChevronDown size={15} /> Load more cafés
-                    </button>
+                      size="small"
+                      rightIcon={<ChevronDown size={15} />}
+                    />
                   </div>
                 )}
 
