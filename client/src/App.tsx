@@ -1,4 +1,11 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { useEffect } from "react";
+
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
+  return null;
+}
 import Header from "./components/Header";
 import Home from "./pages/Home";
 import FindCafe from "./pages/FindCafe";
@@ -42,6 +49,7 @@ export default function App() {
               <Navigate to="/dashboard" replace />
             ) : (
               <>
+                <ScrollToTop />
                 <Header />
                 <Routes>
                   <Route path="/" element={<Home />} />
