@@ -34,13 +34,24 @@ const AMENITY_ICONS: Record<string, any> = {
 };
 
 const TIME_OPTIONS = [
-  "5:00 PM", "5:30 PM", "6:00 PM", "6:30 PM",
-  "7:00 PM", "7:30 PM", "8:00 PM", "8:30 PM",
+  "5:00 PM",
+  "5:30 PM",
+  "6:00 PM",
+  "6:30 PM",
+  "7:00 PM",
+  "7:30 PM",
+  "8:00 PM",
+  "8:30 PM",
 ];
 
 const PLAYER_OPTIONS = [
-  "1 player", "2 players", "3 players", "4 players",
-  "5 players", "6 players", "7 players",
+  "1 player",
+  "2 players",
+  "3 players",
+  "4 players",
+  "5 players",
+  "6 players",
+  "7 players",
 ];
 
 function useDebounce(value: string, delay: number) {
@@ -56,8 +67,13 @@ function useDebounce(value: string, delay: number) {
 function CafeCardSkeleton() {
   return (
     <div
+      role="status"
+      aria-label="Loading café"
       className="bg-warm-100 rounded-[8px] animate-pulse"
-      style={{ padding: "24px 28px", boxShadow: "0px 2px 8px 0px rgba(0,0,0,0.08)" }}
+      style={{
+        padding: "24px 28px",
+        boxShadow: "0px 2px 8px 0px rgba(0,0,0,0.08)",
+      }}
     >
       <div className="flex gap-4">
         <div className="w-[120px] h-[120px] rounded-[8px] bg-gray-100 shrink-0" />
@@ -110,7 +126,8 @@ function CafeCard({ cafe }: { cafe: CafeSummary }) {
       <div
         className="absolute inset-x-0 top-0 h-56 rounded-t-[8px] pointer-events-none transition-opacity duration-200"
         style={{
-          background: "linear-gradient(to bottom, rgba(20,184,166,0.10), transparent)",
+          background:
+            "linear-gradient(to bottom, rgba(20,184,166,0.10), transparent)",
           opacity: hovered ? 1 : 0,
         }}
       />
@@ -120,13 +137,22 @@ function CafeCard({ cafe }: { cafe: CafeSummary }) {
         <div
           className="w-[110px] h-[110px] sm:w-[120px] sm:h-[120px] shrink-0 rounded-[8px] overflow-hidden bg-gray-100"
           style={{
-            boxShadow: "0px 4px 6px -1px rgba(0,0,0,0.10), 0px 2px 4px -2px rgba(0,0,0,0.10)",
+            boxShadow:
+              "0px 4px 6px -1px rgba(0,0,0,0.10), 0px 2px 4px -2px rgba(0,0,0,0.10)",
           }}
         >
           {cafe.logoUrl ? (
-            <img src={cafe.logoUrl} alt={cafe.name} className="w-full h-full object-cover" />
+            <img
+              src={cafe.logoUrl}
+              alt={cafe.name}
+              className="w-full h-full object-cover"
+            />
           ) : (
-            <div className="w-full h-full bg-teal-700 flex items-center justify-center text-white font-bold text-xl">
+            <div
+              role="img"
+              aria-label={`${cafe.name} logo placeholder`}
+              className="w-full h-full bg-teal-700 flex items-center justify-center text-white font-bold text-xl"
+            >
               {cafe.name[0]}
             </div>
           )}
@@ -134,36 +160,64 @@ function CafeCard({ cafe }: { cafe: CafeSummary }) {
 
         {/* Details */}
         <div className="flex flex-col gap-1.5 min-w-0">
-          <p className="text-base font-semibold truncate" style={{ color: "#292524" }}>{cafe.name}</p>
+          <p
+            className="text-base font-semibold truncate"
+            style={{ color: "#292524" }}
+          >
+            {cafe.name}
+          </p>
 
           <div className="flex items-center gap-1">
-            <MapPin size={13} style={{ color: "#57534E", flexShrink: 0 }} />
-            <span className="text-sm truncate" style={{ color: "#57534E", fontWeight: 400 }}>
+            <MapPin aria-hidden="true" size={13} style={{ color: "#57534E", flexShrink: 0 }} />
+            <span
+              className="text-sm truncate"
+              style={{ color: "#57534E", fontWeight: 400 }}
+            >
               {cafe.address}, {cafe.city}
             </span>
           </div>
 
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-1">
-              <Star size={13} style={{ color: "#F59E0B", fill: "#F59E0B", flexShrink: 0 }} />
-              <span className="text-sm" style={{ color: "#292524", fontWeight: 600 }}>
+              <Star
+                aria-hidden="true"
+                size={13}
+                style={{ color: "#F59E0B", fill: "#F59E0B", flexShrink: 0 }}
+              />
+              <span
+                className="text-sm"
+                style={{ color: "#292524", fontWeight: 600 }}
+              >
                 {Number(cafe.rating).toFixed(1)}
               </span>
-              <span className="text-sm" style={{ color: "#78716C", fontWeight: 400 }}>
+              <span
+                className="text-sm"
+                style={{ color: "#78716C", fontWeight: 400 }}
+              >
                 ({cafe.reviewCount})
               </span>
             </div>
             <span
               className="text-xs rounded-full"
-              style={{ backgroundColor: "#E8D4C4", color: "#292524", fontWeight: 500, padding: "4px 10px" }}
+              style={{
+                backgroundColor: "#E8D4C4",
+                color: "#292524",
+                fontWeight: 500,
+                padding: "4px 10px",
+              }}
             >
               {cafe._count.restaurantGames} games
             </span>
           </div>
 
           <div className="flex items-center gap-1">
-            <Clock size={13} style={{ color: "#57534E", flexShrink: 0 }} />
-            <span className="text-sm" style={{ color: "#57534E", fontWeight: 400 }}>{hoursLabel}</span>
+            <Clock aria-hidden="true" size={13} style={{ color: "#57534E", flexShrink: 0 }} />
+            <span
+              className="text-sm"
+              style={{ color: "#57534E", fontWeight: 400 }}
+            >
+              {hoursLabel}
+            </span>
           </div>
         </div>
       </div>
@@ -227,7 +281,6 @@ export default function FindCafePage() {
 
   return (
     <div className="bg-[#faf8f4] min-h-screen">
-
       {/* ── Heading ───────────────────────────────────────────────────────── */}
       <div className="max-w-4xl mx-auto px-4 sm:px-7 pt-10 pb-6">
         <h1 className="text-3xl font-black text-gray-900">Find a café</h1>
@@ -239,7 +292,6 @@ export default function FindCafePage() {
       {/* ── Filter bar — scrolls on mobile, sticky on desktop ────────────── */}
       <div className="sm:sticky sm:top-[104px] sm:z-40 w-full bg-[#faf8f4] border-b border-warm-200 shadow-sm">
         <div className="max-w-4xl mx-auto px-4 sm:px-7 py-4 flex flex-col gap-3">
-
           {/* Row 1 — Search */}
           <div
             className={`flex items-center gap-2 bg-white border px-4 py-3 transition-all ${
@@ -260,11 +312,16 @@ export default function FindCafePage() {
               onChange={(e) => setInputValue(e.target.value)}
               onFocus={() => setSearchFocused(true)}
               onBlur={() => setSearchFocused(false)}
-              className="flex-1 text-sm text-gray-700 placeholder-gray-400 outline-none bg-transparent"
+              aria-label="Search cafés by name or city"
+              className="flex-1 text-base text-gray-700 placeholder-gray-400 outline-none bg-transparent"
               style={{ fontFamily: "'DM Sans', sans-serif" }}
             />
             {inputValue && (
-              <button onClick={() => setInputValue("")} className="text-gray-400 hover:text-gray-600">
+              <button
+                onClick={() => setInputValue("")}
+                aria-label="Clear search"
+                className="text-gray-400 hover:text-gray-600"
+              >
                 <X size={16} />
               </button>
             )}
@@ -282,6 +339,7 @@ export default function FindCafePage() {
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
                     min={new Date().toISOString().split("T")[0]}
+                    aria-label="Select date"
                     className="bg-white border-warm-300 focus:ring-teal-500 cursor-pointer"
                   />
                 </div>
@@ -294,7 +352,10 @@ export default function FindCafePage() {
                       triggerIcon={<Clock size={16} />}
                       triggerLabel={time}
                       fullWidth
-                      items={TIME_OPTIONS.map((opt) => ({ label: opt, onClick: () => setTime(opt) }))}
+                      items={TIME_OPTIONS.map((opt) => ({
+                        label: opt,
+                        onClick: () => setTime(opt),
+                      }))}
                     />
                   </div>
 
@@ -304,20 +365,27 @@ export default function FindCafePage() {
                       triggerIcon={<Users size={16} />}
                       triggerLabel={players}
                       fullWidth
-                      items={PLAYER_OPTIONS.map((opt) => ({ label: opt, onClick: () => setPlayers(opt) }))}
+                      items={PLAYER_OPTIONS.map((opt) => ({
+                        label: opt,
+                        onClick: () => setPlayers(opt),
+                      }))}
                     />
                   </div>
                 </div>
 
                 {/* CTA */}
-                <PrimaryButton label="Find tables" onClick={() => {}} size="sm" />
+                <PrimaryButton
+                  label="Find tables"
+                  onClick={() => {}}
+                  size="sm"
+                />
               </div>
 
               {/* Divider — or browse by city */}
               <div className="flex items-center gap-3">
-                <div className="flex-1 h-px bg-warm-300" />
-                <span className="text-xs text-gray-400">or browse by city</span>
-                <div className="flex-1 h-px bg-warm-300" />
+                <div className="flex-1 h-px bg-warm-400" />
+                <span className="text-xs text-gray-600">or browse by city</span>
+                <div className="flex-1 h-px bg-warm-400" />
               </div>
 
               {/* City filter pills */}
@@ -326,6 +394,7 @@ export default function FindCafePage() {
                   <button
                     key={city}
                     onClick={() => setActiveCity(city)}
+                    aria-pressed={activeCity === city}
                     className={`flex items-center gap-1.5 text-xs font-semibold px-3.5 py-1.5 rounded-full border transition-all ${
                       activeCity === city
                         ? "bg-teal-600 border-teal-600 text-white"
@@ -354,16 +423,25 @@ export default function FindCafePage() {
 
       {/* ── Results ───────────────────────────────────────────────────────── */}
       <div className="max-w-4xl mx-auto px-4 sm:px-7 py-6">
-
         {/* Results count */}
         {!loading && (
-          <p className="text-xs text-gray-400 mb-4">
+          <p className="text-xs text-gray-600 mb-4">
             {filtered.length} café{filtered.length !== 1 ? "s" : ""} found
             {activeCity !== "All" && (
-              <> · <span className="text-teal-600 font-medium">{activeCity}</span></>
+              <>
+                {" "}
+                ·{" "}
+                <span className="text-teal-600 font-medium">{activeCity}</span>
+              </>
             )}
             {debouncedQuery && (
-              <> · matching <span className="text-gray-600 font-medium">"{debouncedQuery}"</span></>
+              <>
+                {" "}
+                · matching{" "}
+                <span className="text-gray-600 font-medium">
+                  "{debouncedQuery}"
+                </span>
+              </>
             )}
           </p>
         )}
@@ -398,7 +476,7 @@ export default function FindCafePage() {
 
                 {hasMore && (
                   <div className="flex flex-col items-center gap-2 mt-8">
-                    <p className="text-xs text-gray-400">
+                    <p className="text-xs text-gray-600">
                       Showing {visible.length} of {filtered.length} cafés
                     </p>
                     <button
@@ -411,7 +489,7 @@ export default function FindCafePage() {
                 )}
 
                 {!hasMore && filtered.length > PAGE_SIZE && (
-                  <p className="text-center text-xs text-gray-400 mt-6">
+                  <p className="text-center text-xs text-gray-600 mt-6">
                     All {filtered.length} cafés shown
                   </p>
                 )}
@@ -419,10 +497,17 @@ export default function FindCafePage() {
             ) : (
               <div className="text-center py-16 text-gray-400">
                 <Search size={32} className="mx-auto mb-3 opacity-30" />
-                <p className="text-sm font-semibold text-gray-500">No cafés found</p>
-                <p className="text-xs mt-1">Try a different search or clear the filters</p>
+                <p className="text-sm font-semibold text-gray-500">
+                  No cafés found
+                </p>
+                <p className="text-xs mt-1">
+                  Try a different search or clear the filters
+                </p>
                 <button
-                  onClick={() => { setInputValue(""); setActiveCity("All"); }}
+                  onClick={() => {
+                    setInputValue("");
+                    setActiveCity("All");
+                  }}
                   className="mt-4 text-xs text-teal-600 font-medium hover:underline"
                 >
                   Clear filters
