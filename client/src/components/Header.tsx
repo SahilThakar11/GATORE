@@ -1,5 +1,14 @@
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
-import { ChevronDown, LogOut, User, CalendarDays, Menu, X, UserPlus, Building2 } from "lucide-react";
+import {
+  ChevronDown,
+  LogOut,
+  User,
+  CalendarDays,
+  Menu,
+  X,
+  UserPlus,
+  Building2,
+} from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { NAV_LINKS } from "../utils/const";
 import { AuthModal } from "./auth/AuthModal";
@@ -18,10 +27,14 @@ export default function Header() {
   return (
     <>
       <header className="w-full bg-teal-50 border-b border-teal-600 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-7 pb-4 pt-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-7 pt-2 pb-2 sm:pb-4 sm:pt-6">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
-            <Link to="/" className="flex items-center gap-5 shrink-0" onClick={closeMobile}>
+            <Link
+              to="/"
+              className="flex items-center gap-5 shrink-0"
+              onClick={closeMobile}
+            >
               <GatoreLogo />
               <span className="text-[18px] sm:text-[24px] font-bold tracking-wide text-teal-800 uppercase">
                 Gatore
@@ -138,7 +151,10 @@ export default function Header() {
                     Reservations
                   </Link>
                   <button
-                    onClick={() => { closeMobile(); auth.logout(); }}
+                    onClick={() => {
+                      closeMobile();
+                      auth.logout();
+                    }}
                     className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-[16px] text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
                   >
                     <LogOut size={17} />
@@ -148,13 +164,19 @@ export default function Header() {
               ) : (
                 <>
                   <button
-                    onClick={() => { closeMobile(); auth.open("signin"); }}
+                    onClick={() => {
+                      closeMobile();
+                      auth.open("signin");
+                    }}
                     className="w-full text-left px-3 py-2.5 rounded-lg text-[16px] font-normal text-neutral-600 hover:text-teal-600 hover:bg-teal-100 transition-colors cursor-pointer"
                   >
                     Sign in
                   </button>
                   <GetStartedDropdown
-                    onPersonal={() => { closeMobile(); auth.open("signup"); }}
+                    onPersonal={() => {
+                      closeMobile();
+                      auth.open("signup");
+                    }}
                   />
                 </>
               )}
@@ -177,8 +199,13 @@ function GetStartedDropdown({ onPersonal }: { onPersonal: () => void }) {
   const timeout = useRef<ReturnType<typeof setTimeout>>(undefined);
   const navigate = useNavigate();
 
-  const show = () => { clearTimeout(timeout.current); setOpen(true); };
-  const hide = () => { timeout.current = setTimeout(() => setOpen(false), 150); };
+  const show = () => {
+    clearTimeout(timeout.current);
+    setOpen(true);
+  };
+  const hide = () => {
+    timeout.current = setTimeout(() => setOpen(false), 150);
+  };
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -197,9 +224,13 @@ function GetStartedDropdown({ onPersonal }: { onPersonal: () => void }) {
       if (!focusable?.length) return;
       const els = Array.from(focusable);
       const idx = els.indexOf(document.activeElement as HTMLElement);
-      if (e.key === "ArrowDown") { e.preventDefault(); els[(idx + 1) % els.length].focus(); }
-      else if (e.key === "ArrowUp") { e.preventDefault(); els[(idx - 1 + els.length) % els.length].focus(); }
-      else if (e.key === "Escape") setOpen(false);
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        els[(idx + 1) % els.length].focus();
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        els[(idx - 1 + els.length) % els.length].focus();
+      } else if (e.key === "Escape") setOpen(false);
     };
     document.addEventListener("keydown", handleKey);
     return () => document.removeEventListener("keydown", handleKey);
@@ -210,18 +241,29 @@ function GetStartedDropdown({ onPersonal }: { onPersonal: () => void }) {
       icon: <UserPlus size={16} />,
       label: "Personal account",
       sublabel: "Find cafés and book tables",
-      onClick: () => { setOpen(false); onPersonal(); },
+      onClick: () => {
+        setOpen(false);
+        onPersonal();
+      },
     },
     {
       icon: <Building2 size={16} />,
       label: "Business account",
       sublabel: "List your café on Gatore",
-      onClick: () => { setOpen(false); navigate("/for-cafe-owners"); },
+      onClick: () => {
+        setOpen(false);
+        navigate("/for-cafe-owners");
+      },
     },
   ];
 
   return (
-    <div ref={ref} style={{ position: "relative", display: "inline-block" }} onMouseEnter={show} onMouseLeave={hide}>
+    <div
+      ref={ref}
+      style={{ position: "relative", display: "inline-block" }}
+      onMouseEnter={show}
+      onMouseLeave={hide}
+    >
       <SecondaryButton
         label="Get started"
         size="small"
@@ -273,14 +315,31 @@ function GetStartedDropdown({ onPersonal }: { onPersonal: () => void }) {
               }}
               className="bg-transparent hover:bg-[#FEF7F0]"
             >
-              <span style={{ color: "#57534E", flexShrink: 0, display: "flex" }}>
+              <span
+                style={{ color: "#57534E", flexShrink: 0, display: "flex" }}
+              >
                 {item.icon}
               </span>
               <span>
-                <span style={{ display: "block", fontFamily: "'DM Sans', sans-serif", fontSize: 14, fontWeight: 400 }}>
+                <span
+                  style={{
+                    display: "block",
+                    fontFamily: "'DM Sans', sans-serif",
+                    fontSize: 14,
+                    fontWeight: 400,
+                  }}
+                >
                   {item.label}
                 </span>
-                <span style={{ display: "block", fontFamily: "'DM Sans', sans-serif", fontSize: 12, fontWeight: 400, color: "#78716C" }}>
+                <span
+                  style={{
+                    display: "block",
+                    fontFamily: "'DM Sans', sans-serif",
+                    fontSize: 12,
+                    fontWeight: 400,
+                    color: "#78716C",
+                  }}
+                >
                   {item.sublabel}
                 </span>
               </span>
@@ -438,5 +497,11 @@ function UserDropdown({
 }
 
 function GatoreLogo() {
-  return <img src="/logo.png" alt="Gatore Logo" className="w-16 h-8 sm:w-23.25 sm:h-12" />;
+  return (
+    <img
+      src="/logo.png"
+      alt="Gatore Logo"
+      className="w-16 h-8 sm:w-23.25 sm:h-12"
+    />
+  );
 }

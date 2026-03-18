@@ -28,9 +28,8 @@ export function CafeCard({
       to={`/cafe/${id}`}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      className="relative block bg-warm-100 border rounded-[8px] overflow-hidden transition-colors duration-200"
+      className="relative block bg-warm-100 border rounded-[8px] overflow-hidden transition-colors duration-200 p-4 sm:px-7 sm:py-6"
       style={{
-        padding: "24px 28px",
         borderColor: hovered ? "#14B8A6" : "#E8D4C4",
         boxShadow: hovered
           ? "0px 8px 24px 0px rgba(0,0,0,0.14)"
@@ -48,11 +47,11 @@ export function CafeCard({
         }}
       />
 
-      {/* Info section — items-stretch so thumbnail matches text height */}
+      {/* Info section */}
       <div className="relative flex items-stretch gap-4">
         {/* Thumbnail */}
         <div
-          className="w-[120px] h-[120px] shrink-0 rounded-[8px] overflow-hidden bg-gray-100"
+          className="w-[110px] h-[110px] sm:w-[120px] sm:h-[120px] shrink-0 rounded-[8px] overflow-hidden bg-gray-100"
           style={{
             boxShadow:
               "0px 4px 6px -1px rgba(0,0,0,0.10), 0px 2px 4px -2px rgba(0,0,0,0.10)",

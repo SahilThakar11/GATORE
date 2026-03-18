@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 
 type ButtonSize = "small" | "medium" | "large";
 
@@ -31,6 +31,7 @@ export function SecondaryButton({
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
   const [active, setActive] = useState(false);
+  const mouseDownRef = useRef(false);
 
   // isLoading takes priority over disabled
   const isInert = isLoading || disabled;
@@ -56,9 +57,9 @@ export function SecondaryButton({
         setHovered(false);
         setActive(false);
       }}
-      onFocus={() => setFocused(true)}
-      onBlur={() => setFocused(false)}
-      onMouseDown={() => setActive(true)}
+      onFocus={() => { if (!mouseDownRef.current) setFocused(true); }}
+      onBlur={() => { setFocused(false); mouseDownRef.current = false; }}
+      onMouseDown={() => { mouseDownRef.current = true; setActive(true); }}
       onMouseUp={() => setActive(false)}
       style={{
         padding,
