@@ -1,35 +1,33 @@
 import React, { useState, useRef } from "react";
 
-type ButtonSize = "sm" | "md" | "lg";
+type ButtonSize = "small" | "medium" | "large";
 
-interface PrimaryButtonProps {
+interface TertiaryButtonProps {
   label: string;
   onClick?: () => void;
+  size?: ButtonSize;
   disabled?: boolean;
   isLoading?: boolean;
-  size?: ButtonSize;
-  rightIcon?: React.ReactNode;
+  leftIcon?: React.ReactNode;
 }
-
-const SHADOW_DEFAULT = "0px 4px 14px 0px rgba(15,118,110,0.25)";
 
 const SIZE_STYLES: Record<
   ButtonSize,
   { padding: string; fontSize: string; spinnerSize: number }
 > = {
-  sm: { padding: "12px 16px", fontSize: "14px", spinnerSize: 14 },
-  md: { padding: "12px 24px", fontSize: "16px", spinnerSize: 16 },
-  lg: { padding: "14px 28px", fontSize: "18px", spinnerSize: 18 },
+  small:  { padding: "8px 16px",  fontSize: "14px", spinnerSize: 14 },
+  medium: { padding: "10px 24px", fontSize: "16px", spinnerSize: 16 },
+  large:  { padding: "14px 28px", fontSize: "18px", spinnerSize: 18 },
 };
 
-export function PrimaryButton({
+export function TertiaryButton({
   label,
   onClick,
+  size = "medium",
   disabled = false,
   isLoading = false,
-  size = "md",
-  rightIcon,
-}: PrimaryButtonProps) {
+  leftIcon,
+}: TertiaryButtonProps) {
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
   const [active, setActive] = useState(false);
@@ -38,36 +36,14 @@ export function PrimaryButton({
   // isLoading takes priority over disabled
   const isInert = isLoading || disabled;
 
-  const shadow = (focused || active || isInert) ? "none"
-    : hovered ? "0px 4px 14px 0px rgba(17,94,89,0.25)"
-    : SHADOW_DEFAULT;
-
   const bg = (() => {
-    if (isLoading) return "#FFFFFF";
-    if (disabled)  return "#FFFFFF";
-    if (active)    return "#CCFBF1";
-    if (hovered)   return "#115E59";
-    if (focused)   return "#FFFFFF";
-    return "#0F766E";
-  })();
-
-  const borderColor = (() => {
-    if (isLoading) return "#0F766E";
-    if (disabled)  return "#D6D3D1";
-    if (active)    return "#134E4A";
-    if (hovered)   return "#115E59";
-    if (focused)   return "#0F766E";
+    if (isInert)  return "transparent";
+    if (active)   return "#CCFBF1";
+    if (hovered)  return "#F0FDFA";
     return "transparent";
   })();
 
-  const textColor = (() => {
-    if (isLoading) return "#0F766E";
-    if (disabled)  return "#78716C";
-    if (active)    return "#134E4A";
-    if (hovered)   return "#FFFFFF";
-    if (focused)   return "#0F766E";
-    return "#FFFFFF";
-  })();
+  const textColor = isInert && !isLoading ? "#D6D3D1" : "#0F766E";
 
   const { padding, fontSize, spinnerSize } = SIZE_STYLES[size];
 
@@ -76,10 +52,7 @@ export function PrimaryButton({
       onClick={isInert ? undefined : onClick}
       disabled={isInert}
       onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => {
-        setHovered(false);
-        setActive(false);
-      }}
+      onMouseLeave={() => { setHovered(false); setActive(false); }}
       onFocus={() => { if (!mouseDownRef.current) setFocused(true); }}
       onBlur={() => { setFocused(false); mouseDownRef.current = false; }}
       onMouseDown={() => { mouseDownRef.current = true; setActive(true); }}
@@ -88,13 +61,12 @@ export function PrimaryButton({
         padding,
         fontSize,
         borderRadius: "8px",
-        gap: "8px",
+        gap: "10px",
         fontWeight: 600,
         fontFamily: "'DM Sans', sans-serif",
         backgroundColor: bg,
         color: textColor,
-        boxShadow: shadow,
-        border: `1px solid ${borderColor}`,
+        border: "none",
         outline: focused ? "2px solid #0F766E" : undefined,
         outlineOffset: focused ? "3px" : undefined,
         cursor: isInert ? "not-allowed" : "pointer",
@@ -105,7 +77,7 @@ export function PrimaryButton({
         transition: "background-color 150ms",
       }}
     >
-      {isLoading && (
+      {isLoading ? (
         <svg
           style={{ width: spinnerSize, height: spinnerSize, flexShrink: 0, color: "#0F766E" }}
           className="animate-spin"
@@ -126,9 +98,12 @@ export function PrimaryButton({
             d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
           />
         </svg>
+      ) : leftIcon && (
+        <span style={{ display: "flex", alignItems: "center", flexShrink: 0 }}>
+          {leftIcon}
+        </span>
       )}
       {isLoading ? "Loading..." : label}
-      {!isLoading && rightIcon}
     </button>
   );
 }
