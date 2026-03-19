@@ -2,7 +2,7 @@ import { Search } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Input } from "../ui/Input";
-import { Button } from "../ui/Button";
+import { PrimaryButton } from "../ui/PrimaryButton";
 
 export function HeroSection() {
   const [query, setQuery] = useState("");
@@ -14,6 +14,7 @@ export function HeroSection() {
 
   return (
     <section
+      aria-label="Find a café"
       className="relative w-full py-16 px-7 flex flex-col items-center justify-center text-center"
       style={{
         backgroundImage: "url('/images/hero_wood_texture.png')",
@@ -34,25 +35,19 @@ export function HeroSection() {
         </p>
 
         {/* Search box */}
-        <div className="lg:w-175 bg-white rounded-xl overflow-hidden mt-2 shadow-lg">
+        <div className="w-full lg:w-175 bg-white rounded-xl overflow-hidden mt-2 shadow-lg">
           <div className="flex flex-col gap-2.5 p-4.5">
             <Input
               type="text"
               placeholder="City or café name"
+              aria-label="Search by city or café name"
               value={query}
               leftIcon={<Search size={18} className="text-gray-400" />}
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-              className="w-full"
+              className="w-full bg-warm-50"
             />
-            <Button
-              onClick={handleSearch}
-              variant="primary"
-              className="w-full"
-              size="md"
-            >
-              Search
-            </Button>
+            <PrimaryButton label="Search" onClick={handleSearch} size="md" />
           </div>
         </div>
       </div>

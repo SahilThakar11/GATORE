@@ -1,59 +1,128 @@
-import { MapPin } from "lucide-react";
+import { MapPin, Star } from "lucide-react";
 import { Link } from "react-router-dom";
-import type { CafeSummary } from "../../hooks/useCafe";
+import { useState } from "react";
 
 interface CafeCardProps {
-  cafe: CafeSummary;
+  id: number;
+  image: string | null;
+  title: string;
+  location: string;
+  rating: number;
+  reviewCount: number;
+  gameCount: number;
 }
 
-export function CafeCard({ cafe }: CafeCardProps) {
+export function CafeCard({
+  id,
+  image,
+  title,
+  location,
+  rating,
+  reviewCount,
+  gameCount,
+}: CafeCardProps) {
+  const [hovered, setHovered] = useState(false);
+
   return (
     <Link
-      to={`/cafe/${cafe.id}`}
-      className="block bg-warm-100 border border-warm-300 rounded-xl p-4 hover:shadow-md hover:border-teal-200 transition-all duration-200 group"
+      to={`/cafe/${id}`}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      className="relative block bg-warm-100 border rounded-[8px] overflow-hidden transition-colors duration-200 p-4 sm:px-7 sm:py-6"
+      style={{
+        borderColor: hovered ? "#14B8A6" : "#E8D4C4",
+        boxShadow: hovered
+          ? "0px 8px 24px 0px rgba(0,0,0,0.14)"
+          : "0px 2px 8px 0px rgba(0,0,0,0.08)",
+        transition: "box-shadow 200ms, border-color 200ms",
+      }}
     >
-      {/* Top row — logo + info */}
-      <div className="flex items-start gap-3">
-        <div className="w-30 h-30 rounded-lg overflow-hidden bg-gray-100 shrink-0 ">
-          {cafe.logoUrl ? (
+      {/* Teal gradient overlay from top */}
+      <div
+        className="absolute inset-x-0 top-0 h-56 rounded-t-[8px] pointer-events-none transition-opacity duration-200"
+        style={{
+          background:
+            "linear-gradient(to bottom, rgba(20,184,166,0.10), transparent)",
+          opacity: hovered ? 1 : 0,
+        }}
+      />
+
+      {/* Info section */}
+      <div className="relative flex items-stretch gap-4">
+        {/* Thumbnail */}
+        <div
+          className="w-[110px] h-[110px] sm:w-[120px] sm:h-[120px] shrink-0 rounded-[8px] overflow-hidden bg-gray-100"
+          style={{
+            boxShadow:
+              "0px 4px 6px -1px rgba(0,0,0,0.10), 0px 2px 4px -2px rgba(0,0,0,0.10)",
+          }}
+        >
+          {image ? (
             <img
-              src={cafe.logoUrl}
-              alt={cafe.name}
+              src={image}
+              alt={title}
               className="w-full h-full object-cover"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-gray-300 text-xs">
-              IMG
+            <div className="w-full h-full bg-teal-700 flex items-center justify-center text-white font-bold text-xl">
+              {title[0]}
             </div>
           )}
         </div>
 
-        <div className="flex-1 min-w-0">
-          <h3 className="text-[20px] font-bold text-neutral-800 group-hover:text-teal-700 transition-colors truncate">
-            {cafe.name}
-          </h3>
-          <div className="flex items-center gap-1 mt-0.5">
-            <MapPin size={11} className="text-neutral-400 shrink-0" />
-            <span className="text-xs text-neutral-400 truncate">
-              {cafe.address}
+        {/* Details */}
+        <div className="flex flex-col gap-1.5 min-w-0">
+          {/* Title */}
+          <p
+            className="text-base font-semibold truncate"
+            style={{ color: "#292524" }}
+          >
+            {title}
+          </p>
+
+          {/* Location */}
+          <div className="flex items-center gap-1">
+            <MapPin size={13} style={{ color: "#57534E", flexShrink: 0 }} />
+            <span
+              className="text-sm truncate"
+              style={{ color: "#57534E", fontWeight: 400 }}
+            >
+              {location}
             </span>
           </div>
 
-          {/* Rating + game count */}
-          <div className="flex items-center gap-2 mt-1.5">
-            <div className="flex items-center gap-1">
-              <img src="/icons/star.svg" alt="star-icon" />
-              <span className="text-[16px] font-semibold text-neutral-800">
-                {cafe.rating}
-              </span>
-              <span className="text-[16px] text-neutral-800">
-                ({cafe.reviewCount})
-              </span>
-            </div>
+          {/* Rating */}
+          <div className="flex items-center gap-1">
+            <Star
+              size={13}
+              style={{ color: "#F59E0B", fill: "#F59E0B", flexShrink: 0 }}
+            />
+            <span
+              className="text-sm"
+              style={{ color: "#292524", fontWeight: 600 }}
+            >
+              {Number(rating).toFixed(1)}
+            </span>
+            <span
+              className="text-sm"
+              style={{ color: "#292524", fontWeight: 400 }}
+            >
+              ({reviewCount})
+            </span>
           </div>
-          <div className="mt-1">
-            <span className="text-xs bg-warm-300 text-neutral-800 px-3 py-1 rounded-full font-medium">
-              {cafe._count.restaurantGames} games
+
+          {/* Games pill */}
+          <div className="flex">
+            <span
+              className="text-xs rounded-full"
+              style={{
+                backgroundColor: "#E8D4C4",
+                color: "#292524",
+                fontWeight: 500,
+                padding: "4px 10px",
+              }}
+            >
+              {gameCount} games
             </span>
           </div>
         </div>
