@@ -551,9 +551,12 @@ export default function CafeDetailPage() {
                   {cafe.phone && (
                     <div className="flex items-center gap-2.5">
                       <Phone size={14} className="text-teal-700 shrink-0" aria-hidden="true" />
-                      <span className="text-xs sm:text-sm text-gray-600">
+                      <a
+                        href={`tel:${cafe.phone}`}
+                        className="text-xs sm:text-sm text-teal-600 hover:underline"
+                      >
                         {cafe.phone}
-                      </span>
+                      </a>
                     </div>
                   )}
                   {cafe.website && (
