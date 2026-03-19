@@ -82,13 +82,33 @@ function GameSkeleton() {
 function DetailSkeleton() {
   return (
     <div role="status" aria-label="Loading café details" className="bg-white rounded-2xl border border-gray-100 shadow-md -mt-16 relative z-10 p-6 animate-pulse">
-      <div className="flex items-start gap-5">
-        <div className="w-24 h-24 sm:w-40 sm:h-40 rounded-xl bg-gray-100 -mt-10 shrink-0" />
+      {/* Mobile: logo + title row */}
+      <div className="sm:hidden">
+        <div className="flex items-center gap-4">
+          <div className="w-24 h-24 rounded-xl bg-gray-100 shrink-0 -mt-10" />
+          <div className="h-7 bg-gray-100 rounded w-2/3" />
+        </div>
+        <div className="mt-3 flex flex-col gap-2.5">
+          <div className="h-4 bg-gray-100 rounded w-1/2" />
+          <div className="h-4 bg-gray-100 rounded w-3/4" />
+          <div className="h-10 bg-gray-100 rounded w-36 mt-1" />
+        </div>
+      </div>
+      {/* Desktop: logo beside info */}
+      <div className="hidden sm:flex items-start gap-5">
+        <div className="w-40 h-40 rounded-xl bg-gray-100 shrink-0 -mt-10" />
         <div className="flex-1 flex flex-col gap-3 mt-2">
-          <div className="h-6 bg-gray-100 rounded w-1/2" />
+          <div className="h-8 bg-gray-100 rounded w-1/2" />
           <div className="h-4 bg-gray-100 rounded w-1/3" />
           <div className="h-4 bg-gray-100 rounded w-2/3" />
+          <div className="h-10 bg-gray-100 rounded w-36 mt-1" />
         </div>
+      </div>
+      {/* Amenities bar */}
+      <div className="flex gap-6 mt-5 pt-4 border-t border-gray-100">
+        {[...Array(3)].map((_, i) => (
+          <div key={i} className="h-4 bg-gray-100 rounded w-24" />
+        ))}
       </div>
     </div>
   );
