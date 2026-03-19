@@ -8,6 +8,7 @@ interface SecondaryButtonProps {
   disabled?: boolean;
   isLoading?: boolean;
   size?: ButtonSize;
+  leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
 }
 
@@ -26,6 +27,7 @@ export function SecondaryButton({
   disabled = false,
   isLoading = false,
   size = "medium",
+  leftIcon,
   rightIcon,
 }: SecondaryButtonProps) {
   const [hovered, setHovered] = useState(false);
@@ -108,6 +110,7 @@ export function SecondaryButton({
           />
         </svg>
       )}
+      {!isLoading && leftIcon}
       {isLoading ? "Loading..." : label}
       {!isLoading && rightIcon}
     </button>
