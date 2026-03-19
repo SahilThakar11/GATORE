@@ -2,18 +2,12 @@ interface Props {
   difficulty: string | null;
   dots: number;
   isTextWhite?: boolean;
+  filledClass?: string;
+  emptyClass?: string;
 }
 
-const COLOR: Record<string, string> = {
-  Light: "bg-green-500",
-  Medium: "bg-amber-400",
-  Hard: "bg-orange-500",
-  "Very Hard": "bg-red-500",
-};
-
-export function DifficultyDots({ difficulty, dots, isTextWhite }: Props) {
+export function DifficultyDots({ difficulty, dots, isTextWhite, filledClass = "bg-warm-700", emptyClass = "bg-warm-300" }: Props) {
   const filled = Math.min(Math.max(Math.round(dots), 0), 5);
-  const color = COLOR[difficulty ?? ""] ?? "bg-gray-400";
 
   return (
     <div className="flex items-center gap-1.5">
@@ -22,14 +16,14 @@ export function DifficultyDots({ difficulty, dots, isTextWhite }: Props) {
           <span
             key={i}
             className={`w-2 h-2 rounded-full ${
-              i < filled ? color : "bg-white"
+              i < filled ? filledClass : emptyClass
             }`}
           />
         ))}
       </div>
       {difficulty && (
         <span
-          className={`text-xs ${isTextWhite ? "text-white" : "text-neutral-600"} font-medium`}
+          className={`text-xs sm:text-sm ${isTextWhite ? "text-white" : "text-neutral-600"} font-medium`}
         >
           {difficulty}
         </span>

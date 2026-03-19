@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import {
   X,
   Star,
@@ -37,6 +37,9 @@ function categoryColor(cat: string) {
 }
 
 export function GameDetailModal({ game, onClose }: Props) {
+  const modalRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+
   // Lock body scroll
   useEffect(() => {
     if (game) document.body.style.overflow = "hidden";
@@ -46,6 +49,11 @@ export function GameDetailModal({ game, onClose }: Props) {
     };
   }, [game]);
 
+  // Move focus to close button when modal opens
+  useEffect(() => {
+    if (game) closeButtonRef.current?.focus();
+  }, [!!game]);
+
   // Escape to close
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -54,6 +62,30 @@ export function GameDetailModal({ game, onClose }: Props) {
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, [onClose]);
+
+  // Focus trap
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key !== "Tab") return;
+    const focusable = Array.from(
+      modalRef.current?.querySelectorAll<HTMLElement>(
+        'button:not([disabled]), [href], input:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      ) ?? []
+    );
+    if (focusable.length === 0) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (e.shiftKey) {
+      if (document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      }
+    } else {
+      if (document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+  };
 
   if (!game) return null;
 
@@ -81,14 +113,22 @@ export function GameDetailModal({ game, onClose }: Props) {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+      <div
+        ref={modalRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="game-detail-title"
+        onKeyDown={handleKeyDown}
+        className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+      >
         {/* ── Header image band ───────────────────────────────────────── */}
         <div className="relative h-36 bg-teal-800 shrink-0 overflow-hidden">
-          {/* Blurred bg from game image */}
+          {/* Blurred bg — purely decorative */}
           {game.image && (
             <img
               src={game.image}
               alt=""
+              aria-hidden="true"
               className="absolute inset-0 w-full h-full object-cover opacity-30 blur-sm scale-110"
             />
           )}
@@ -96,10 +136,12 @@ export function GameDetailModal({ game, onClose }: Props) {
 
           {/* Close button */}
           <button
+            ref={closeButtonRef}
             onClick={onClose}
-            className="absolute top-3 right-3 w-7 h-7 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors z-10"
+            aria-label="Close game details"
+            className="absolute top-3 right-3 w-7 h-7 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors z-10 cursor-pointer"
           >
-            <X size={14} className="text-white" />
+            <X size={14} className="text-white" aria-hidden="true" />
           </button>
 
           {/* Game image + title */}
@@ -118,12 +160,19 @@ export function GameDetailModal({ game, onClose }: Props) {
               )}
             </div>
             <div className="flex-1 min-w-0 pb-1">
-              <h2 className="text-lg font-black text-white leading-tight truncate">
+              <h2
+                id="game-detail-title"
+                className="text-lg font-black text-white leading-tight truncate"
+              >
                 {game.name}
               </h2>
               {game.rating && (
                 <div className="flex items-center gap-1.5 mt-1">
-                  <Star size={12} className="text-amber-300 fill-amber-300" />
+                  <Star
+                    size={12}
+                    className="text-amber-300 fill-amber-300"
+                    aria-hidden="true"
+                  />
                   <span className="text-sm font-bold text-white">
                     {game.rating}
                   </span>
@@ -146,8 +195,9 @@ export function GameDetailModal({ game, onClose }: Props) {
                 className="bg-[#faf8f4] border border-gray-100 rounded-xl px-3 py-3 flex flex-col gap-1.5"
               >
                 <div className="flex items-center gap-1.5">
-                  <Icon size={12} className="text-teal-500 shrink-0" />
-                  <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">
+                  <Icon size={12} className="text-teal-500 shrink-0" aria-hidden="true" />
+                  {/* Bumped from text-[10px]/gray-400 (2.26:1 fail) to text-xs/gray-600 (7.16:1) */}
+                  <span className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
                     {label}
                   </span>
                 </div>
@@ -158,7 +208,7 @@ export function GameDetailModal({ game, onClose }: Props) {
                   />
                 ) : label === "BGG Rating" ? (
                   <div className="flex items-center gap-1">
-                    <Star size={11} className="text-amber-400 fill-amber-400" />
+                    <Star size={11} className="text-amber-400 fill-amber-400" aria-hidden="true" />
                     <span className="text-sm font-bold text-gray-800">
                       {value}
                     </span>
@@ -186,7 +236,7 @@ export function GameDetailModal({ game, onClose }: Props) {
           {game.categories.length > 0 && (
             <div>
               <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2 flex items-center gap-1.5">
-                <Hash size={11} /> Categories
+                <Hash size={11} aria-hidden="true" /> Categories
               </h3>
               <div className="flex flex-wrap gap-2">
                 {game.categories.map((cat) => (
@@ -210,16 +260,17 @@ export function GameDetailModal({ game, onClose }: Props) {
               href={`https://boardgamegeek.com/boardgame/${game.id}`}
               target="_blank"
               rel="noopener noreferrer"
+              aria-label="View on BoardGameGeek (opens in new tab)"
               className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-teal-600 transition-colors"
             >
-              <Layers size={12} />
+              <Layers size={12} aria-hidden="true" />
               View on BoardGameGeek
-              <ExternalLink size={11} />
+              <ExternalLink size={11} aria-hidden="true" />
             </a>
 
             <button
               onClick={onClose}
-              className="bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold px-5 py-2.5 rounded-lg transition-colors"
+              className="bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold px-5 py-2.5 rounded-lg transition-colors cursor-pointer"
             >
               Close
             </button>

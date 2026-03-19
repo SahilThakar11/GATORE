@@ -7,6 +7,7 @@ import { useRecommendedGames } from "../hooks/useRecommendedGames";
 import { GameCard } from "../components/searchGames/GameCard";
 import { SelectedGameBanner } from "../components/searchGames/SelectedGameBanner";
 import { GameDetailModal } from "../components/searchGames/GameDetailModal";
+import { SecondaryButton } from "../components/ui/SecondaryButton";
 
 function useDebounce(value: string, delay: number) {
   const [debounced, setDebounced] = useState(value);
@@ -25,52 +26,121 @@ function CafeResultCard({
   cafe: CafeSummary;
   gameName: string;
 }) {
+  const [hovered, setHovered] = useState(false);
+
   return (
     <Link
       to={`/cafe/${cafe.id}`}
-      className="group flex items-start gap-4 bg-warm-100 border border-warm-300 rounded-xl p-4 hover:shadow-md hover:border-teal-200 transition-all"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      className="relative block bg-warm-100 border rounded-[8px] overflow-hidden p-4 sm:px-7 sm:py-6"
+      style={{
+        borderColor: hovered ? "#14B8A6" : "#E8D4C4",
+        boxShadow: hovered
+          ? "0px 8px 24px 0px rgba(0,0,0,0.14)"
+          : "0px 2px 8px 0px rgba(0,0,0,0.08)",
+        transition: "box-shadow 200ms, border-color 200ms",
+      }}
     >
-      {/* Logo */}
-      <div className="w-20 h-20 rounded-lg overflow-hidden bg-gray-100 border border-gray-100 shrink-0">
-        {cafe.logoUrl ? (
-          <img
-            src={cafe.logoUrl}
-            alt={cafe.name}
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <div className="w-full h-full bg-teal-700 flex items-center justify-center text-white font-black text-lg">
-            {cafe.name[0]}
-          </div>
-        )}
-      </div>
+      {/* Teal gradient overlay on hover */}
+      <div
+        className="absolute inset-x-0 top-0 h-56 rounded-t-[8px] pointer-events-none transition-opacity duration-200"
+        style={{
+          background:
+            "linear-gradient(to bottom, rgba(20,184,166,0.10), transparent)",
+          opacity: hovered ? 1 : 0,
+        }}
+      />
 
-      <div className="flex-1 min-w-0">
-        <div className="flex items-start justify-between gap-2">
-          <h3 className="text-lg font-bold text-gray-900 group-hover:text-teal-700 transition-colors truncate">
-            {cafe.name}
-          </h3>
+      <div className="relative flex items-stretch gap-4">
+        {/* Thumbnail */}
+        <div
+          className="w-[110px] h-[110px] sm:w-[120px] sm:h-[120px] shrink-0 rounded-[8px] overflow-hidden bg-gray-100"
+          style={{
+            boxShadow:
+              "0px 4px 6px -1px rgba(0,0,0,0.10), 0px 2px 4px -2px rgba(0,0,0,0.10)",
+          }}
+        >
+          {cafe.logoUrl ? (
+            <img
+              src={cafe.logoUrl}
+              alt={cafe.name}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="w-full h-full bg-teal-700 flex items-center justify-center text-white font-bold text-xl">
+              {cafe.name[0]}
+            </div>
+          )}
         </div>
 
-        <div className="flex items-center flex-wrap gap-x-3 gap-y-1 mt-1.5">
-          <div className="flex items-center gap-1 text-gray-400">
-            <MapPin size={11} />
-            <span className="text-xs">
+        {/* Details */}
+        <div className="flex flex-col gap-1.5 min-w-0">
+          <p
+            className="text-base font-semibold truncate"
+            style={{ color: "#292524" }}
+          >
+            {cafe.name}
+          </p>
+
+          <div className="flex items-center gap-1">
+            <MapPin
+              aria-hidden="true"
+              size={13}
+              style={{ color: "#57534E", flexShrink: 0 }}
+            />
+            <span
+              className="text-sm truncate"
+              style={{ color: "#57534E", fontWeight: 400 }}
+            >
               {cafe.address}, {cafe.city}
             </span>
           </div>
-          <div className="flex items-center gap-1">
-            <Star size={11} className="text-amber-400 fill-amber-400" />
-            <span className="text-xs font-bold text-gray-700">
-              {Number(cafe.rating).toFixed(1)}
-            </span>
-            <span className="text-xs text-gray-400">({cafe.reviewCount})</span>
-          </div>
-        </div>
 
-        <p className="text-xs text-teal-600 font-medium mt-1.5">
-          ✓ Has <span className="font-bold">{gameName}</span> available
-        </p>
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
+              <span className="sr-only">
+                Rating: {Number(cafe.rating).toFixed(1)} ({cafe.reviewCount} reviews)
+              </span>
+              <Star
+                aria-hidden="true"
+                size={13}
+                style={{ color: "#F59E0B", fill: "#F59E0B", flexShrink: 0 }}
+              />
+              <span
+                className="text-sm"
+                aria-hidden="true"
+                style={{ color: "#292524", fontWeight: 600 }}
+              >
+                {Number(cafe.rating).toFixed(1)}
+              </span>
+              <span
+                className="text-sm"
+                aria-hidden="true"
+                style={{ color: "#78716C", fontWeight: 400 }}
+              >
+                ({cafe.reviewCount})
+              </span>
+            </div>
+            {cafe._count && (
+              <span
+                className="text-xs rounded-full"
+                style={{
+                  backgroundColor: "#E8D4C4",
+                  color: "#292524",
+                  fontWeight: 500,
+                  padding: "4px 10px",
+                }}
+              >
+                {cafe._count.restaurantGames} games
+              </span>
+            )}
+          </div>
+
+          <span className="inline-flex self-start items-center gap-1 text-xs font-semibold text-teal-700 bg-teal-50 px-2.5 py-0.5 rounded-full mt-0.5">
+            ✓ Has <span className="font-bold">{gameName}</span>
+          </span>
+        </div>
       </div>
     </Link>
   );
@@ -94,6 +164,8 @@ export default function FindByGamePage() {
   const [inputValue, setInputValue] = useState("");
   const [selectedGame, setSelectedGame] = useState<BGGGame | null>(null);
   const [detailGame, setDetailGame] = useState<BGGGame | null>(null);
+  const [activeCity, setActiveCity] = useState("All");
+  const [searchFocused, setSearchFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const debouncedQuery = useDebounce(inputValue, 500);
 
@@ -119,6 +191,30 @@ export default function FindByGamePage() {
     selectedGame?.id ?? null,
   );
 
+  // City pills derived from the café results for the selected game
+  const cafesCities = [
+    "All",
+    ...Object.entries(
+      cafesWithGame.reduce<Record<string, number>>((acc, c) => {
+        acc[c.city] = (acc[c.city] || 0) + 1;
+        return acc;
+      }, {}),
+    )
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 7)
+      .map(([city]) => city),
+  ];
+
+  // Filter café results by selected city
+  const filteredCafes = cafesWithGame.filter(
+    (cafe) => activeCity === "All" || cafe.city === activeCity,
+  );
+
+  // Reset city filter when the selected game changes
+  useEffect(() => {
+    setActiveCity("All");
+  }, [selectedGame?.id]);
+
   const isSearchMode = activeQuery.trim().length > 0;
 
   useEffect(() => {
@@ -131,11 +227,7 @@ export default function FindByGamePage() {
 
   const handleSelectGame = (game: BGGGame) => {
     setSelectedGame(game);
-    setTimeout(() => {
-      document
-        .getElementById("cafe-results")
-        ?.scrollIntoView({ behavior: "smooth", block: "start" });
-    }, 100);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleClearGame = () => setSelectedGame(null);
@@ -157,7 +249,7 @@ export default function FindByGamePage() {
   return (
     <>
       <div className="bg-[#faf8f4] min-h-screen">
-        <div className="max-w-5xl mx-auto px-7 py-10">
+        <div className="max-w-4xl mx-auto px-4 sm:px-7 pt-10 pb-6">
           <div className="mb-6">
             <h1 className="text-3xl font-black text-gray-900">Find by game</h1>
             <p className="text-sm text-gray-500 mt-1">
@@ -169,19 +261,25 @@ export default function FindByGamePage() {
           {/* Search bar */}
           <div className="relative mb-8">
             <div
-              className={`flex items-center gap-3 bg-white border rounded-xl px-4 py-3.5 shadow-sm transition-all ${
-                inputValue
-                  ? "border-teal-400 ring-2 ring-teal-100"
-                  : "border-gray-200"
+              className={`flex items-center gap-2 bg-white border px-4 py-3 transition-all ${
+                searchFocused || inputValue
+                  ? "border-teal-500 ring-2 ring-teal-100"
+                  : "border-warm-300"
               }`}
+              style={{ borderRadius: 8 }}
             >
               {searchLoading ? (
                 <Loader2
                   size={17}
                   className="text-teal-500 shrink-0 animate-spin"
+                  aria-hidden="true"
                 />
               ) : (
-                <Search size={17} className="text-gray-400 shrink-0" />
+                <Search
+                  size={17}
+                  className={`shrink-0 transition-colors ${searchFocused || inputValue ? "text-teal-500" : "text-gray-400"}`}
+                  aria-hidden="true"
+                />
               )}
               <input
                 ref={inputRef}
@@ -189,14 +287,19 @@ export default function FindByGamePage() {
                 placeholder="Search for a board game..."
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
-                className="flex-1 text-sm text-gray-700 placeholder-gray-400 outline-none bg-transparent"
+                onFocus={() => setSearchFocused(true)}
+                onBlur={() => setSearchFocused(false)}
+                aria-label="Search for a board game"
+                className="flex-1 text-base text-gray-700 placeholder-gray-400 outline-none bg-transparent"
+                style={{ fontFamily: "'DM Sans', sans-serif" }}
               />
               {inputValue && (
                 <button
                   onClick={handleClearSearch}
+                  aria-label="Clear search"
                   className="text-gray-400 hover:text-gray-600"
                 >
-                  <X size={16} />
+                  <X size={16} aria-hidden="true" />
                 </button>
               )}
             </div>
@@ -214,27 +317,69 @@ export default function FindByGamePage() {
 
           {/* Café results from our DB */}
           {selectedGame && (
-            <div id="cafe-results" className="mb-10">
-              <h2 className="text-base font-bold text-gray-700 mb-3">
-                Cafés with{" "}
-                <span className="text-teal-700">{selectedGame.name}</span>
-              </h2>
+            <div className="mb-10">
+              <div className="flex items-start justify-between mb-1">
+                <div>
+                  <h2 className="text-xl font-bold text-gray-800">
+                    Cafés with{" "}
+                    <span className="text-teal-700">{selectedGame.name}</span>
+                  </h2>
+                  <div className="w-20 h-1 bg-warm-400 mt-1 mb-4 rounded-full" />
+                </div>
+              </div>
+
+              {/* City filter pills */}
+              {!cafesLoading && cafesWithGame.length > 0 && (
+                <div className="flex gap-2 flex-wrap mb-4">
+                  {cafesCities.map((city) => (
+                    <button
+                      key={city}
+                      onClick={() => setActiveCity(city)}
+                      aria-pressed={activeCity === city}
+                      className={`flex items-center gap-1.5 text-xs font-semibold px-3.5 py-1.5 rounded-full border transition-all ${
+                        activeCity === city
+                          ? "bg-teal-600 border-teal-600 text-white"
+                          : "bg-white border-gray-200 text-gray-600 hover:border-teal-300 hover:text-teal-600"
+                      }`}
+                    >
+                      {city !== "All" && <MapPin size={11} aria-hidden="true" />}
+                      {city}
+                    </button>
+                  ))}
+                </div>
+              )}
 
               {cafesLoading ? (
-                <div className="flex flex-col gap-3">
+                <div className="flex flex-col gap-3" role="status" aria-label="Loading cafés">
                   {[...Array(3)].map((_, i) => (
                     <CafeResultSkeleton key={i} />
                   ))}
                 </div>
-              ) : cafesWithGame.length > 0 ? (
+              ) : filteredCafes.length > 0 ? (
                 <div className="flex flex-col gap-3">
-                  {cafesWithGame.map((cafe) => (
+                  {filteredCafes.map((cafe) => (
                     <CafeResultCard
                       key={cafe.id}
                       cafe={cafe}
                       gameName={selectedGame.name}
                     />
                   ))}
+                </div>
+              ) : cafesWithGame.length > 0 ? (
+                <div className="bg-white border border-gray-100 rounded-xl p-6 text-center text-gray-400">
+                  <p className="text-sm font-medium text-gray-500">
+                    No cafés in{" "}
+                    <span className="text-gray-700 font-bold">
+                      {activeCity}
+                    </span>{" "}
+                    carry {selectedGame.name}.
+                  </p>
+                  <button
+                    onClick={() => setActiveCity("All")}
+                    className="mt-3 text-xs text-teal-600 font-medium hover:underline"
+                  >
+                    Show all cities
+                  </button>
                 </div>
               ) : (
                 <div className="bg-white border border-gray-100 rounded-xl p-6 text-center text-gray-400">
@@ -257,20 +402,27 @@ export default function FindByGamePage() {
 
           {/* Game grid */}
           <div>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-base font-bold text-gray-700">
-                {sectionTitle}
-              </h2>
+            {/* sr-only live region announces section title changes to screen readers */}
+            <div aria-live="polite" aria-atomic="true" className="sr-only">
+              {sectionTitle}
+            </div>
+            <div className="flex items-start justify-between mb-1">
+              <div>
+                <h2 className="text-xl font-bold text-gray-800">
+                  {sectionTitle}
+                </h2>
+                <div className="w-20 h-1 bg-warm-400 mt-1 mb-4 rounded-full" />
+              </div>
               {isSearchMode && searchLoading && (
-                <div className="flex items-center gap-1.5 text-xs text-teal-600">
-                  <Loader2 size={13} className="animate-spin" /> Searching...
+                <div role="status" className="flex items-center gap-1.5 text-xs text-teal-600 mt-1">
+                  <Loader2 size={13} className="animate-spin" aria-hidden="true" /> Searching...
                 </div>
               )}
             </div>
 
             {(recommendedLoading && !isSearchMode) ||
             (searchLoading && searchGames.length === 0) ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4" role="status" aria-label="Loading games">
                 {[...Array(6)].map((_, i) => (
                   <div
                     key={i}
@@ -281,7 +433,7 @@ export default function FindByGamePage() {
               </div>
             ) : displayGames.length > 0 ? (
               <>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {displayGames.map((game) => (
                     <GameCard
                       key={game.id}
@@ -298,22 +450,13 @@ export default function FindByGamePage() {
                     <p className="text-xs text-gray-400">
                       Showing {searchGames.length} of {totalResults} games
                     </p>
-                    <button
+                    <SecondaryButton
+                      label="Load more games"
                       onClick={loadMore}
-                      disabled={loadingMore}
-                      className="flex items-center gap-2 border border-gray-200 bg-white hover:border-teal-400 hover:text-teal-700 text-sm font-semibold text-gray-600 px-6 py-2.5 rounded-lg transition-all disabled:opacity-50"
-                    >
-                      {loadingMore ? (
-                        <>
-                          <Loader2 size={15} className="animate-spin" />{" "}
-                          Loading...
-                        </>
-                      ) : (
-                        <>
-                          <ChevronDown size={15} /> Load more games
-                        </>
-                      )}
-                    </button>
+                      isLoading={loadingMore}
+                      size="small"
+                      rightIcon={<ChevronDown size={15} />}
+                    />
                   </div>
                 )}
 
@@ -325,7 +468,7 @@ export default function FindByGamePage() {
               </>
             ) : isSearchMode && !searchLoading ? (
               <div className="text-center py-16 text-gray-400">
-                <Search size={32} className="mx-auto mb-3 opacity-30" />
+                <Search size={32} className="mx-auto mb-3 opacity-30" aria-hidden="true" />
                 <p className="text-sm font-semibold text-gray-500">
                   No games found for "{activeQuery}"
                 </p>

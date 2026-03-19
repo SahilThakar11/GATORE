@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Users, Clock, ChevronRight } from "lucide-react";
 import { type BGGGame } from "../../hooks/useBGG";
 import { DifficultyDots } from "./DifficultyDots";
@@ -10,18 +11,34 @@ interface Props {
 }
 
 export function GameCard({ game, onClick, onViewDetails, selected }: Props) {
+  const [hovered, setHovered] = useState(false);
+
   return (
     <div
-      className={`w-full text-left flex flex-col rounded-xl border transition-all duration-150 overflow-hidden  ${
+      className={`relative w-full text-left flex flex-col rounded-xl border transition-all duration-150 overflow-hidden ${
         selected
           ? "border-teal-500 bg-warm-100 shadow-sm"
-          : "border-warm-300 bg-white hover:border-teal-200 hover:shadow-sm"
+          : "border-warm-300 bg-white hover:border-teal-500 hover:shadow-sm"
       }`}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
     >
+      {/* Warm gradient overlay on hover */}
+      <div
+        className="absolute inset-x-0 top-0 h-56 rounded-t-xl pointer-events-none transition-opacity duration-200"
+        aria-hidden="true"
+        style={{
+          background:
+            "linear-gradient(to bottom, rgba(254,247,240,0.9), transparent)",
+          opacity: hovered ? 1 : 0,
+        }}
+      />
+
       {/* Main clickable area */}
       <button
         onClick={() => onClick(game)}
-        className="flex items-start gap-4 p-4 w-full text-left cursor-pointer"
+        aria-pressed={selected}
+        className="relative flex items-start gap-4 p-4 w-full text-left cursor-pointer"
       >
         {/* Game image */}
         <div className="w-30 h-30 rounded-lg overflow-hidden bg-gray-100 shrink-0 border border-gray-100">
@@ -32,7 +49,7 @@ export function GameCard({ game, onClick, onViewDetails, selected }: Props) {
               className="w-full h-full object-cover"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-gray-300 text-xs">
+            <div className="w-full h-full flex items-center justify-center text-gray-300 text-xs sm:text-sm">
               No image
             </div>
           )}
@@ -40,20 +57,22 @@ export function GameCard({ game, onClick, onViewDetails, selected }: Props) {
 
         {/* Info */}
         <div className="flex-1 min-w-0">
-          <h3 className="text-sm font-bold text-gray-900 leading-snug mb-1.5">
+          <h3 className="text-sm sm:text-lg font-bold text-gray-900 leading-snug mb-1.5">
             {game.name}
           </h3>
 
           <DifficultyDots difficulty={game.difficulty} dots={game.weightDots} />
 
           <div className="flex items-center gap-4 mt-2">
-            <div className="flex items-center gap-1.5 text-gray-500">
-              <Users size={13} />
-              <span className="text-xs">{game.players} players</span>
+            <div className="flex items-center gap-1.5 text-gray-600">
+              <Users size={13} className="sm:hidden" aria-hidden="true" />
+              <Users size={15} className="hidden sm:block" aria-hidden="true" />
+              <span className="text-xs sm:text-sm">{game.players} players</span>
             </div>
-            <div className="flex items-center gap-1.5 text-gray-500">
-              <Clock size={13} />
-              <span className="text-xs">{game.duration}</span>
+            <div className="flex items-center gap-1.5 text-gray-600">
+              <Clock size={13} className="sm:hidden" aria-hidden="true" />
+              <Clock size={15} className="hidden sm:block" aria-hidden="true" />
+              <span className="text-xs sm:text-sm">{game.duration}</span>
             </div>
           </div>
 
@@ -62,9 +81,25 @@ export function GameCard({ game, onClick, onViewDetails, selected }: Props) {
               {game.categories.slice(0, 2).map((cat) => (
                 <span
                   key={cat}
-                  className="text-xs bg-[#fdf0e8] text-[#b07040] px-2 py-0.5 rounded-md font-medium flex items-center gap-1"
+                  className="text-xs sm:text-sm bg-warm-200 text-warm-700 px-2 py-0.5 rounded-md font-medium flex items-center gap-1"
                 >
-                  <span className="text-[10px]">⊞</span> {cat}
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="1em"
+                    height="1em"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="1"
+                    aria-hidden="true"
+                  >
+                    <circle cx="17" cy="7" r="3" />
+                    <circle cx="7" cy="17" r="3" />
+                    <path d="M14 14h6v5a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1zM4 4h6v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z" />
+                  </svg>
+                  {cat}
                 </span>
               ))}
             </div>
@@ -74,7 +109,7 @@ export function GameCard({ game, onClick, onViewDetails, selected }: Props) {
 
       {/* View details link — separated from select click */}
       <div
-        className={`border-t px-4 py-2 ${
+        className={`relative border-t px-4 py-2 ${
           selected ? "border-teal-200" : "border-gray-100"
         }`}
       >
@@ -83,10 +118,11 @@ export function GameCard({ game, onClick, onViewDetails, selected }: Props) {
             e.stopPropagation();
             onViewDetails(game);
           }}
-          className="flex items-center gap-1 text-xs font-semibold text-teal-600 hover:text-teal-800 transition-colors cursor-pointer"
+          className="flex items-center gap-1 text-xs sm:text-sm font-semibold text-teal-600 hover:text-teal-800 transition-colors cursor-pointer"
         >
           View game details
-          <ChevronRight size={13} />
+          <ChevronRight size={13} className="sm:hidden" aria-hidden="true" />
+          <ChevronRight size={15} className="hidden sm:block" aria-hidden="true" />
         </button>
       </div>
     </div>
