@@ -19,6 +19,7 @@ import Contact from "./pages/Contact";
 import CafeDetailPage from "./pages/CafeDetailPage";
 import Reservations from "./pages/Reservations";
 import BusinessDashboard from "./pages/BusinessDashboard";
+import BusinessSettings from "./pages/BusinessSettings";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { useAuth } from "./context/AuthContext";
 
@@ -37,6 +38,14 @@ export default function App() {
           element={
             <ProtectedRoute requiredRole="business">
               <BusinessDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/settings"
+          element={
+            <ProtectedRoute requiredRole="business">
+              <BusinessSettings />
             </ProtectedRoute>
           }
         />
