@@ -12,6 +12,8 @@ export interface BGGGame {
   difficulty: string | null;
   weightDots: number;
   categories: string[];
+  designer: string | null;
+  publisher: string | null;
 }
 
 const POPULAR_IDS = [

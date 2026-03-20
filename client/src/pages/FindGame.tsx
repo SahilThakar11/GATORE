@@ -8,6 +8,7 @@ import { GameCard } from "../components/searchGames/GameCard";
 import { SelectedGameBanner } from "../components/searchGames/SelectedGameBanner";
 import { GameDetailModal } from "../components/searchGames/GameDetailModal";
 import { SecondaryButton } from "../components/ui/SecondaryButton";
+import { FilterPill } from "../components/ui/FilterPill";
 
 function useDebounce(value: string, delay: number) {
   const [debounced, setDebounced] = useState(value);
@@ -332,19 +333,13 @@ export default function FindByGamePage() {
               {!cafesLoading && cafesWithGame.length > 0 && (
                 <div className="flex gap-2 flex-wrap mb-4">
                   {cafesCities.map((city) => (
-                    <button
+                    <FilterPill
                       key={city}
+                      label={city}
+                      active={activeCity === city}
                       onClick={() => setActiveCity(city)}
-                      aria-pressed={activeCity === city}
-                      className={`flex items-center gap-1.5 text-xs font-semibold px-3.5 py-1.5 rounded-full border transition-all ${
-                        activeCity === city
-                          ? "bg-teal-600 border-teal-600 text-white"
-                          : "bg-white border-gray-200 text-gray-600 hover:border-teal-300 hover:text-teal-600"
-                      }`}
-                    >
-                      {city !== "All" && <MapPin size={11} aria-hidden="true" />}
-                      {city}
-                    </button>
+                      icon={city !== "All" ? <MapPin size={11} /> : undefined}
+                    />
                   ))}
                 </div>
               )}

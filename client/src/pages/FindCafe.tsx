@@ -21,6 +21,7 @@ import { PrimaryButton } from "../components/ui/PrimaryButton";
 import { SecondaryButton } from "../components/ui/SecondaryButton";
 import { TertiaryButton } from "../components/ui/TertiaryButton";
 import { Input } from "../components/ui/Input";
+import { FilterPill } from "../components/ui/FilterPill";
 
 // ─── Amenity icon map ─────────────────────────────────────────────────────────
 // Our DB doesn't have structured amenities yet — derive simple labels from
@@ -392,19 +393,13 @@ export default function FindCafePage() {
               {/* City filter pills */}
               <div className="flex gap-2 flex-wrap">
                 {allCities.map((city) => (
-                  <button
+                  <FilterPill
                     key={city}
+                    label={city}
+                    active={activeCity === city}
                     onClick={() => setActiveCity(city)}
-                    aria-pressed={activeCity === city}
-                    className={`flex items-center gap-1.5 text-xs font-semibold px-3.5 py-1.5 rounded-full border transition-all ${
-                      activeCity === city
-                        ? "bg-teal-600 border-teal-600 text-white"
-                        : "bg-white border-gray-200 text-gray-600 hover:border-teal-300 hover:text-teal-600"
-                    }`}
-                  >
-                    {city !== "All" && <MapPin size={11} />}
-                    {city}
-                  </button>
+                    icon={city !== "All" ? <MapPin size={11} /> : undefined}
+                  />
                 ))}
               </div>
             </>

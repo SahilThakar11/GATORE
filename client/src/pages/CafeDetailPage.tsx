@@ -20,6 +20,7 @@ import { ReservationModal } from "../components/reservation/ReservationModal";
 import { PrimaryButton } from "../components/ui/PrimaryButton";
 import { SecondaryButton } from "../components/ui/SecondaryButton";
 import { TertiaryButton } from "../components/ui/TertiaryButton";
+import { FilterPill } from "../components/ui/FilterPill";
 import { type Venue } from "../hooks/useReservationFlow";
 import {
   useCafe,
@@ -360,7 +361,7 @@ export default function CafeDetailPage() {
                   key={label}
                   className="flex items-center gap-1.5 text-gray-500"
                 >
-                  <Icon size={14} className="text-teal-700" aria-hidden="true" />
+                  <Icon size={18} className="text-teal-700" aria-hidden="true" />
                   <span className="text-xs sm:text-sm font-medium">{label}</span>
                 </div>
               ))}
@@ -454,14 +455,12 @@ export default function CafeDetailPage() {
               {!gamesLoading && allCategories.length > 1 && (
                 <div className="flex gap-2 flex-wrap mb-5">
                   {allCategories.map((cat) => (
-                    <button
+                    <FilterPill
                       key={cat}
+                      label={cat}
+                      active={activeCategory === cat}
                       onClick={() => setActiveCategory(cat)}
-                      aria-pressed={activeCategory === cat}
-                      className={`text-xs sm:text-sm font-semibold px-3 py-1.5 rounded-full border transition-all ${activeCategory === cat ? "bg-teal-600 border-teal-600 text-white" : "bg-white border-gray-200 text-gray-600 hover:border-teal-300"}`}
-                    >
-                      {cat}
-                    </button>
+                    />
                   ))}
                 </div>
               )}
@@ -477,13 +476,14 @@ export default function CafeDetailPage() {
               {!gamesLoading &&
                 !gamesError &&
                 (filteredGames.length > 0 ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {filteredGames.map((game) => (
                       <GameCard
                         key={game.id}
                         game={game}
                         onClick={() => {}}
                         onViewDetails={setDetailGame}
+                        selectable={false}
                       />
                     ))}
                   </div>
@@ -531,7 +531,7 @@ export default function CafeDetailPage() {
             {cafe && (
               <div className="bg-warm-100 rounded-xl border border-warm-200 p-5">
                 <h3 className="text-sm sm:text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
-                  <Clock size={14} className="text-teal-700" aria-hidden="true" /> Hours
+                  <Clock size={18} className="text-teal-700" aria-hidden="true" /> Hours
                 </h3>
                 <div className="flex flex-col gap-2">
                   {Object.entries(formattedHours).map(([day, hours]) => (
@@ -562,7 +562,7 @@ export default function CafeDetailPage() {
                 </h3>
                 <div className="flex flex-col gap-3">
                   <div className="flex items-center gap-2.5">
-                    <MapPin size={14} className="text-teal-700 shrink-0" aria-hidden="true" />
+                    <MapPin size={18} className="text-teal-700 shrink-0" aria-hidden="true" />
                     <span className="text-xs sm:text-sm text-gray-600 leading-snug">
                       {cafe.address}, {cafe.city}, {cafe.province}{" "}
                       {cafe.postalCode}
@@ -570,7 +570,7 @@ export default function CafeDetailPage() {
                   </div>
                   {cafe.phone && (
                     <div className="flex items-center gap-2.5">
-                      <Phone size={14} className="text-teal-700 shrink-0" aria-hidden="true" />
+                      <Phone size={18} className="text-teal-700 shrink-0" aria-hidden="true" />
                       <a
                         href={`tel:${cafe.phone}`}
                         className="text-xs sm:text-sm text-teal-600 hover:underline"
@@ -581,7 +581,7 @@ export default function CafeDetailPage() {
                   )}
                   {cafe.website && (
                     <div className="flex items-center gap-2.5">
-                      <Globe size={14} className="text-teal-700 shrink-0" aria-hidden="true" />
+                      <Globe size={18} className="text-teal-700 shrink-0" aria-hidden="true" />
                       <a
                         href={
                           cafe.website.startsWith("http")

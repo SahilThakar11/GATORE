@@ -4,19 +4,12 @@ import {
   Star,
   Users,
   Clock,
-  Baby,
-  Shield,
-  Hash,
+  UserRound,
   Layers,
   ExternalLink,
+  Pencil,
+  Building2,
 } from "lucide-react";
-import { type BGGGame } from "../../hooks/useBGG";
-import { DifficultyDots } from "./DifficultyDots";
-
-interface Props {
-  game: BGGGame | null;
-  onClose: () => void;
-}
 
 const CATEGORY_COLORS: Record<string, string> = {
   Strategy: "bg-pink-50 text-pink-700 border-pink-100",
@@ -28,12 +21,43 @@ const CATEGORY_COLORS: Record<string, string> = {
   Wargame: "bg-orange-50 text-orange-700 border-orange-100",
 };
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function categoryColor(cat: string) {
   for (const key of Object.keys(CATEGORY_COLORS)) {
     if (cat.toLowerCase().includes(key.toLowerCase()))
       return CATEGORY_COLORS[key];
   }
   return "bg-gray-50 text-gray-600 border-gray-100";
+}
+
+function HalfCircleIcon() {
+  return (
+    <svg
+      width="13"
+      height="13"
+      viewBox="0 0 14 14"
+      fill="none"
+      className="shrink-0"
+      aria-hidden="true"
+    >
+      <circle
+        cx="7"
+        cy="7"
+        r="6"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        opacity="0.5"
+      />
+      <path d="M 7 1 A 6 6 0 0 0 7 13 Z" fill="currentColor" />
+    </svg>
+  );
+}
+import { type BGGGame } from "../../hooks/useBGG";
+import { DifficultyDots } from "./DifficultyDots";
+
+interface Props {
+  game: BGGGame | null;
+  onClose: () => void;
 }
 
 export function GameDetailModal({ game, onClose }: Props) {
@@ -68,8 +92,8 @@ export function GameDetailModal({ game, onClose }: Props) {
     if (e.key !== "Tab") return;
     const focusable = Array.from(
       modalRef.current?.querySelectorAll<HTMLElement>(
-        'button:not([disabled]), [href], input:not([disabled]), [tabindex]:not([tabindex="-1"])'
-      ) ?? []
+        'button:not([disabled]), [href], input:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      ) ?? [],
     );
     if (focusable.length === 0) return;
     const first = focusable[0];
@@ -96,13 +120,41 @@ export function GameDetailModal({ game, onClose }: Props) {
       : game.description
     : "No description available.";
 
-  const stats = [
-    { icon: Users, label: "Players", value: `${game.players} players` },
-    { icon: Clock, label: "Duration", value: game.duration },
-    { icon: Shield, label: "Difficulty", value: game.difficulty ?? "Unknown" },
-    ...(game.age ? [{ icon: Baby, label: "Min. Age", value: game.age }] : []),
+  const stats: { icon: React.ReactNode; label: string; value: string }[] = [
+    {
+      icon: <Users size={13} className="shrink-0" aria-hidden="true" />,
+      label: "Players",
+      value: `${game.players} players`,
+    },
+    {
+      icon: <Clock size={13} className="shrink-0" aria-hidden="true" />,
+      label: "Duration",
+      value: game.duration,
+    },
+    {
+      icon: <HalfCircleIcon />,
+      label: "Difficulty",
+      value: game.difficulty ?? "Unknown",
+    },
+    ...(game.age
+      ? [
+          {
+            icon: (
+              <UserRound size={13} className="shrink-0" aria-hidden="true" />
+            ),
+            label: "Min. Age",
+            value: game.age,
+          },
+        ]
+      : []),
     ...(game.rating
-      ? [{ icon: Star, label: "BGG Rating", value: String(game.rating) }]
+      ? [
+          {
+            icon: <Star size={13} className="shrink-0" aria-hidden="true" />,
+            label: "BGG Rating",
+            value: String(game.rating),
+          },
+        ]
       : []),
   ];
 
@@ -118,6 +170,7 @@ export function GameDetailModal({ game, onClose }: Props) {
         role="dialog"
         aria-modal="true"
         aria-labelledby="game-detail-title"
+        aria-describedby="game-detail-description"
         onKeyDown={handleKeyDown}
         className="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
       >
@@ -139,14 +192,14 @@ export function GameDetailModal({ game, onClose }: Props) {
             ref={closeButtonRef}
             onClick={onClose}
             aria-label="Close game details"
-            className="absolute top-3 right-3 w-7 h-7 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors z-10 cursor-pointer"
+            className="absolute top-4 right-4 w-6 h-6 rounded-full bg-white/20 hover:bg-white/30 border border-white/60 flex items-center justify-center transition-colors z-10 cursor-pointer"
           >
-            <X size={14} className="text-white" aria-hidden="true" />
+            <X size={13} className="text-white block" aria-hidden="true" />
           </button>
 
           {/* Game image + title */}
           <div className="absolute bottom-0 left-0 right-0 flex items-end gap-4 px-5 pb-4">
-            <div className="w-16 h-16 rounded-xl overflow-hidden border-2 border-white/20 shrink-0 shadow-lg mb-1">
+            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden border-2 border-white/20 shrink-0 shadow-lg mb-1">
               {game.image ? (
                 <img
                   src={game.image}
@@ -154,7 +207,11 @@ export function GameDetailModal({ game, onClose }: Props) {
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <div className="w-full h-full bg-teal-600 flex items-center justify-center text-white font-black text-xl">
+                <div
+                  role="img"
+                  aria-label={game.name}
+                  className="w-full h-full bg-teal-600 flex items-center justify-center text-white font-black text-xl"
+                >
                   {game.name[0]}
                 </div>
               )}
@@ -162,10 +219,40 @@ export function GameDetailModal({ game, onClose }: Props) {
             <div className="flex-1 min-w-0 pb-1">
               <h2
                 id="game-detail-title"
-                className="text-lg font-black text-white leading-tight truncate"
+                className="text-lg sm:text-2xl font-bold text-white leading-tight truncate"
               >
                 {game.name}
               </h2>
+              {(game.designer || game.publisher) && (
+                <div className="flex flex-col gap-0.5 mt-1">
+                  {game.designer && (
+                    <div className="flex items-center gap-1.5">
+                      <Pencil
+                        size={11}
+                        className="text-white/80 shrink-0"
+                        aria-hidden="true"
+                      />
+                      <span className="text-xs text-white/90 truncate sm:text-sm">
+                        <span className="font-semibold">Designer:</span>{" "}
+                        {game.designer}
+                      </span>
+                    </div>
+                  )}
+                  {game.publisher && (
+                    <div className="flex items-center gap-1.5">
+                      <Building2
+                        size={11}
+                        className="text-white/80 shrink-0"
+                        aria-hidden="true"
+                      />
+                      <span className="text-xs sm:text-sm text-white/90 truncate">
+                        <span className="font-semibold">Publisher:</span>{" "}
+                        {game.publisher}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
               {game.rating && (
                 <div className="flex items-center gap-1.5 mt-1">
                   <Star
@@ -173,10 +260,11 @@ export function GameDetailModal({ game, onClose }: Props) {
                     className="text-amber-300 fill-amber-300"
                     aria-hidden="true"
                   />
+                  <span className="sr-only">Rating:</span>
                   <span className="text-sm font-bold text-white">
                     {game.rating}
                   </span>
-                  <span className="text-xs text-teal-300">
+                  <span className="text-xs text-teal-100">
                     on BoardGameGeek
                   </span>
                 </div>
@@ -188,46 +276,55 @@ export function GameDetailModal({ game, onClose }: Props) {
         {/* ── Scrollable body ─────────────────────────────────────────── */}
         <div className="overflow-y-auto flex-1 px-5 py-5 flex flex-col gap-5">
           {/* Stats grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-            {stats.map(({ icon: Icon, label, value }) => (
+          <dl className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            {stats.map(({ icon, label, value }) => (
               <div
                 key={label}
-                className="bg-[#faf8f4] border border-gray-100 rounded-xl px-3 py-3 flex flex-col gap-1.5"
+                className="bg-warm-50 border border-warm-300 rounded-xl px-2.5 py-2.5 sm:px-3 sm:py-3 flex flex-col gap-1"
               >
-                <div className="flex items-center gap-1.5">
-                  <Icon size={12} className="text-teal-500 shrink-0" aria-hidden="true" />
-                  {/* Bumped from text-[10px]/gray-400 (2.26:1 fail) to text-xs/gray-600 (7.16:1) */}
-                  <span className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                <dt className="flex items-center gap-1.5 text-gray-500">
+                  {icon}
+                  <span className="text-[11px] sm:text-[11px] font-medium text-gray-500 uppercase tracking-widest">
                     {label}
                   </span>
-                </div>
-                {label === "Difficulty" ? (
-                  <DifficultyDots
-                    difficulty={game.difficulty}
-                    dots={game.weightDots}
-                  />
-                ) : label === "BGG Rating" ? (
-                  <div className="flex items-center gap-1">
-                    <Star size={11} className="text-amber-400 fill-amber-400" aria-hidden="true" />
-                    <span className="text-sm font-bold text-gray-800">
+                </dt>
+                <dd>
+                  {label === "Difficulty" ? (
+                    <DifficultyDots
+                      difficulty={game.difficulty}
+                      dots={game.weightDots}
+                      textSizeClass="text-sm sm:text-base"
+                    />
+                  ) : label === "BGG Rating" ? (
+                    <div className="flex items-center gap-1">
+                      <Star
+                        size={12}
+                        className="text-amber-400 fill-amber-400"
+                        aria-hidden="true"
+                      />
+                      <span className="text-sm sm:text-base font-semibold text-gray-800">
+                        {value}
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="text-sm sm:text-base font-semibold text-gray-800 leading-tight">
                       {value}
                     </span>
-                  </div>
-                ) : (
-                  <span className="text-sm font-bold text-gray-800 leading-tight">
-                    {value}
-                  </span>
-                )}
+                  )}
+                </dd>
               </div>
             ))}
-          </div>
+          </dl>
 
           {/* Description */}
           <div>
-            <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">
+            <h3 className="text-base font-semibold text-gray-900 mb-2">
               About this game
             </h3>
-            <p className="text-sm text-gray-600 leading-relaxed">
+            <p
+              id="game-detail-description"
+              className="text-sm text-gray-600 leading-relaxed"
+            >
               {description}
             </p>
           </div>
@@ -235,15 +332,47 @@ export function GameDetailModal({ game, onClose }: Props) {
           {/* Categories */}
           {game.categories.length > 0 && (
             <div>
-              <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2 flex items-center gap-1.5">
-                <Hash size={11} aria-hidden="true" /> Categories
+              <h3 className="text-base font-semibold text-gray-900 mb-2 flex items-center gap-1.5">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="1"
+                  aria-hidden="true"
+                >
+                  <circle cx="17" cy="7" r="3" />
+                  <circle cx="7" cy="17" r="3" />
+                  <path d="M14 14h6v5a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1zM4 4h6v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z" />
+                </svg>
+                Categories
               </h3>
               <div className="flex flex-wrap gap-2">
                 {game.categories.map((cat) => (
                   <span
                     key={cat}
-                    className={`text-xs font-medium px-2.5 py-1 rounded-lg border ${categoryColor(cat)}`}
+                    className="text-xs bg-warm-200 text-warm-700 px-2 py-0.5 rounded-md font-medium flex items-center gap-1"
                   >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="1em"
+                      height="1em"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="1"
+                      aria-hidden="true"
+                    >
+                      <circle cx="17" cy="7" r="3" />
+                      <circle cx="7" cy="17" r="3" />
+                      <path d="M14 14h6v5a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1zM4 4h6v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z" />
+                    </svg>
                     {cat}
                   </span>
                 ))}
@@ -252,7 +381,7 @@ export function GameDetailModal({ game, onClose }: Props) {
           )}
 
           {/* Divider */}
-          <div className="border-t border-gray-100" />
+          <div className="border-t border-warm-300" />
 
           {/* Footer row */}
           <div className="flex items-center justify-between gap-3">
@@ -261,19 +390,12 @@ export function GameDetailModal({ game, onClose }: Props) {
               target="_blank"
               rel="noopener noreferrer"
               aria-label="View on BoardGameGeek (opens in new tab)"
-              className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-teal-600 transition-colors"
+              className="flex items-center gap-1.5 text-xs text-gray-600 hover:text-teal-600 transition-colors"
             >
               <Layers size={12} aria-hidden="true" />
               View on BoardGameGeek
               <ExternalLink size={11} aria-hidden="true" />
             </a>
-
-            <button
-              onClick={onClose}
-              className="bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold px-5 py-2.5 rounded-lg transition-colors cursor-pointer"
-            >
-              Close
-            </button>
           </div>
         </div>
       </div>

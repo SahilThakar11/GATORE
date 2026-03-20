@@ -4,9 +4,10 @@ interface Props {
   isTextWhite?: boolean;
   filledClass?: string;
   emptyClass?: string;
+  textSizeClass?: string;
 }
 
-export function DifficultyDots({ difficulty, dots, isTextWhite, filledClass = "bg-warm-700", emptyClass = "bg-warm-300" }: Props) {
+export function DifficultyDots({ difficulty, dots, isTextWhite, filledClass = "bg-warm-700", emptyClass = "bg-warm-300", textSizeClass = "text-xs sm:text-sm" }: Props) {
   const filled = Math.min(Math.max(Math.round(dots), 0), 5);
 
   return (
@@ -23,7 +24,7 @@ export function DifficultyDots({ difficulty, dots, isTextWhite, filledClass = "b
       </div>
       {difficulty && (
         <span
-          className={`text-xs sm:text-sm ${isTextWhite ? "text-white" : "text-neutral-600"} font-medium`}
+          className={`${textSizeClass} ${isTextWhite ? "text-white" : "text-gray-800"} font-semibold`}
         >
           {difficulty}
         </span>

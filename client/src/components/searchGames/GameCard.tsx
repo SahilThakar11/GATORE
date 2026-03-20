@@ -1,16 +1,24 @@
 import { useState } from "react";
-import { Users, Clock, ChevronRight } from "lucide-react";
+import { Users, Clock } from "lucide-react";
 import { type BGGGame } from "../../hooks/useBGG";
 import { DifficultyDots } from "./DifficultyDots";
+import { TextButton } from "../ui/TextButton";
 
 interface Props {
   game: BGGGame;
   onClick: (game: BGGGame) => void;
   onViewDetails: (game: BGGGame) => void;
   selected?: boolean;
+  selectable?: boolean;
 }
 
-export function GameCard({ game, onClick, onViewDetails, selected }: Props) {
+export function GameCard({
+  game,
+  onClick,
+  onViewDetails,
+  selected,
+  selectable = true,
+}: Props) {
   const [hovered, setHovered] = useState(false);
 
   return (
@@ -18,7 +26,7 @@ export function GameCard({ game, onClick, onViewDetails, selected }: Props) {
       className={`relative w-full text-left flex flex-col rounded-xl border transition-all duration-150 overflow-hidden ${
         selected
           ? "border-teal-500 bg-warm-100 shadow-sm"
-          : "border-warm-300 bg-white hover:border-teal-500 hover:shadow-sm"
+          : "border-warm-300 bg-warm-50 hover:border-teal-500 hover:shadow-sm"
       }`}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
@@ -29,7 +37,7 @@ export function GameCard({ game, onClick, onViewDetails, selected }: Props) {
         aria-hidden="true"
         style={{
           background:
-            "linear-gradient(to bottom, rgba(254,247,240,0.9), transparent)",
+            "linear-gradient(to bottom, rgba(255, 247, 240, 0.9), transparent)",
           opacity: hovered ? 1 : 0,
         }}
       />
@@ -38,7 +46,7 @@ export function GameCard({ game, onClick, onViewDetails, selected }: Props) {
       <button
         onClick={() => onClick(game)}
         aria-pressed={selected}
-        className="relative flex items-start gap-4 p-4 w-full text-left cursor-pointer"
+        className={`relative flex items-start gap-4 p-4 w-full text-left ${selectable ? "cursor-pointer" : "cursor-default"}`}
       >
         {/* Game image */}
         <div className="w-30 h-30 rounded-lg overflow-hidden bg-gray-100 shrink-0 border border-gray-100">
@@ -109,21 +117,31 @@ export function GameCard({ game, onClick, onViewDetails, selected }: Props) {
 
       {/* View details link — separated from select click */}
       <div
-        className={`relative border-t px-4 py-2 ${
+        className={`relative border-t px-3 py-1 ${
           selected ? "border-teal-200" : "border-gray-100"
         }`}
       >
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onViewDetails(game);
-          }}
-          className="flex items-center gap-1 text-xs sm:text-sm font-semibold text-teal-600 hover:text-teal-800 transition-colors cursor-pointer"
-        >
-          View game details
-          <ChevronRight size={13} className="sm:hidden" aria-hidden="true" />
-          <ChevronRight size={15} className="hidden sm:block" aria-hidden="true" />
-        </button>
+        <TextButton
+          label="View game details"
+          size="small"
+          onClick={() => onViewDetails(game)}
+          rightIcon={
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="1.5em"
+              height="1.5em"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path
+                fill="currentColor"
+                d="M3 9a1 1 0 0 0 0 2h18a1 1 0 1 0 0-2zm0 4a1 1 0 1 0 0 2h12a1 1 0 1 0 0-2z"
+                strokeWidth="0.4"
+                stroke="currentColor"
+              />
+            </svg>
+          }
+        />
       </div>
     </div>
   );
