@@ -97,7 +97,7 @@ export function BPOTPVerify({
               onResend();
             }}
             disabled={loading}
-            className="text-teal-600 font-medium hover:underline disabled:opacity-50"
+            className="text-teal-700 font-medium hover:underline disabled:opacity-50"
           >
             {loading ? "Sending..." : "Resend code"}
           </button>

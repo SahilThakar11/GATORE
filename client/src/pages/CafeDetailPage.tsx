@@ -95,14 +95,18 @@ function DetailSkeleton() {
           <div className="h-10 bg-gray-100 rounded w-36 mt-1" />
         </div>
       </div>
-      {/* Desktop: logo beside info */}
-      <div className="hidden sm:flex items-start gap-5">
-        <div className="w-40 h-40 rounded-xl bg-gray-100 shrink-0 -mt-10" />
-        <div className="flex-1 flex flex-col gap-3 mt-2">
-          <div className="h-8 bg-gray-100 rounded w-1/2" />
-          <div className="h-4 bg-gray-100 rounded w-1/3" />
-          <div className="h-4 bg-gray-100 rounded w-2/3" />
-          <div className="h-10 bg-gray-100 rounded w-36 mt-1" />
+      {/* Tablet + desktop: logo beside info */}
+      <div className="hidden sm:flex items-center lg:items-start gap-5">
+        <div className="w-32 h-32 lg:w-40 lg:h-40 rounded-xl bg-gray-100 shrink-0 lg:-mt-10" />
+        <div className="flex-1 flex flex-col gap-3">
+          <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-3">
+            <div className="flex flex-col gap-2.5">
+              <div className="h-7 lg:h-8 bg-gray-100 rounded w-1/2" />
+              <div className="h-4 bg-gray-100 rounded w-1/3" />
+              <div className="h-4 bg-gray-100 rounded w-2/3" />
+            </div>
+            <div className="h-10 bg-gray-100 rounded w-36 shrink-0" />
+          </div>
         </div>
       </div>
       {/* Amenities bar */}
@@ -204,7 +208,7 @@ export default function CafeDetailPage() {
           <p className="text-gray-500 font-semibold">Café not found</p>
           <button
             onClick={() => navigate(-1)}
-            className="mt-3 text-sm text-teal-600 hover:underline inline-flex items-center gap-1"
+            className="mt-3 text-sm text-teal-700 hover:underline inline-flex items-center gap-1"
           >
             <ChevronLeft size={14} aria-hidden="true" /> Go back
           </button>
@@ -300,8 +304,8 @@ export default function CafeDetailPage() {
             </div>
 
             {/* ── Desktop layout: logo beside all info ── */}
-            <div className="hidden sm:flex items-start gap-5">
-              <div className="w-40 h-40 rounded-xl overflow-hidden bg-gray-100 border border-gray-200 shrink-0 -mt-10" style={{ boxShadow: "0px 4px 6px -1px rgba(0,0,0,0.10), 0px 2px 4px -2px rgba(0,0,0,0.10)" }}>
+            <div className="hidden sm:flex items-center lg:items-start gap-5">
+              <div className="w-32 h-32 lg:w-40 lg:h-40 rounded-xl overflow-hidden bg-gray-100 border border-gray-200 shrink-0 lg:-mt-10" style={{ boxShadow: "0px 4px 6px -1px rgba(0,0,0,0.10), 0px 2px 4px -2px rgba(0,0,0,0.10)" }}>
                 {cafe.logoUrl ? (
                   <img
                     src={cafe.logoUrl}
@@ -315,43 +319,45 @@ export default function CafeDetailPage() {
                 )}
               </div>
               <div className="flex-1 min-w-0">
-                <div className="flex items-start justify-between gap-4">
+                <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-3">
                   <div>
-                    <h1 className="text-2xl sm:text-3xl font-black text-gray-900">
+                    <h1 className="text-2xl lg:text-3xl font-black text-gray-900">
                       {cafe.name}
                     </h1>
-                    <p className="text-sm sm:text-base text-gray-500 mt-0.5">
+                    <p className="text-sm lg:text-base text-gray-500 mt-0.5">
                       {cafe.tagline}
                     </p>
                     <div className="flex items-center gap-3 mt-2 flex-wrap">
                       <div className="flex items-center gap-1">
                         <Star size={13} aria-hidden="true" style={{ color: "#F59E0B", fill: "#F59E0B", flexShrink: 0 }} />
                         <span className="sr-only">Rating:</span>
-                        <span className="text-sm sm:text-base font-semibold" style={{ color: "#292524" }}>
+                        <span className="text-sm lg:text-base font-semibold" style={{ color: "#292524" }}>
                           {Number(cafe.rating).toFixed(1)}
                         </span>
-                        <span className="text-sm sm:text-base" style={{ color: "#292524", fontWeight: 400 }}>
+                        <span className="text-sm lg:text-base" style={{ color: "#292524", fontWeight: 400 }}>
                           ({cafe.reviewCount} reviews)
                         </span>
                       </div>
                       <span aria-hidden="true" className="text-gray-200">·</span>
-                      <span className="text-xs sm:text-sm rounded-full font-medium" style={{ backgroundColor: "#E8D4C4", color: "#292524", padding: "4px 10px" }}>
+                      <span className="text-xs lg:text-sm rounded-full font-medium" style={{ backgroundColor: "#E8D4C4", color: "#292524", padding: "4px 10px" }}>
                         {dbGamesLoading ? "…" : dbGames.length} games
                       </span>
                       <span aria-hidden="true" className="text-gray-200">·</span>
                       <div className="flex items-center gap-1">
                         <MapPin size={13} aria-hidden="true" style={{ color: "#57534E", flexShrink: 0 }} />
-                        <span className="text-sm sm:text-base" style={{ color: "#57534E", fontWeight: 400 }}>
+                        <span className="text-sm lg:text-base" style={{ color: "#57534E", fontWeight: 400 }}>
                           {cafe.address}, {cafe.city}
                         </span>
                       </div>
                     </div>
                   </div>
-                  <PrimaryButton
-                    label="Reserve a table"
-                    size="sm"
-                    onClick={() => setReservationOpen(true)}
-                  />
+                  <div className="shrink-0 self-start">
+                    <PrimaryButton
+                      label="Reserve a table"
+                      size="sm"
+                      onClick={() => setReservationOpen(true)}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
@@ -362,14 +368,14 @@ export default function CafeDetailPage() {
                   className="flex items-center gap-1.5 text-gray-500"
                 >
                   <Icon size={18} className="text-teal-700" aria-hidden="true" />
-                  <span className="text-xs sm:text-sm font-medium">{label}</span>
+                  <span className="text-xs lg:text-sm font-medium">{label}</span>
                 </div>
               ))}
             </div>
           </div>
         ) : null}
 
-        <div className="flex flex-col md:flex-row gap-8 mt-2 md:mt-8 pb-16">
+        <div className="flex flex-col xl:flex-row gap-8 mt-2 xl:mt-8 pb-16">
           <div className="flex-1 min-w-0 flex flex-col gap-6">
             {cafe && (
               <div className="bg-white rounded-xl border border-warm-200 p-6">
@@ -498,7 +504,7 @@ export default function CafeDetailPage() {
                         setGameQuery("");
                         setActiveCategory("All");
                       }}
-                      className="mt-2 text-xs text-teal-600 font-medium hover:underline"
+                      className="mt-2 text-xs text-teal-700 font-medium hover:underline"
                     >
                       Clear filters
                     </button>
@@ -507,8 +513,8 @@ export default function CafeDetailPage() {
             </div>
           </div>
 
-          <div className="w-full md:w-72 md:shrink-0 flex flex-col gap-5">
-            <div className="bg-warm-100 border border-warm-200 rounded-xl p-5 text-center flex flex-col gap-3 md:order-last">
+          <div className="w-full xl:w-72 xl:shrink-0 flex flex-col gap-5">
+            <div className="bg-warm-100 border border-warm-200 rounded-xl p-5 text-center flex flex-col gap-3 xl:order-last">
               <p className="text-gray-900 font-bold text-base sm:text-lg">Ready to play?</p>
               <p className="text-gray-500 text-xs sm:text-sm leading-relaxed">
                 Reserve your table and request games in advance — we'll have
@@ -529,73 +535,73 @@ export default function CafeDetailPage() {
             </div>
 
             {cafe && (
-              <div className="bg-warm-100 rounded-xl border border-warm-200 p-5">
-                <h3 className="text-sm sm:text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
-                  <Clock size={18} className="text-teal-700" aria-hidden="true" /> Hours
-                </h3>
-                <div className="flex flex-col gap-2">
-                  {Object.entries(formattedHours).map(([day, hours]) => (
-                    <div
-                      key={day}
-                      className="flex items-center justify-between"
-                    >
-                      <span
-                        className={`text-xs sm:text-sm ${day === todayName ? "font-bold text-teal-700" : "text-gray-500"}`}
+              <div className="flex flex-col md:flex-row xl:flex-col gap-5">
+                <div className="flex-1 bg-warm-100 rounded-xl border border-warm-200 p-5">
+                  <h3 className="text-sm sm:text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
+                    <Clock size={18} className="text-teal-700" aria-hidden="true" /> Hours
+                  </h3>
+                  <div className="flex flex-col gap-2">
+                    {Object.entries(formattedHours).map(([day, hours]) => (
+                      <div
+                        key={day}
+                        className="flex items-center justify-between"
                       >
-                        {day}
-                      </span>
-                      <span
-                        className={`text-xs sm:text-sm font-semibold ${day === todayName ? "text-teal-700" : "text-gray-700"}`}
-                      >
-                        {hours}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {cafe && (
-              <div className="bg-warm-100 rounded-xl border border-warm-200 p-5">
-                <h3 className="text-sm sm:text-base font-bold text-gray-900 mb-3">
-                  Contact
-                </h3>
-                <div className="flex flex-col gap-3">
-                  <div className="flex items-center gap-2.5">
-                    <MapPin size={18} className="text-teal-700 shrink-0" aria-hidden="true" />
-                    <span className="text-xs sm:text-sm text-gray-600 leading-snug">
-                      {cafe.address}, {cafe.city}, {cafe.province}{" "}
-                      {cafe.postalCode}
-                    </span>
+                        <span
+                          className={`text-xs sm:text-sm ${day === todayName ? "font-bold text-teal-700" : "text-gray-500"}`}
+                        >
+                          {day}
+                        </span>
+                        <span
+                          className={`text-xs sm:text-sm font-semibold ${day === todayName ? "text-teal-700" : "text-gray-700"}`}
+                        >
+                          {hours}
+                        </span>
+                      </div>
+                    ))}
                   </div>
-                  {cafe.phone && (
+                </div>
+
+                <div className="flex-1 bg-warm-100 rounded-xl border border-warm-200 p-5">
+                  <h3 className="text-sm sm:text-base font-bold text-gray-900 mb-3">
+                    Contact
+                  </h3>
+                  <div className="flex flex-col gap-3">
                     <div className="flex items-center gap-2.5">
-                      <Phone size={18} className="text-teal-700 shrink-0" aria-hidden="true" />
-                      <a
-                        href={`tel:${cafe.phone}`}
-                        className="text-xs sm:text-sm text-teal-600 hover:underline"
-                      >
-                        {cafe.phone}
-                      </a>
+                      <MapPin size={18} className="text-teal-700 shrink-0" aria-hidden="true" />
+                      <span className="text-xs sm:text-sm text-gray-600 leading-snug">
+                        {cafe.address}, {cafe.city}, {cafe.province}{" "}
+                        {cafe.postalCode}
+                      </span>
                     </div>
-                  )}
-                  {cafe.website && (
-                    <div className="flex items-center gap-2.5">
-                      <Globe size={18} className="text-teal-700 shrink-0" aria-hidden="true" />
-                      <a
-                        href={
-                          cafe.website.startsWith("http")
-                            ? cafe.website
-                            : `https://${cafe.website}`
-                        }
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-xs sm:text-sm text-teal-600 hover:underline"
-                      >
-                        {cafe.website.replace(/^https?:\/\//, "")}
-                      </a>
-                    </div>
-                  )}
+                    {cafe.phone && (
+                      <div className="flex items-center gap-2.5">
+                        <Phone size={18} className="text-teal-700 shrink-0" aria-hidden="true" />
+                        <a
+                          href={`tel:${cafe.phone}`}
+                          className="text-xs sm:text-sm text-teal-700 hover:underline"
+                        >
+                          {cafe.phone}
+                        </a>
+                      </div>
+                    )}
+                    {cafe.website && (
+                      <div className="flex items-center gap-2.5">
+                        <Globe size={18} className="text-teal-700 shrink-0" aria-hidden="true" />
+                        <a
+                          href={
+                            cafe.website.startsWith("http")
+                              ? cafe.website
+                              : `https://${cafe.website}`
+                          }
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs sm:text-sm text-teal-700 hover:underline"
+                        >
+                          {cafe.website.replace(/^https?:\/\//, "")}
+                        </a>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             )}

@@ -135,7 +135,7 @@ export function StepSuccess({ formData, onClose }: Props) {
       {/* Edit profile link */}
       <p className="text-center text-sm text-gray-500">
         Need to make changes?{" "}
-        <button className="text-teal-600 font-medium hover:underline">
+        <button className="text-teal-700 font-medium hover:underline">
           Edit profile
         </button>
       </p>

@@ -23,13 +23,55 @@ export default function Header() {
   const auth = useAuthModal();
   const { user, isAuthenticated } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
 
   const closeMobile = () => setMobileOpen(false);
+
+  // Focus trap + Escape + initial focus for mobile menu
+  useEffect(() => {
+    if (!mobileOpen) return;
+
+    const menu = mobileMenuRef.current;
+    if (!menu) return;
+
+    // Focus the first focusable element
+    const focusable = menu.querySelectorAll<HTMLElement>(
+      'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])',
+    );
+    if (focusable.length) focusable[0].focus();
+
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setMobileOpen(false);
+        return;
+      }
+      if (e.key !== "Tab") return;
+      if (!focusable.length) return;
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+
+      if (e.shiftKey) {
+        if (document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        }
+      } else {
+        if (document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    };
+
+    document.addEventListener("keydown", handleKey);
+    return () => document.removeEventListener("keydown", handleKey);
+  }, [mobileOpen]);
 
   return (
     <>
       <header className="w-full bg-teal-50 border-b border-teal-600 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-7 pt-2 pb-2 sm:pb-4 sm:pt-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-7 pt-2 pb-2 sm:pb-3 sm:pt-4 lg:pb-4 lg:pt-6">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
             <Link
@@ -44,17 +86,17 @@ export default function Header() {
             </Link>
 
             {/* Nav — desktop */}
-            <nav className="hidden md:flex items-center gap-8">
+            <nav className="hidden lg:flex items-center gap-8">
               <FindCafeDropdown />
               {NAV_LINKS.map((link) => (
                 <NavLink
                   key={link.to}
                   to={link.to}
                   className={({ isActive }) =>
-                    `text-[16px] font-normal transition-colors duration-150 ${
+                    `text-[16px] font-normal transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 rounded ${
                       isActive
-                        ? "text-teal-600"
-                        : "text-neutral-600 hover:text-teal-600"
+                        ? "text-teal-700"
+                        : "text-neutral-600 hover:text-teal-700"
                     }`
                   }
                 >
@@ -64,14 +106,14 @@ export default function Header() {
             </nav>
 
             {/* Right side — desktop auth */}
-            <div className="hidden md:flex items-center gap-4">
+            <div className="hidden lg:flex items-center gap-4">
               {isAuthenticated && user ? (
                 <UserDropdown userName={user.name} onLogout={auth.logout} />
               ) : (
                 <>
                   <button
                     onClick={() => auth.open("signin")}
-                    className="text-[16px] font-normal text-neutral-600 hover:text-teal-600 transition-colors duration-150 cursor-pointer"
+                    className="text-[16px] font-normal text-neutral-600 hover:text-teal-700 transition-colors duration-150 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 rounded"
                   >
                     Sign in
                   </button>
@@ -80,20 +122,32 @@ export default function Header() {
               )}
             </div>
 
-            {/* Hamburger — mobile only */}
+            {/* Hamburger — mobile + tablet */}
             <button
-              className="md:hidden p-2 rounded-lg text-neutral-600 hover:text-teal-600 hover:bg-teal-100 transition-colors cursor-pointer"
+              className="lg:hidden p-2 rounded-lg text-neutral-600 hover:text-teal-700 hover:bg-teal-100 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
               onClick={() => setMobileOpen((v) => !v)}
-              aria-label="Toggle menu"
+              aria-label={mobileOpen ? "Close menu" : "Open menu"}
+              aria-expanded={mobileOpen}
+              aria-controls="mobile-menu"
             >
-              {mobileOpen ? <X size={22} /> : <Menu size={22} />}
+              {mobileOpen ? (
+                <X size={22} aria-hidden="true" />
+              ) : (
+                <Menu size={22} aria-hidden="true" />
+              )}
             </button>
           </div>
         </div>
 
-        {/* Mobile menu */}
+        {/* Mobile + tablet menu */}
         {mobileOpen && (
-          <div className="md:hidden border-t border-teal-200 bg-teal-50 px-4 py-4 flex flex-col gap-1">
+          <div
+            ref={mobileMenuRef}
+            id="mobile-menu"
+            role="navigation"
+            aria-label="Main navigation"
+            className="lg:hidden border-t border-teal-200 bg-teal-50 px-4 py-4 flex flex-col gap-1"
+          >
             {/* Find a café sub-links */}
             <p className="px-3 pt-1 pb-0.5 text-[13px] font-semibold uppercase tracking-wide text-teal-700">
               Find a café
@@ -102,10 +156,10 @@ export default function Header() {
               to="/find-a-cafe"
               onClick={closeMobile}
               className={({ isActive }) =>
-                `block px-5 py-2.5 rounded-lg text-[16px] font-normal transition-colors duration-150 ${
+                `block px-5 py-2.5 rounded-lg text-[16px] font-normal transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 ${
                   isActive
-                    ? "text-teal-600 bg-teal-100"
-                    : "text-neutral-600 hover:text-teal-600 hover:bg-teal-100"
+                    ? "text-teal-700 bg-teal-100"
+                    : "text-neutral-600 hover:text-teal-700 hover:bg-teal-100"
                 }`
               }
             >
@@ -115,10 +169,10 @@ export default function Header() {
               to="/find-a-game"
               onClick={closeMobile}
               className={({ isActive }) =>
-                `block px-5 py-2.5 rounded-lg text-[16px] font-normal transition-colors duration-150 ${
+                `block px-5 py-2.5 rounded-lg text-[16px] font-normal transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 ${
                   isActive
-                    ? "text-teal-600 bg-teal-100"
-                    : "text-neutral-600 hover:text-teal-600 hover:bg-teal-100"
+                    ? "text-teal-700 bg-teal-100"
+                    : "text-neutral-600 hover:text-teal-700 hover:bg-teal-100"
                 }`
               }
             >
@@ -130,10 +184,10 @@ export default function Header() {
                 to={link.to}
                 onClick={closeMobile}
                 className={({ isActive }) =>
-                  `block px-3 py-2.5 rounded-lg text-[16px] font-normal transition-colors duration-150 ${
+                  `block px-3 py-2.5 rounded-lg text-[16px] font-normal transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 ${
                     isActive
-                      ? "text-teal-600 bg-teal-100"
-                      : "text-neutral-600 hover:text-teal-600 hover:bg-teal-100"
+                      ? "text-teal-700 bg-teal-100"
+                      : "text-neutral-600 hover:text-teal-700 hover:bg-teal-100"
                   }`
                 }
               >
@@ -147,9 +201,9 @@ export default function Header() {
                   <Link
                     to="/reservations"
                     onClick={closeMobile}
-                    className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-[16px] text-neutral-600 hover:text-teal-600 hover:bg-teal-100 transition-colors"
+                    className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-[16px] text-neutral-600 hover:text-teal-700 hover:bg-teal-100 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
                   >
-                    <CalendarDays size={17} />
+                    <CalendarDays size={17} aria-hidden="true" />
                     Reservations
                   </Link>
                   <button
@@ -157,9 +211,9 @@ export default function Header() {
                       closeMobile();
                       auth.logout();
                     }}
-                    className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-[16px] text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
+                    className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-[16px] text-red-600 hover:bg-red-50 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
                   >
-                    <LogOut size={17} />
+                    <LogOut size={17} aria-hidden="true" />
                     Log out
                   </button>
                 </>
@@ -170,11 +224,12 @@ export default function Header() {
                       closeMobile();
                       auth.open("signin");
                     }}
-                    className="w-full text-left px-3 py-2.5 rounded-lg text-[16px] font-normal text-neutral-600 hover:text-teal-600 hover:bg-teal-100 transition-colors cursor-pointer"
+                    className="w-full text-left px-3 py-2.5 rounded-lg text-[16px] font-normal text-neutral-600 hover:text-teal-700 hover:bg-teal-100 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
                   >
                     Sign in
                   </button>
                   <GetStartedDropdown
+                    align="left"
                     onPersonal={() => {
                       closeMobile();
                       auth.open("signup");
@@ -194,7 +249,13 @@ export default function Header() {
 
 // ── Get started dropdown ──────────────────────────────────────────────────────
 
-function GetStartedDropdown({ onPersonal }: { onPersonal: () => void }) {
+function GetStartedDropdown({
+  onPersonal,
+  align = "right",
+}: {
+  onPersonal: () => void;
+  align?: "left" | "right";
+}) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -240,7 +301,7 @@ function GetStartedDropdown({ onPersonal }: { onPersonal: () => void }) {
 
   const items = [
     {
-      icon: <UserPlus size={16} />,
+      icon: <UserPlus size={16} aria-hidden="true" />,
       label: "Personal account",
       sublabel: "Find cafés and book tables",
       onClick: () => {
@@ -249,7 +310,7 @@ function GetStartedDropdown({ onPersonal }: { onPersonal: () => void }) {
       },
     },
     {
-      icon: <Building2 size={16} />,
+      icon: <Building2 size={16} aria-hidden="true" />,
       label: "Business account",
       sublabel: "List your café on Gatore",
       onClick: () => {
@@ -272,6 +333,7 @@ function GetStartedDropdown({ onPersonal }: { onPersonal: () => void }) {
         rightIcon={
           <ChevronDown
             size={14}
+            aria-hidden="true"
             style={{
               transition: "transform 200ms",
               transform: open ? "rotate(180deg)" : "rotate(0deg)",
@@ -279,6 +341,8 @@ function GetStartedDropdown({ onPersonal }: { onPersonal: () => void }) {
           />
         }
         onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        aria-haspopup="menu"
       />
 
       {open && (
@@ -288,7 +352,7 @@ function GetStartedDropdown({ onPersonal }: { onPersonal: () => void }) {
           style={{
             position: "absolute",
             top: "calc(100% + 6px)",
-            right: 0,
+            ...(align === "left" ? { left: 0 } : { right: 0 }),
             backgroundColor: "#FFFFFF",
             borderRadius: 8,
             border: "1px solid #E8D4C4",
@@ -315,7 +379,7 @@ function GetStartedDropdown({ onPersonal }: { onPersonal: () => void }) {
                 transition: "background 150ms",
                 color: "#292524",
               }}
-              className="bg-transparent hover:bg-[#FEF7F0]"
+              className="bg-transparent hover:bg-[#FEF7F0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
             >
               <span
                 style={{ color: "#57534E", flexShrink: 0, display: "flex" }}
@@ -356,6 +420,7 @@ function GetStartedDropdown({ onPersonal }: { onPersonal: () => void }) {
 function FindCafeDropdown() {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
   const timeout = useRef<ReturnType<typeof setTimeout>>(undefined);
   const location = useLocation();
 
@@ -380,47 +445,83 @@ function FindCafeDropdown() {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
+  useEffect(() => {
+    if (!open) return;
+    const focusable = menuRef.current?.querySelectorAll<HTMLElement>("a");
+    if (focusable?.length) focusable[0].focus();
+    const handleKey = (e: KeyboardEvent) => {
+      if (!focusable?.length) return;
+      const els = Array.from(focusable);
+      const idx = els.indexOf(document.activeElement as HTMLElement);
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        els[(idx + 1) % els.length].focus();
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        els[(idx - 1 + els.length) % els.length].focus();
+      } else if (e.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("keydown", handleKey);
+    return () => document.removeEventListener("keydown", handleKey);
+  }, [open]);
+
   return (
     <div ref={ref} className="relative" onMouseEnter={show} onMouseLeave={hide}>
       <button
         onClick={() => setOpen((v) => !v)}
-        className={`flex items-center gap-1 text-[16px] font-normal transition-colors duration-150 cursor-pointer ${
-          isActive ? "text-teal-600" : "text-neutral-600 hover:text-teal-600"
+        aria-expanded={open}
+        aria-haspopup="menu"
+        className={`flex items-center gap-1 text-[16px] font-normal transition-colors duration-150 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 rounded ${
+          isActive ? "text-teal-700" : "text-neutral-600 hover:text-teal-700"
         }`}
       >
         Find a café
         <ChevronDown
           size={15}
+          aria-hidden="true"
           className={`transition-transform duration-200 ${open ? "rotate-180" : ""}`}
         />
       </button>
 
       {open && (
-        <div className="absolute left-0 mt-2 w-40 bg-white rounded-lg shadow-lg py-1 z-50" style={{ border: "1px solid #E8D4C4" }}>
+        <div
+          ref={menuRef}
+          role="menu"
+          className="absolute left-0 mt-2 w-40 bg-white rounded-lg shadow-lg py-1 z-50"
+          style={{ border: "1px solid #E8D4C4" }}
+        >
           <Link
             to="/find-a-cafe"
+            role="menuitem"
             onClick={() => setOpen(false)}
-            className={`flex items-center gap-2.5 px-4 py-2.5 text-sm transition-colors hover:bg-teal-50 hover:text-teal-700 ${
+            className={`flex items-center gap-2.5 px-4 py-2.5 text-sm transition-colors hover:bg-teal-50 hover:text-teal-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 ${
               location.pathname === "/find-a-cafe"
-                ? "text-teal-600 font-medium"
+                ? "text-teal-700 font-medium"
                 : "text-neutral-700"
             }`}
           >
-            <span style={{ color: "#57534E", flexShrink: 0, display: "flex" }}>
+            <span
+              style={{ color: "#57534E", flexShrink: 0, display: "flex" }}
+              aria-hidden="true"
+            >
               <Search size={16} />
             </span>
             By name
           </Link>
           <Link
             to="/find-a-game"
+            role="menuitem"
             onClick={() => setOpen(false)}
-            className={`flex items-center gap-2.5 px-4 py-2.5 text-sm transition-colors hover:bg-teal-50 hover:text-teal-700 ${
+            className={`flex items-center gap-2.5 px-4 py-2.5 text-sm transition-colors hover:bg-teal-50 hover:text-teal-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 ${
               location.pathname === "/find-a-game"
-                ? "text-teal-600 font-medium"
+                ? "text-teal-700 font-medium"
                 : "text-neutral-700"
             }`}
           >
-            <span style={{ color: "#57534E", flexShrink: 0, display: "flex" }}>
+            <span
+              style={{ color: "#57534E", flexShrink: 0, display: "flex" }}
+              aria-hidden="true"
+            >
               <Dices size={16} />
             </span>
             By game
@@ -440,6 +541,7 @@ function UserDropdown({
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
   const timeout = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const show = () => {
@@ -459,43 +561,74 @@ function UserDropdown({
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
+  useEffect(() => {
+    if (!open) return;
+    const focusable = menuRef.current?.querySelectorAll<HTMLElement>(
+      "a, button",
+    );
+    if (focusable?.length) focusable[0].focus();
+    const handleKey = (e: KeyboardEvent) => {
+      if (!focusable?.length) return;
+      const els = Array.from(focusable);
+      const idx = els.indexOf(document.activeElement as HTMLElement);
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        els[(idx + 1) % els.length].focus();
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        els[(idx - 1 + els.length) % els.length].focus();
+      } else if (e.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("keydown", handleKey);
+    return () => document.removeEventListener("keydown", handleKey);
+  }, [open]);
+
   return (
     <div ref={ref} className="relative" onMouseEnter={show} onMouseLeave={hide}>
       <button
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-2 cursor-pointer group"
+        aria-expanded={open}
+        aria-haspopup="menu"
+        className="flex items-center gap-2 cursor-pointer group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 rounded"
       >
         <div className="w-8 h-8 rounded-full bg-teal-600 flex items-center justify-center shrink-0">
-          <User size={16} className="text-white" />
+          <User size={16} className="text-white" aria-hidden="true" />
         </div>
         <span className="text-[15px] font-medium text-neutral-700 max-w-35 truncate">
           {userName}
         </span>
         <ChevronDown
           size={15}
+          aria-hidden="true"
           className={`text-neutral-400 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
         />
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-xl shadow-lg py-1.5 z-50">
+        <div
+          ref={menuRef}
+          role="menu"
+          className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-xl shadow-lg py-1.5 z-50"
+        >
           <Link
             to="/reservations"
+            role="menuitem"
             onClick={() => setOpen(false)}
-            className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-neutral-700 hover:bg-teal-50 hover:text-teal-700 transition-colors"
+            className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-neutral-700 hover:bg-teal-50 hover:text-teal-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
           >
-            <CalendarDays size={15} />
+            <CalendarDays size={15} aria-hidden="true" />
             Reservations
           </Link>
           <div className="border-t border-gray-100 my-1" />
           <button
+            role="menuitem"
             onClick={() => {
               setOpen(false);
               onLogout();
             }}
-            className="flex items-center gap-2.5 w-full px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors cursor-pointer"
+            className="flex items-center gap-2.5 w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
           >
-            <LogOut size={15} />
+            <LogOut size={15} aria-hidden="true" />
             Log out
           </button>
         </div>

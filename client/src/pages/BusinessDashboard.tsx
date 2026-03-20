@@ -39,7 +39,7 @@ export default function BusinessDashboard() {
               <p className="text-sm font-bold text-gray-800 mt-0.5">
                 {user?.email}
               </p>
-              <p className="text-xs text-teal-600 font-semibold mt-0.5 uppercase tracking-wide">
+              <p className="text-xs text-teal-700 font-semibold mt-0.5 uppercase tracking-wide">
                 {user?.role}
               </p>
             </div>

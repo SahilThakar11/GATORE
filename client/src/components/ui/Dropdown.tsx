@@ -16,6 +16,7 @@ interface DropdownProps {
   items: DropdownItem[];
   align?: "left" | "right";
   fullWidth?: boolean;
+  isPlaceholder?: boolean;
 }
 
 export function Dropdown({
@@ -25,6 +26,7 @@ export function Dropdown({
   items,
   align = trigger === "kebab" ? "right" : "left",
   fullWidth = false,
+  isPlaceholder = false,
 }: DropdownProps) {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -126,7 +128,7 @@ export function Dropdown({
               fontFamily: "'DM Sans', sans-serif",
               fontSize: 16,
               fontWeight: 400,
-              color: "#292524",
+              color: isPlaceholder ? "#9CA3AF" : "#292524",
               flex: 1,
               textAlign: "left",
             }}

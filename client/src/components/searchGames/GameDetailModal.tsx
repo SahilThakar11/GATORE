@@ -147,15 +147,6 @@ export function GameDetailModal({ game, onClose }: Props) {
           },
         ]
       : []),
-    ...(game.rating
-      ? [
-          {
-            icon: <Star size={13} className="shrink-0" aria-hidden="true" />,
-            label: "BGG Rating",
-            value: String(game.rating),
-          },
-        ]
-      : []),
   ];
 
   return (
@@ -274,17 +265,17 @@ export function GameDetailModal({ game, onClose }: Props) {
         </div>
 
         {/* ── Scrollable body ─────────────────────────────────────────── */}
-        <div className="overflow-y-auto flex-1 px-5 py-5 flex flex-col gap-5">
+        <div className="overflow-y-auto flex-1 px-5 py-5 flex flex-col gap-5 bg-warm-50">
           {/* Stats grid */}
-          <dl className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          <dl className="grid grid-cols-2 gap-2">
             {stats.map(({ icon, label, value }) => (
               <div
                 key={label}
-                className="bg-warm-50 border border-warm-300 rounded-xl px-2.5 py-2.5 sm:px-3 sm:py-3 flex flex-col gap-1"
+                className="bg-warm-100 border border-warm-300 rounded-xl px-2.5 py-2.5 sm:px-3 sm:py-3 flex flex-col gap-1"
               >
                 <dt className="flex items-center gap-1.5 text-gray-500">
                   {icon}
-                  <span className="text-[11px] sm:text-[11px] font-medium text-gray-500 uppercase tracking-widest">
+                  <span className="text-[11px] sm:text-[11px] font-medium text-gray-600 uppercase tracking-widest">
                     {label}
                   </span>
                 </dt>
@@ -295,17 +286,6 @@ export function GameDetailModal({ game, onClose }: Props) {
                       dots={game.weightDots}
                       textSizeClass="text-sm sm:text-base"
                     />
-                  ) : label === "BGG Rating" ? (
-                    <div className="flex items-center gap-1">
-                      <Star
-                        size={12}
-                        className="text-amber-400 fill-amber-400"
-                        aria-hidden="true"
-                      />
-                      <span className="text-sm sm:text-base font-semibold text-gray-800">
-                        {value}
-                      </span>
-                    </div>
                   ) : (
                     <span className="text-sm sm:text-base font-semibold text-gray-800 leading-tight">
                       {value}
@@ -390,7 +370,7 @@ export function GameDetailModal({ game, onClose }: Props) {
               target="_blank"
               rel="noopener noreferrer"
               aria-label="View on BoardGameGeek (opens in new tab)"
-              className="flex items-center gap-1.5 text-xs text-gray-600 hover:text-teal-600 transition-colors"
+              className="flex items-center gap-1.5 text-xs text-gray-600 hover:text-teal-700 transition-colors"
             >
               <Layers size={12} aria-hidden="true" />
               View on BoardGameGeek

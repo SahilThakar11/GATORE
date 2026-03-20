@@ -40,7 +40,7 @@ export function SelectedGameBanner({ game, onClose }: Props) {
   }, []);
 
   const ratingLabel = (() => {
-    const r = parseFloat(game.rating ?? "0");
+    const r = game.rating ?? 0;
     if (r >= 9.0) return "Exceptional";
     if (r >= 8.0) return "Highly Rated";
     if (r >= 7.0) return "Well Rated";
@@ -80,8 +80,8 @@ export function SelectedGameBanner({ game, onClose }: Props) {
             difficulty={game.difficulty}
             dots={game.weightDots}
             isTextWhite={true}
-            filledClass="bg-teal-900"
-            emptyClass="bg-white"
+            filledClass="bg-white"
+            emptyClass="bg-teal-700"
           />
         </span>
       ),
@@ -118,30 +118,20 @@ export function SelectedGameBanner({ game, onClose }: Props) {
       </button>
 
       {/* Title row */}
-      <div className="flex items-center gap-2 mb-1">
+      <div className="flex flex-col sm:flex-row items-start gap-2 mb-1">
         <img
           src={game.image}
           alt={game.name}
-          className="w-38 h-38 rounded-sm object-cover"
+          className="w-38 h-38 rounded-sm object-cover shrink-0"
         />
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2 min-w-0 w-full">
           <h2 className="text-xl font-bold text-white">{game.name}</h2>
           {game.rating && (
             <div className="flex items-center gap-2">
-              {/* sr-only provides the label; visual elements are hidden from AT */}
               <div className="flex items-center gap-1 bg-white/20 rounded-full px-2.5 py-1">
                 <span className="sr-only">Rating: {game.rating}</span>
-                <Star
-                  size={12}
-                  className="text-amber-300 fill-amber-300"
-                  aria-hidden="true"
-                />
-                <span
-                  className="text-base font-bold text-white"
-                  aria-hidden="true"
-                >
-                  {game.rating}
-                </span>
+                <Star size={12} className="text-amber-300 fill-amber-300" aria-hidden="true" />
+                <span className="text-base font-bold text-white" aria-hidden="true">{game.rating}</span>
               </div>
               <span className="text-base text-teal-50">{ratingLabel}</span>
             </div>

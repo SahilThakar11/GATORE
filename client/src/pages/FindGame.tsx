@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Search, Loader2, X, ChevronDown, MapPin, Star } from "lucide-react";
+import { Search, Loader2, X, ChevronDown, MapPin, Star, Check } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useBGGSearch, type BGGGame } from "../hooks/useBGG";
 import { useCafesByGame, type CafeSummary } from "../hooks/useCafe";
@@ -69,7 +69,7 @@ function CafeResultCard({
               className="w-full h-full object-cover"
             />
           ) : (
-            <div className="w-full h-full bg-teal-700 flex items-center justify-center text-white font-bold text-xl">
+            <div role="img" aria-label={`${cafe.name} logo placeholder`} className="w-full h-full bg-teal-700 flex items-center justify-center text-white font-bold text-xl">
               {cafe.name[0]}
             </div>
           )}
@@ -139,7 +139,8 @@ function CafeResultCard({
           </div>
 
           <span className="inline-flex self-start items-center gap-1 text-xs font-semibold text-teal-700 bg-teal-50 px-2.5 py-0.5 rounded-full mt-0.5">
-            ✓ Has <span className="font-bold">{gameName}</span>
+            <Check size={11} aria-hidden="true" />
+            Has <span className="font-bold">{gameName}</span>
           </span>
         </div>
       </div>
@@ -149,12 +150,13 @@ function CafeResultCard({
 
 function CafeResultSkeleton() {
   return (
-    <div className="bg-white border border-gray-100 rounded-xl p-4 animate-pulse flex gap-4">
-      <div className="w-12 h-12 rounded-lg bg-gray-100 shrink-0" />
-      <div className="flex-1 flex flex-col gap-2">
+    <div className="bg-white border border-gray-100 rounded-[8px] p-4 sm:px-7 sm:py-6 animate-pulse flex gap-4">
+      <div className="w-[110px] h-[110px] sm:w-[120px] sm:h-[120px] rounded-[8px] bg-gray-100 shrink-0" />
+      <div className="flex-1 flex flex-col gap-2.5 justify-center">
         <div className="h-4 bg-gray-100 rounded w-1/2" />
         <div className="h-3 bg-gray-100 rounded w-2/3" />
         <div className="h-3 bg-gray-100 rounded w-1/3" />
+        <div className="h-5 bg-gray-100 rounded-full w-28 mt-1" />
       </div>
     </div>
   );
@@ -249,7 +251,7 @@ export default function FindByGamePage() {
 
   return (
     <>
-      <div className="bg-[#faf8f4] min-h-screen">
+      <div className="bg-warm-50 min-h-screen">
         <div className="max-w-4xl mx-auto px-4 sm:px-7 pt-10 pb-6">
           <div className="mb-6">
             <h1 className="text-3xl font-black text-gray-900">Find by game</h1>
@@ -264,7 +266,7 @@ export default function FindByGamePage() {
             <div
               className={`flex items-center gap-2 bg-white border px-4 py-3 transition-all ${
                 searchFocused || inputValue
-                  ? "border-teal-500 ring-2 ring-teal-100"
+                  ? "border-teal-600 ring-2 ring-teal-100"
                   : "border-warm-300"
               }`}
               style={{ borderRadius: 8 }}
@@ -272,13 +274,13 @@ export default function FindByGamePage() {
               {searchLoading ? (
                 <Loader2
                   size={17}
-                  className="text-teal-500 shrink-0 animate-spin"
+                  className="text-teal-600 shrink-0 animate-spin"
                   aria-hidden="true"
                 />
               ) : (
                 <Search
                   size={17}
-                  className={`shrink-0 transition-colors ${searchFocused || inputValue ? "text-teal-500" : "text-gray-400"}`}
+                  className={`shrink-0 transition-colors ${searchFocused || inputValue ? "text-teal-600" : "text-gray-400"}`}
                   aria-hidden="true"
                 />
               )}
@@ -371,7 +373,7 @@ export default function FindByGamePage() {
                   </p>
                   <button
                     onClick={() => setActiveCity("All")}
-                    className="mt-3 text-xs text-teal-600 font-medium hover:underline"
+                    className="mt-3 text-xs text-teal-700 font-medium hover:underline"
                   >
                     Show all cities
                   </button>
@@ -409,7 +411,7 @@ export default function FindByGamePage() {
                 <div className="w-20 h-1 bg-warm-400 mt-1 mb-4 rounded-full" />
               </div>
               {isSearchMode && searchLoading && (
-                <div role="status" className="flex items-center gap-1.5 text-xs text-teal-600 mt-1">
+                <div role="status" className="flex items-center gap-1.5 text-xs text-teal-700 mt-1">
                   <Loader2 size={13} className="animate-spin" aria-hidden="true" /> Searching...
                 </div>
               )}
@@ -472,7 +474,7 @@ export default function FindByGamePage() {
                 </p>
                 <button
                   onClick={handleClearSearch}
-                  className="mt-4 text-xs text-teal-600 font-medium hover:underline"
+                  className="mt-4 text-xs text-teal-700 font-medium hover:underline"
                 >
                   Clear search
                 </button>
