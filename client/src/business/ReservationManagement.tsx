@@ -235,7 +235,7 @@ const TimelineView = () => {
                                         return (
                                             <div
                                                 key={res.id}
-                                                className="absolute top-1 bottom-1 rounded-lg cursor-pointer hover:shadow-lg hover:scale-105 transition-all"
+                                                className="absolute top-1 bottom-1 rounded-lg cursor-pointer hover:shadow-lg hover:scale-105 transition-all overflow-hidden"
                                                 style={{
                                                     left: `${startOffsetPx}px`,
                                                     width: `${widthPx}px`
@@ -281,6 +281,11 @@ const LegendItem = ({ color, label }) => (
 
 
 const FloorPlanView = () => {
+    const [isEditable, setIsEditable] = useState(false);
+    const toggleEditMode = () => {
+        setIsEditable(!isEditable);
+    };
+
     return (
 			<div className="bg-white border border-warm-200 rounded-xl shadow p-6 mb-6">
                 <div className="flex items-center justify-between mb-4">
@@ -289,10 +294,10 @@ const FloorPlanView = () => {
                         <p className="text-sm text-gray-500">Manage table layout and real-time status</p>
                     </div>
                     <div className="flex space-x-6">
-                        <LegendItem color="bg-blue-400" label="Confirmed" />
-                        <LegendItem color="bg-green-400" label="Checked‑In" />
-                        <LegendItem color="bg-purple-400" label="Completed" />
-                        <LegendItem color="bg-red-400" label="Cancelled" />
+                        <LegendItem color="bg-blue-400" label="Available" />
+                        <LegendItem color="bg-green-400" label="Reserved" />
+                        <LegendItem color="bg-purple-400" label="Occupied" />
+                        <LegendItem color="bg-red-400" label="Out of Service" />
                     </div>
                 </div>
                 <div className="flex items-center justify-between mb-4">
@@ -305,13 +310,15 @@ const FloorPlanView = () => {
                         </select>
                     </div>
                     <div className="space-x-2">
-                        <button className="text-sm text-teal-600 hover:text-gray-800 px-4 py-2 border rounded border-teal-600">Edit Layout</button>
+                        <button className={`text-sm text-teal-600 hover:text-gray-800 px-4 py-2 border rounded border-teal-600 ${isEditable ? 'bg-teal-600 text-white' : ''}`} onClick={toggleEditMode}>
+                            Edit Layout
+                        </button>
                         <button className="text-sm text-teal-600 hover:text-gray-800 px-4 py-2 border rounded border-teal-600">Export</button>
                         <button className="text-sm text-teal-600 hover:text-gray-800 px-4 py-2 border rounded border-teal-600">Import</button>
                     </div>
                 </div>
                 {/* placeholder for floor plan graphic */}
-                <FloorPlan/>
+                <FloorPlan isEditable={isEditable} />
 			</div>
 		);
 }
