@@ -153,10 +153,18 @@ export default function FindCafePage() {
   // Fetch all cafés — no city param so we get everything, then filter client-side
   const { cafes, loading, error } = useCafes();
 
-  // Derive city list from real data
+  // Top 7 cities by café count
   const allCities = [
     "All",
-    ...Array.from(new Set(cafes.map((c) => c.city))).sort(),
+    ...Object.entries(
+      cafes.reduce<Record<string, number>>((acc, c) => {
+        acc[c.city] = (acc[c.city] || 0) + 1;
+        return acc;
+      }, {}),
+    )
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 7)
+      .map(([city]) => city),
   ];
 
   // Reset pagination when filters change

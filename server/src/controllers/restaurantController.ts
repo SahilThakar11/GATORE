@@ -247,7 +247,9 @@ export const getRestaurantAvailability = async (
       return;
     }
 
-    const targetDate = new Date(date as string);
+    // Parse "YYYY-MM-DD" into components to avoid UTC-midnight shift
+    const [year, month, day] = (date as string).split("-").map(Number);
+    const targetDate = new Date(year, month - 1, day); // local midnight
     const dayOfWeek = targetDate.toLocaleDateString("en-US", {
       weekday: "long",
     }); // e.g. "Saturday"
@@ -293,23 +295,39 @@ export const getRestaurantAvailability = async (
     const tableIds = tables.map((t) => t.id);
 
     // Get existing reservations on that date for those tables
-    const startOfDay = new Date(targetDate);
-    startOfDay.setHours(0, 0, 0, 0);
-    const endOfDay = new Date(targetDate);
-    endOfDay.setHours(23, 59, 59, 999);
+    // Use startTime/endTime overlap instead of reservationDate to avoid
+    // timezone inconsistencies with how reservationDate was stored
+    const startOfDay = new Date(year, month - 1, day, 0, 0, 0, 0);
+    const endOfDay = new Date(year, month - 1, day, 23, 59, 59, 999);
 
     const existingReservations = await prisma.reservation.findMany({
       where: {
         tableId: { in: tableIds },
-        reservationDate: { gte: startOfDay, lte: endOfDay },
         status: { in: ["pending", "confirmed"] },
+        startTime: { lt: endOfDay },
+        endTime: { gt: startOfDay },
       },
-      select: { tableId: true, startTime: true, endTime: true },
+      select: {
+        tableId: true,
+        startTime: true,
+        endTime: true,
+        gameReservations: { select: { gameId: true } },
+      },
+    });
+
+    // DEBUG: Log found reservations
+    console.log(`[Availability] Date: ${date}, Tables: ${tableIds.join(",")}, Found ${existingReservations.length} reservations`);
+    existingReservations.forEach((r) => {
+      console.log(`  → table=${r.tableId} start=${r.startTime.toISOString()} end=${r.endTime.toISOString()} games=${r.gameReservations.map(g => g.gameId).join(",") || "none"}`);
     });
 
     // Build 1-hour slots between open/close time
     const SLOT_DURATION = 60; // minutes
-    const slots: { time: string; available: boolean }[] = [];
+    const slots: {
+      time: string;
+      available: boolean;
+      reservedGameIds: number[];
+    }[] = [];
 
     for (
       let t = hours.openTime;
@@ -318,24 +336,32 @@ export const getRestaurantAvailability = async (
     ) {
       const slotHour = Math.floor(t / 60);
       const slotMin = t % 60;
-      const slotStart = new Date(targetDate);
-      slotStart.setHours(slotHour, slotMin, 0, 0);
-      const slotEnd = new Date(slotStart.getTime() + SLOT_DURATION * 60000);
+      const slotStart = new Date(year, month - 1, day, slotHour, slotMin, 0, 0);
+      const slotEnd = new Date(year, month - 1, day, slotHour, slotMin + SLOT_DURATION, 0, 0);
 
       // A slot is available if at least one table has no conflicting reservation
+      const conflictingReservations = existingReservations.filter(
+        (r) => r.startTime < slotEnd && r.endTime > slotStart,
+      );
+
       const hasAvailableTable = tableIds.some((tableId) => {
-        const conflicts = existingReservations.filter(
-          (r) =>
-            r.tableId === tableId &&
-            r.startTime < slotEnd &&
-            r.endTime > slotStart,
-        );
-        return conflicts.length === 0;
+        return !conflictingReservations.some((r) => r.tableId === tableId);
       });
 
+      // Collect game IDs reserved during this slot
+      const reservedGameIds = [
+        ...new Set(
+          conflictingReservations.flatMap((r) =>
+            r.gameReservations.map((gr) => gr.gameId),
+          ),
+        ),
+      ];
+
+      // Return as ISO string (this preserves the correct local time intent)
       slots.push({
         time: slotStart.toISOString(),
         available: hasAvailableTable,
+        reservedGameIds,
       });
     }
 

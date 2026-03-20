@@ -41,6 +41,29 @@ export const authenticate = async (
   }
 };
 
+// Optional auth — sets req.user if a valid token is present, but never rejects
+export const optionalAuthenticate = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction,
+): Promise<void> => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+      const token = authHeader.substring(7);
+      const decoded = verifyAccessToken(token);
+      req.user = {
+        userId: decoded.userId,
+        email: decoded.email,
+        role: decoded.role,
+      };
+    }
+  } catch {
+    // token invalid / expired — continue as unauthenticated
+  }
+  next();
+};
+
 // Middleware to check if user has required role
 export const authorize = (...allowedRoles: string[]) => {
   return (req: AuthRequest, res: Response, next: NextFunction): void => {
