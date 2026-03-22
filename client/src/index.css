@@ -30,6 +30,22 @@ input[type="date"].hide-calendar-indicator::-webkit-calendar-picker-indicator {
   }
 }
 
+/* Logo die spin on hover */
+@keyframes die-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+.die-group {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+}
+
+.logo-link:hover .die-group {
+  animation: die-spin 0.65s ease-in-out;
+  filter: drop-shadow(0 2px 6px rgba(15, 118, 110, 0.35));
+}
+
 @layer base {
   @apply font-sans;
 
