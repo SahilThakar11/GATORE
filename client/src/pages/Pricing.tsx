@@ -2,6 +2,33 @@ import { Link } from "react-router-dom";
 import { PageHero } from "../components/PageHero";
 import { Check } from "lucide-react";
 
+function FaqItem({ q, a }: { q: string; a: string }) {
+  return (
+    <details className="group border border-warm-300 bg-warm-50 rounded-[8px] overflow-hidden">
+      <summary className="flex items-center justify-between gap-4 px-5 py-4 cursor-pointer list-none select-none text-sm font-semibold text-gray-800 hover:text-teal-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-600 focus-visible:ring-inset">
+        {q}
+        <span
+          aria-hidden="true"
+          className="text-gray-400 group-open:rotate-180 transition-transform duration-200 shrink-0"
+        >
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path
+              d="M4 6l4 4 4-4"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </span>
+      </summary>
+      <div className="px-5 pb-4 text-sm text-gray-500 leading-relaxed border-t border-warm-200 pt-3">
+        {a}
+      </div>
+    </details>
+  );
+}
+
 const PLANS = [
   {
     name: "Starter",
@@ -81,7 +108,7 @@ const FAQ = [
 
 export default function Pricing() {
   return (
-    <div className="bg-[#faf8f4] min-h-screen">
+    <main className="bg-warm-50 min-h-screen">
       <PageHero
         eyebrow="Simple pricing"
         title="Plans that grow with"
@@ -90,37 +117,43 @@ export default function Pricing() {
       />
 
       {/* Plans */}
-      <section className="max-w-6xl mx-auto px-7 py-16">
+      <section
+        aria-labelledby="plans-heading"
+        className="max-w-6xl mx-auto px-4 sm:px-7 py-16"
+      >
+        <h2 id="plans-heading" className="sr-only">
+          Pricing plans
+        </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
           {PLANS.map((plan) => (
             <div
               key={plan.name}
-              className={`rounded-2xl border p-7 flex flex-col gap-5 ${
+              className={`rounded-[8px] border p-7 flex flex-col gap-5 ${
                 plan.highlight
                   ? "bg-teal-700 border-teal-600 shadow-xl shadow-teal-900/20 scale-[1.02]"
-                  : "bg-white border-gray-100 hover:shadow-md transition-shadow"
+                  : "bg-white border-warm-300 hover:shadow-md transition-shadow"
               }`}
             >
               {/* Plan name */}
               <div>
                 <div className="flex items-center justify-between mb-3">
-                  <span
+                  <h3
                     className={`text-xs font-semibold tracking-widest uppercase ${
-                      plan.highlight ? "text-teal-300" : "text-teal-700"
+                      plan.highlight ? "text-white" : "text-teal-700"
                     }`}
                   >
                     {plan.name}
-                  </span>
+                  </h3>
                   {plan.highlight && (
-                    <span className="text-xs font-semibold bg-teal-500 text-white px-2.5 py-1 rounded-full">
+                    <span className="text-xs font-semibold bg-teal-900 text-white px-2.5 py-1 rounded-full">
                       Most popular
                     </span>
                   )}
                 </div>
                 <div className="flex items-end gap-1">
                   <span
-                    className={`text-4xl font-black leading-none ${
-                      plan.highlight ? "text-white" : "text-gray-900"
+                    className={`text-4xl font-bold leading-none ${
+                      plan.highlight ? "text-white" : "text-gray-800"
                     }`}
                   >
                     {plan.price}
@@ -128,7 +161,7 @@ export default function Pricing() {
                   {plan.period && (
                     <span
                       className={`text-sm mb-1 ${
-                        plan.highlight ? "text-teal-200" : "text-gray-400"
+                        plan.highlight ? "text-teal-100" : "text-gray-500"
                       }`}
                     >
                       {plan.period}
@@ -150,8 +183,9 @@ export default function Pricing() {
                   <li key={f} className="flex items-start gap-2.5">
                     <Check
                       size={15}
+                      aria-hidden="true"
                       className={`shrink-0 mt-0.5 ${
-                        plan.highlight ? "text-teal-300" : "text-teal-500"
+                        plan.highlight ? "text-teal-200" : "text-teal-500"
                       }`}
                     />
                     <span
@@ -168,10 +202,10 @@ export default function Pricing() {
               {/* CTA */}
               <Link
                 to={plan.ctaLink}
-                className={`w-full text-center text-sm font-semibold py-3 rounded-lg transition-colors duration-150 ${
+                className={`w-full text-center text-sm font-semibold py-3 rounded-[8px] transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${
                   plan.highlight
-                    ? "bg-white text-teal-700 hover:bg-teal-50"
-                    : "bg-teal-600 text-white hover:bg-teal-700"
+                    ? "bg-white text-teal-700 hover:bg-teal-50 focus-visible:ring-white focus-visible:ring-offset-teal-700"
+                    : "bg-teal-700 text-white hover:bg-teal-800 focus-visible:ring-teal-600"
                 }`}
               >
                 {plan.cta}
@@ -182,27 +216,27 @@ export default function Pricing() {
       </section>
 
       {/* FAQ */}
-      <section className="bg-white border-t border-gray-100 py-16 px-7">
+      <section
+        aria-labelledby="faq-heading"
+        className="bg-white border-t border-warm-300 py-16 px-4 sm:px-7"
+      >
         <div className="max-w-3xl mx-auto">
-          <div className="text-center mb-10">
-            <h2 className="text-2xl font-bold text-gray-900">
+          <div className="mb-10">
+            <h2
+              id="faq-heading"
+              className="text-2xl font-bold text-gray-800 mb-1"
+            >
               Frequently asked questions
             </h2>
-            <div className="w-10 h-0.5 bg-teal-500 mx-auto mt-3" />
+            <div className="w-20 h-1 bg-warm-400 rounded-full" aria-hidden="true" />
           </div>
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-3">
             {FAQ.map(({ q, a }) => (
-              <div
-                key={q}
-                className="border-b border-gray-100 pb-6 last:border-0 last:pb-0"
-              >
-                <h3 className="text-sm font-bold text-gray-900 mb-1.5">{q}</h3>
-                <p className="text-sm text-gray-500 leading-relaxed">{a}</p>
-              </div>
+              <FaqItem key={q} q={q} a={a} />
             ))}
           </div>
         </div>
       </section>
-    </div>
+    </main>
   );
 }

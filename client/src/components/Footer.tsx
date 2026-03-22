@@ -7,7 +7,7 @@ const FOOTER_LINKS = {
   ],
   Discover: [
     { label: "Find a cafe", to: "/find-a-cafe" },
-    { label: "Browse by city", to: "/browse" },
+    { label: "Find by game", to: "/find-a-game" },
     { label: "How it works", to: "/how-it-works" },
   ],
   Company: [

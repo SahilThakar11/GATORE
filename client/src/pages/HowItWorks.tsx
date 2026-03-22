@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
   Search,
   Calendar,
@@ -6,6 +6,8 @@ import {
   CheckCircle,
   PartyPopper,
 } from "lucide-react";
+import { PrimaryButton } from "../components/ui/PrimaryButton";
+import { SecondaryButton } from "../components/ui/SecondaryButton";
 
 const STEPS = [
   {
@@ -16,7 +18,7 @@ const STEPS = [
       "Search for board game cafés in your area or find cafés that have your favourite games. Filter by location, available games, ratings, and amenities.",
     persona: "Alex starts searching for cafés",
     personaStep: "Step 1 of 5",
-    avatarColor: "bg-orange-300",
+    emoji: "👨🏾‍💻",
     imageSide: "right",
     image: "images/browse_discover.png",
   },
@@ -28,7 +30,7 @@ const STEPS = [
       "Choose your preferred date, time, and table size. View real-time availability and select the perfect spot for your gaming session.",
     persona: "Alex picks the perfect time",
     personaStep: "Step 2 of 5",
-    avatarColor: "bg-teal-300",
+    emoji: "👨🏾‍💻",
     imageSide: "left",
     image: "images/select_spot.png",
   },
@@ -40,7 +42,7 @@ const STEPS = [
       "Browse the café's full game library and request games to be set up at your table before you arrive. No waiting, just playing.",
     persona: "Alex picks the perfect game",
     personaStep: "Step 3 of 5",
-    avatarColor: "bg-purple-300",
+    emoji: "👨🏾‍💻",
     imageSide: "right",
     image: "images/choose_game.png",
   },
@@ -52,7 +54,7 @@ const STEPS = [
       "Confirm your reservation in seconds. Receive instant confirmation with all the details you need for your visit.",
     persona: "Alex confirms the booking",
     personaStep: "Step 4 of 5",
-    avatarColor: "bg-blue-300",
+    emoji: "👨🏾‍💻",
     imageSide: "left",
     image: "images/reserve_instantly.png",
   },
@@ -64,7 +66,7 @@ const STEPS = [
       "Show up and start playing! Your table is reserved and waiting. Browse the café's game library and enjoy your gaming experience.",
     persona: "Alex enjoys game night!",
     personaStep: "Step 5 of 5",
-    avatarColor: "bg-pink-300",
+    emoji: "👨🏾‍💻",
     imageSide: "right",
     image: "images/play_enjoy.png",
   },
@@ -94,19 +96,20 @@ const FAQS = [
 ];
 
 // ─── Persona bubble ───────────────────────────────────────────────────────────
-function PersonaBubble({ persona, step }: { persona: string; step: string }) {
+function PersonaBubble({ persona, step, emoji }: { persona: string; step: string; emoji: string }) {
   return (
-    <div className="inline-flex items-center gap-4 rounded-full px-3 py-1.5  mb-4">
+    <div className="inline-flex items-center gap-4 rounded-full px-3 py-1.5 mb-4">
       <div
-        className={`w-10 h-10 rounded-full flex items-center justify-center text-[60px]`}
+        aria-hidden="true"
+        className="w-10 h-10 rounded-full flex items-center justify-center text-[60px]"
       >
-        👨🏾‍💻
+        {emoji}
       </div>
       <div>
-        <p className="text-xs font-semibold text-teal-700 leading-none">
+        <p className="text-sm font-semibold text-teal-700 leading-none">
           {persona}
         </p>
-        <p className="text-[10px] text-neutral-400 mt-0.5">{step}</p>
+        <p className="text-sm text-gray-500 mt-0.5">{step}</p>
       </div>
     </div>
   );
@@ -115,10 +118,13 @@ function PersonaBubble({ persona, step }: { persona: string; step: string }) {
 // ─── FAQ accordion item ───────────────────────────────────────────────────────
 function FaqItem({ q, a }: { q: string; a: string }) {
   return (
-    <details className="group border border-warm-300 bg-white rounded-xl overflow-hidden">
-      <summary className="flex items-center justify-between gap-4 px-5 py-4 cursor-pointer list-none select-none text-sm font-semibold text-neutral-800 hover:text-teal-700 transition-colors">
+    <details className="group border border-warm-300 bg-white rounded-[8px] overflow-hidden">
+      <summary className="flex items-center justify-between gap-4 px-5 py-4 cursor-pointer list-none select-none text-sm font-semibold text-gray-800 hover:text-teal-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-600 focus-visible:ring-inset">
         {q}
-        <span className="text-gray-400 group-open:rotate-180 transition-transform duration-200 shrink-0">
+        <span
+          aria-hidden="true"
+          className="text-gray-400 group-open:rotate-180 transition-transform duration-200 shrink-0"
+        >
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
             <path
               d="M4 6l4 4 4-4"
@@ -130,7 +136,7 @@ function FaqItem({ q, a }: { q: string; a: string }) {
           </svg>
         </span>
       </summary>
-      <div className="px-5 pb-4 text-sm text-neutral-600 leading-relaxed border-t border-gray-50 pt-3">
+      <div className="px-5 pb-4 text-sm text-gray-500 leading-relaxed border-t border-warm-200 pt-3">
         {a}
       </div>
     </details>
@@ -139,35 +145,57 @@ function FaqItem({ q, a }: { q: string; a: string }) {
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function HowItWorksPage() {
+  const navigate = useNavigate();
   return (
-    <div className="bg-[#faf8f4]">
-      {/* Hero banner */}
-      <div className="bg-teal-700 py-14 text-center px-6">
-        <h1 className="text-3xl font-black text-white">How It Works</h1>
-        <p className="text-teal-200 text-sm mt-2 max-w-md mx-auto leading-relaxed">
-          Finding and booking your perfect board game café spot has never been
-          easier. Here's how our platform works in five simple steps.
-        </p>
-      </div>
+    <main className="bg-warm-50">
+      {/* Hero */}
+      <section
+        aria-labelledby="hero-heading"
+        className="bg-warm-100 border-b border-warm-300 py-16 px-4 sm:px-7 text-center"
+      >
+        <div className="max-w-2xl mx-auto flex flex-col items-center gap-3">
+          <span className="text-xs font-semibold tracking-widest uppercase text-teal-700">
+            How It Works
+          </span>
+          <h1
+            id="hero-heading"
+            className="text-3xl sm:text-4xl font-bold text-gray-800 leading-tight"
+          >
+            Your perfect game night in five steps
+          </h1>
+          <p className="text-base text-gray-500 leading-relaxed max-w-lg">
+            Finding and booking your perfect board game café spot has never been
+            easier.
+          </p>
+        </div>
+      </section>
 
       {/* Steps */}
-      <div className="max-w-4xl mx-auto px-7 py-16 flex flex-col gap-20">
+      <section
+        aria-labelledby="steps-heading"
+        className="max-w-4xl mx-auto px-4 sm:px-7 py-16 flex flex-col gap-20"
+      >
+        <h2 id="steps-heading" className="sr-only">
+          Step by step guide
+        </h2>
         {STEPS.map((step) => {
           const Icon = step.icon;
           const isLeft = step.imageSide === "left";
 
           const textBlock = (
             <div className="flex-1 flex flex-col justify-center">
-              <PersonaBubble persona={step.persona} step={step.personaStep} />
+              <PersonaBubble persona={step.persona} step={step.personaStep} emoji={step.emoji} />
               <div className="flex flex-row items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-xl bg-teal-600 flex items-center justify-center shrink-0">
-                  <Icon size={18} className="text-white" />
+                <div className="w-10 h-10 rounded-[8px] bg-teal-700 flex items-center justify-center shrink-0">
+                  <Icon size={18} className="text-white" aria-hidden="true" />
                 </div>
-                <div className="text-4xl text-warm-400 ">{step.number}</div>
+                <div aria-hidden="true" className="text-4xl text-warm-500">
+                  {step.number}
+                </div>
               </div>
-              <h2 className="text-2xl font-black text-gray-900 mb-3">
+              <h3 className="text-2xl font-bold text-gray-800 mb-3">
                 {step.title}
-              </h2>
+              </h3>
               <p className="text-sm text-gray-500 leading-relaxed max-w-sm">
                 {step.description}
               </p>
@@ -176,7 +204,10 @@ export default function HowItWorksPage() {
 
           const imageBlock = (
             <div className="flex-1 flex justify-center">
-              <img src={step.image} alt={`Step ${step.number} screenshot`} />
+              <img
+                src={step.image}
+                alt={`Step ${step.number}: ${step.title}`}
+              />
             </div>
           );
 
@@ -192,11 +223,17 @@ export default function HowItWorksPage() {
             </div>
           );
         })}
-      </div>
+      </section>
 
       {/* CTA band */}
-      <div className="bg-white border-y border-gray-100 py-14 text-center px-6">
-        <h2 className="text-2xl font-black text-gray-900">
+      <section
+        aria-labelledby="cta-heading"
+        className="bg-warm-100 border-y border-warm-300 py-14 text-center px-4 sm:px-7"
+      >
+        <h2
+          id="cta-heading"
+          className="text-2xl font-bold text-teal-700"
+        >
           Ready to Get Started?
         </h2>
         <p className="text-sm text-gray-500 mt-2 mb-7">
@@ -204,29 +241,34 @@ export default function HowItWorksPage() {
           reservation today.
         </p>
         <div className="flex items-center justify-center gap-3 flex-wrap">
-          <Link
-            to="/find-a-cafe"
-            className="flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-bold px-6 py-3 rounded-xl transition-colors"
-          >
-            Find a Café →
-          </Link>
-          <Link
-            to="/find-a-game"
-            className="flex items-center gap-2 border border-teal-600 bg-white  hover:bg-warm-100 text-sm font-bold text-teal-700 px-6 py-3 rounded-xl transition-colors"
-          >
-            Search by Game{" "}
-            <img src="/icons/pawn.png" alt="pawn icon" className="w-3.5 h-6" />
-          </Link>
+          <PrimaryButton
+            label="Find a Café"
+            onClick={() => navigate("/find-a-cafe")}
+            size="sm"
+          />
+          <SecondaryButton
+            label="Search by Game"
+            onClick={() => navigate("/find-a-game")}
+            size="small"
+            rightIcon={<img src="/icons/pawn.png" alt="" className="h-4 w-auto" />}
+          />
         </div>
-      </div>
+      </section>
 
       {/* FAQ */}
-      <div className="max-w-2xl mx-auto px-7 py-16">
-        <div className="text-center mb-8">
-          <h2 className="text-2xl font-black text-gray-900">
+      <section
+        aria-labelledby="faq-heading"
+        className="max-w-2xl mx-auto px-4 sm:px-7 py-16"
+      >
+        <div className="mb-8">
+          <h2
+            id="faq-heading"
+            className="text-2xl font-bold text-gray-800 mb-1"
+          >
             Frequently Asked Questions
           </h2>
-          <p className="text-sm text-gray-400 mt-2">
+          <div className="w-20 h-1 bg-warm-400 rounded-full" aria-hidden="true" />
+          <p className="text-sm text-gray-500 mt-3">
             Everything you need to know about booking with us
           </p>
         </div>
@@ -235,7 +277,7 @@ export default function HowItWorksPage() {
             <FaqItem key={faq.q} q={faq.q} a={faq.a} />
           ))}
         </div>
-      </div>
-    </div>
+      </section>
+    </main>
   );
 }
