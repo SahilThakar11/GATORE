@@ -45,7 +45,7 @@ export default function App() {
           }
         />
         <Route
-          path="/reservation-management"
+          path="/dashboard/reservations"
           element={<ReservationManagement />}
         />
         <Route
