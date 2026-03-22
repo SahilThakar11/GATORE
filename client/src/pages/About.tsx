@@ -56,7 +56,7 @@ export default function About() {
       {/* Mission */}
       <section className="max-w-4xl mx-auto px-7 py-16">
         <div className="bg-white rounded-2xl border border-gray-100 p-10 flex flex-col gap-5 shadow-sm">
-          <span className="text-xs font-semibold tracking-widest uppercase text-teal-600">
+          <span className="text-xs font-semibold tracking-widest uppercase text-teal-700">
             Our mission
           </span>
           <p className="text-2xl font-bold text-gray-900 leading-snug">
@@ -125,7 +125,7 @@ export default function About() {
               </div>
               <div className="text-center">
                 <p className="text-sm font-bold text-gray-900">{name}</p>
-                <p className="text-xs text-teal-600 font-medium mt-0.5">
+                <p className="text-xs text-teal-700 font-medium mt-0.5">
                   {role}
                 </p>
               </div>

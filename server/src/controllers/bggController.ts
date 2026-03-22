@@ -123,6 +123,20 @@ function parseItem(item: any) {
     .map((l: any) => l.value)
     .slice(0, 3);
 
+  const designers = links
+    .filter((l: any) => l.type === "boardgamedesigner")
+    .map((l: any) => l.value)
+    .filter((v: string) => v && v.toLowerCase() !== "(uncredited)")
+    .slice(0, 2);
+  const designer = designers.length > 0 ? designers.join(", ") : null;
+
+  const publishers = links
+    .filter((l: any) => l.type === "boardgamepublisher")
+    .map((l: any) => l.value)
+    .filter((v: string) => v && v.toLowerCase() !== "(self-published)")
+    .slice(0, 2);
+  const publisher = publishers.length > 0 ? publishers.join(", ") : null;
+
   return {
     id,
     name,
@@ -135,6 +149,8 @@ function parseItem(item: any) {
     difficulty,
     weightDots,
     categories,
+    designer,
+    publisher,
   };
 }
 

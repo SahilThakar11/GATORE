@@ -87,7 +87,7 @@ export function StepSignIn({
         Don't have an account?{" "}
         <button
           onClick={onSwitchToSignup}
-          className="text-teal-600 font-medium hover:underline"
+          className="text-teal-700 font-medium hover:underline"
         >
           Sign up
         </button>

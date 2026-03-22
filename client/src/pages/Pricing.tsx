@@ -106,7 +106,7 @@ export default function Pricing() {
                 <div className="flex items-center justify-between mb-3">
                   <span
                     className={`text-xs font-semibold tracking-widest uppercase ${
-                      plan.highlight ? "text-teal-300" : "text-teal-600"
+                      plan.highlight ? "text-teal-300" : "text-teal-700"
                     }`}
                   >
                     {plan.name}

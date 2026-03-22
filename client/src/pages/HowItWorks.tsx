@@ -103,7 +103,7 @@ function PersonaBubble({ persona, step }: { persona: string; step: string }) {
         👨🏾‍💻
       </div>
       <div>
-        <p className="text-xs font-semibold text-teal-600 leading-none">
+        <p className="text-xs font-semibold text-teal-700 leading-none">
           {persona}
         </p>
         <p className="text-[10px] text-neutral-400 mt-0.5">{step}</p>
