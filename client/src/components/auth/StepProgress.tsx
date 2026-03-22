@@ -11,7 +11,7 @@ export function StepProgress({ current, total }: StepProgressProps) {
         <span className="text-xs text-neutral-500">
           Step {current} of {total}
         </span>
-        <span className="text-xs font-semibold text-teal-600">{percent}%</span>
+        <span className="text-xs font-semibold text-teal-700">{percent}%</span>
       </div>
       <div className="w-full h-1.5 bg-warm-200 rounded-full overflow-hidden">
         <div

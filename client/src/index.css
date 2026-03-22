@@ -10,6 +10,26 @@
   --color-neutral-600: #57534e;
   --color-neutral-800: #292524;
 }
+/* Hide native calendar icon so we can use our own */
+input[type="date"].hide-calendar-indicator::-webkit-calendar-picker-indicator {
+  display: none;
+}
+
+/* Header height — keep in sync with Header.tsx padding */
+:root {
+  --header-height: 80px;  /* mobile: pt-2 pb-2 + h-16 */
+}
+@media (min-width: 640px) {
+  :root {
+    --header-height: 92px; /* sm–lg: pt-4 pb-3 + h-16 */
+  }
+}
+@media (min-width: 1024px) {
+  :root {
+    --header-height: 104px; /* lg+: pt-6 pb-4 + h-16 */
+  }
+}
+
 @layer base {
   @apply font-sans;
 

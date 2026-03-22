@@ -148,7 +148,7 @@ export default function Contact() {
                       message: "",
                     });
                   }}
-                  className="text-sm text-teal-600 font-medium hover:underline mt-2"
+                  className="text-sm text-teal-700 font-medium hover:underline mt-2"
                 >
                   Send another message
                 </button>

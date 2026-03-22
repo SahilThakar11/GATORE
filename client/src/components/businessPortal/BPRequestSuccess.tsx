@@ -37,7 +37,7 @@ export function BPRequestSuccess({ cafeName, email, onReset, onClose }: Props) {
         </Button>
         <button
           onClick={onReset}
-          className="text-xs text-gray-400 hover:text-teal-600 transition-colors py-1"
+          className="text-xs text-gray-400 hover:text-teal-700 transition-colors py-1"
         >
           Submit another request
         </button>

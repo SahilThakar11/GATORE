@@ -264,7 +264,7 @@ export default function PartnerWithUs() {
         </p>
         <Link
           to="/pricing"
-          className="inline-flex items-center gap-2 mt-5 text-sm font-bold text-teal-600 hover:text-teal-800 transition-colors"
+          className="inline-flex items-center gap-2 mt-5 text-sm font-bold text-teal-700 hover:text-teal-800 transition-colors"
         >
           View pricing plans →
         </Link>

@@ -157,7 +157,7 @@ export function AuthModal({ isOpen, onClose, auth }: AuthModalProps) {
         {/* Powered by footer */}
         <div className="py-3 text-center text-xs text-gray-400 border-t border-gray-100 shrink-0">
           Powered by{" "}
-          <span className="font-bold text-teal-600 tracking-wide">GATORE</span>
+          <span className="font-bold text-teal-700 tracking-wide">GATORE</span>
         </div>
       </div>
     </div>

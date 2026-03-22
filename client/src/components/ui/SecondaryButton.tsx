@@ -8,7 +8,10 @@ interface SecondaryButtonProps {
   disabled?: boolean;
   isLoading?: boolean;
   size?: ButtonSize;
+  leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
+  "aria-expanded"?: boolean;
+  "aria-haspopup"?: boolean | "menu" | "listbox" | "tree" | "grid" | "dialog";
 }
 
 const SIZE_STYLES: Record<
@@ -26,7 +29,10 @@ export function SecondaryButton({
   disabled = false,
   isLoading = false,
   size = "medium",
+  leftIcon,
   rightIcon,
+  "aria-expanded": ariaExpanded,
+  "aria-haspopup": ariaHaspopup,
 }: SecondaryButtonProps) {
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
@@ -52,6 +58,8 @@ export function SecondaryButton({
     <button
       onClick={isInert ? undefined : onClick}
       disabled={isInert}
+      aria-expanded={ariaExpanded}
+      aria-haspopup={ariaHaspopup}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => {
         setHovered(false);
@@ -108,6 +116,7 @@ export function SecondaryButton({
           />
         </svg>
       )}
+      {!isLoading && leftIcon}
       {isLoading ? "Loading..." : label}
       {!isLoading && rightIcon}
     </button>

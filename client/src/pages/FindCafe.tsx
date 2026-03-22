@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import {
   Search,
   X,
+  CalendarDays,
   MapPin,
   Star,
   ChevronDown,
@@ -21,6 +22,7 @@ import { PrimaryButton } from "../components/ui/PrimaryButton";
 import { SecondaryButton } from "../components/ui/SecondaryButton";
 import { TertiaryButton } from "../components/ui/TertiaryButton";
 import { Input } from "../components/ui/Input";
+import { FilterPill } from "../components/ui/FilterPill";
 
 // ─── Amenity icon map ─────────────────────────────────────────────────────────
 // Our DB doesn't have structured amenities yet — derive simple labels from
@@ -169,7 +171,11 @@ function CafeCard({ cafe }: { cafe: CafeSummary }) {
           </p>
 
           <div className="flex items-center gap-1">
-            <MapPin aria-hidden="true" size={13} style={{ color: "#57534E", flexShrink: 0 }} />
+            <MapPin
+              aria-hidden="true"
+              size={13}
+              style={{ color: "#57534E", flexShrink: 0 }}
+            />
             <span
               className="text-sm truncate"
               style={{ color: "#57534E", fontWeight: 400 }}
@@ -212,7 +218,11 @@ function CafeCard({ cafe }: { cafe: CafeSummary }) {
           </div>
 
           <div className="flex items-center gap-1">
-            <Clock aria-hidden="true" size={13} style={{ color: "#57534E", flexShrink: 0 }} />
+            <Clock
+              aria-hidden="true"
+              size={13}
+              style={{ color: "#57534E", flexShrink: 0 }}
+            />
             <span
               className="text-sm"
               style={{ color: "#57534E", fontWeight: 400 }}
@@ -237,8 +247,8 @@ export default function FindCafePage() {
   const [activeCity, setActiveCity] = useState("All");
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [date, setDate] = useState("");
-  const [time, setTime] = useState("6:00 PM");
-  const [players, setPlayers] = useState("4 players");
+  const [time, setTime] = useState("");
+  const [players, setPlayers] = useState("");
   const [filtersOpen, setFiltersOpen] = useState(true);
   const [searchFocused, setSearchFocused] = useState(false);
 
@@ -281,7 +291,7 @@ export default function FindCafePage() {
   const hasMore = visibleCount < filtered.length;
 
   return (
-    <div className="bg-[#faf8f4] min-h-screen">
+    <div className="bg-warm-50 min-h-screen">
       {/* ── Heading ───────────────────────────────────────────────────────── */}
       <div className="max-w-4xl mx-auto px-4 sm:px-7 pt-10 pb-6">
         <h1 className="text-3xl font-black text-gray-900">Find a café</h1>
@@ -291,20 +301,20 @@ export default function FindCafePage() {
       </div>
 
       {/* ── Filter bar — scrolls on mobile, sticky on desktop ────────────── */}
-      <div className="sm:sticky sm:top-[104px] sm:z-40 w-full bg-[#faf8f4] border-b border-warm-200 shadow-sm">
+      <div className="sm:sticky sm:top-[var(--header-height)] sm:z-40 w-full bg-[#faf8f4] border-b border-warm-200 shadow-sm">
         <div className="max-w-4xl mx-auto px-4 sm:px-7 py-4 flex flex-col gap-3">
           {/* Row 1 — Search */}
           <div
             className={`flex items-center gap-2 bg-white border px-4 py-3 transition-all ${
               searchFocused || inputValue
-                ? "border-teal-500 ring-2 ring-teal-100"
+                ? "border-teal-600 ring-2 ring-teal-100"
                 : "border-warm-300"
             }`}
             style={{ borderRadius: 8 }}
           >
             <Search
               size={17}
-              className={`shrink-0 transition-colors ${searchFocused || inputValue ? "text-teal-500" : "text-gray-400"}`}
+              className={`shrink-0 transition-colors ${searchFocused || inputValue ? "text-teal-600" : "text-gray-400"}`}
             />
             <input
               type="text"
@@ -341,7 +351,8 @@ export default function FindCafePage() {
                     onChange={(e) => setDate(e.target.value)}
                     min={new Date().toISOString().split("T")[0]}
                     aria-label="Select date"
-                    className="bg-white border-warm-300 focus:ring-teal-500 cursor-pointer"
+                    leftIcon={<CalendarDays size={16} color="#57534E" />}
+                    className={`bg-white border-warm-300 focus:ring-teal-500 cursor-pointer hide-calendar-indicator ${date ? "text-gray-700" : "text-gray-400"}`}
                   />
                 </div>
 
@@ -351,7 +362,8 @@ export default function FindCafePage() {
                     <Dropdown
                       trigger="label"
                       triggerIcon={<Clock size={16} />}
-                      triggerLabel={time}
+                      triggerLabel={time || "Time"}
+                      isPlaceholder={!time}
                       fullWidth
                       items={TIME_OPTIONS.map((opt) => ({
                         label: opt,
@@ -364,7 +376,8 @@ export default function FindCafePage() {
                     <Dropdown
                       trigger="label"
                       triggerIcon={<Users size={16} />}
-                      triggerLabel={players}
+                      triggerLabel={players || "Party size"}
+                      isPlaceholder={!players}
                       fullWidth
                       items={PLAYER_OPTIONS.map((opt) => ({
                         label: opt,
@@ -392,19 +405,13 @@ export default function FindCafePage() {
               {/* City filter pills */}
               <div className="flex gap-2 flex-wrap">
                 {allCities.map((city) => (
-                  <button
+                  <FilterPill
                     key={city}
+                    label={city}
+                    active={activeCity === city}
                     onClick={() => setActiveCity(city)}
-                    aria-pressed={activeCity === city}
-                    className={`flex items-center gap-1.5 text-xs font-semibold px-3.5 py-1.5 rounded-full border transition-all ${
-                      activeCity === city
-                        ? "bg-teal-600 border-teal-600 text-white"
-                        : "bg-white border-gray-200 text-gray-600 hover:border-teal-300 hover:text-teal-600"
-                    }`}
-                  >
-                    {city !== "All" && <MapPin size={11} />}
-                    {city}
-                  </button>
+                    icon={city !== "All" ? <MapPin size={11} /> : undefined}
+                  />
                 ))}
               </div>
             </>
@@ -432,7 +439,7 @@ export default function FindCafePage() {
               <>
                 {" "}
                 ·{" "}
-                <span className="text-teal-600 font-medium">{activeCity}</span>
+                <span className="text-teal-700 font-medium">{activeCity}</span>
               </>
             )}
             {debouncedQuery && (
@@ -509,7 +516,7 @@ export default function FindCafePage() {
                     setInputValue("");
                     setActiveCity("All");
                   }}
-                  className="mt-4 text-xs text-teal-600 font-medium hover:underline"
+                  className="mt-4 text-xs text-teal-700 font-medium hover:underline"
                 >
                   Clear filters
                 </button>

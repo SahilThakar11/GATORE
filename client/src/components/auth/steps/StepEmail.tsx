@@ -59,7 +59,7 @@ export function StepEmail({
         Already have an account?{" "}
         <button
           onClick={onSwitchToSignIn}
-          className="text-teal-600 font-medium hover:underline"
+          className="text-teal-700 font-medium hover:underline"
         >
           Sign in
         </button>

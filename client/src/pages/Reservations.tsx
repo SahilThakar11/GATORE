@@ -157,7 +157,7 @@ function ReservationCard({
 
           {/* Games */}
           {games.length > 0 && (
-            <div className="flex items-center gap-1.5 text-teal-600 mt-2">
+            <div className="flex items-center gap-1.5 text-teal-700 mt-2">
               <Gamepad2 size={13} />
               <span className="text-xs font-medium">
                 {games.map((g) => g.game.name).join(", ")}
@@ -178,7 +178,7 @@ function ReservationCard({
               {canEdit && (
                 <button
                   onClick={() => onEdit(reservation)}
-                  className="flex items-center gap-1.5 text-xs font-medium text-teal-600 hover:text-teal-800 transition-colors cursor-pointer"
+                  className="flex items-center gap-1.5 text-xs font-medium text-teal-700 hover:text-teal-800 transition-colors cursor-pointer"
                 >
                   <Pencil size={13} /> Edit reservation
                 </button>
@@ -360,7 +360,7 @@ export default function ReservationsPage() {
               className={`text-xs font-semibold px-3.5 py-1.5 rounded-full border transition-all ${
                 activeTab === tab.key
                   ? "bg-teal-600 border-teal-600 text-white"
-                  : "bg-white border-gray-200 text-gray-600 hover:border-teal-300 hover:text-teal-600"
+                  : "bg-white border-gray-200 text-gray-600 hover:border-teal-300 hover:text-teal-700"
               }`}
             >
               {tab.label}
@@ -420,7 +420,7 @@ export default function ReservationsPage() {
                 </p>
                 <Link
                   to="/find-a-cafe"
-                  className="mt-4 inline-block text-xs text-teal-600 font-medium hover:underline"
+                  className="mt-4 inline-block text-xs text-teal-700 font-medium hover:underline"
                 >
                   Browse cafés
                 </Link>

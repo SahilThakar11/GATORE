@@ -74,7 +74,7 @@ export function StepPassword({
           {rules.map((r) => (
             <p
               key={r.label}
-              className={`text-xs flex items-center gap-1 ${r.pass ? "text-teal-600" : "text-gray-400"}`}
+              className={`text-xs flex items-center gap-1 ${r.pass ? "text-teal-700" : "text-gray-400"}`}
             >
               <span>{r.pass ? "✓" : "○"}</span> {r.label}
             </p>

@@ -27,7 +27,7 @@ export const StepIcon: React.FC<StepIconProps> = ({
         {children}
       </div>
       <div
-        className={`self-stretch text-center justify-start  text-xs font-normal ${isCurrentStep ? "text-teal-600" : isStepCompleted ? variants.completed : variants.default}`}
+        className={`self-stretch text-center justify-start  text-xs font-normal ${isCurrentStep ? "text-teal-700" : isStepCompleted ? variants.completed : variants.default}`}
       >
         {text}
       </div>

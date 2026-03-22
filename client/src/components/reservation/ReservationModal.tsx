@@ -551,7 +551,7 @@ export const ReservationModal: React.FC<ReservationModalProps> = ({
                   <div className="flex items-center gap-4">
                     <button
                       onClick={() => setPartySize((p) => Math.max(1, p - 1))}
-                      className="w-9 h-9 rounded-full border-2 border-gray-200 text-gray-600 hover:border-teal-400 hover:text-teal-600 transition-all font-bold text-lg flex items-center justify-center"
+                      className="w-9 h-9 rounded-full border-2 border-gray-200 text-gray-600 hover:border-teal-400 hover:text-teal-700 transition-all font-bold text-lg flex items-center justify-center"
                     >
                       −
                     </button>
@@ -560,14 +560,14 @@ export const ReservationModal: React.FC<ReservationModalProps> = ({
                         <Users key={i} size={16} className="text-teal-600" />
                       ))}
                       {partySize > 6 && (
-                        <span className="text-sm font-bold text-teal-600">
+                        <span className="text-sm font-bold text-teal-700">
                           +{partySize - 6}
                         </span>
                       )}
                     </div>
                     <button
                       onClick={() => setPartySize((p) => Math.min(12, p + 1))}
-                      className="w-9 h-9 rounded-full border-2 border-gray-200 text-gray-600 hover:border-teal-400 hover:text-teal-600 transition-all font-bold text-lg flex items-center justify-center"
+                      className="w-9 h-9 rounded-full border-2 border-gray-200 text-gray-600 hover:border-teal-400 hover:text-teal-700 transition-all font-bold text-lg flex items-center justify-center"
                     >
                       +
                     </button>
@@ -1056,7 +1056,7 @@ export const ReservationModal: React.FC<ReservationModalProps> = ({
                 </div>
                 <p className="text-center text-xs text-gray-400">
                   Powered by{" "}
-                  <span className="text-teal-600 font-semibold">GATORE</span>
+                  <span className="text-teal-700 font-semibold">GATORE</span>
                 </p>
               </div>
             ) : (
@@ -1069,7 +1069,7 @@ export const ReservationModal: React.FC<ReservationModalProps> = ({
                 </button>
                 <p className="text-center text-xs text-gray-400">
                   Powered by{" "}
-                  <span className="text-teal-600 font-semibold">GATORE</span>
+                  <span className="text-teal-700 font-semibold">GATORE</span>
                 </p>
               </div>
             )}
