@@ -13,7 +13,14 @@ export function StepProgress({ current, total }: StepProgressProps) {
         </span>
         <span className="text-xs font-semibold text-teal-700">{percent}%</span>
       </div>
-      <div className="w-full h-1.5 bg-warm-200 rounded-full overflow-hidden">
+      <div
+        role="progressbar"
+        aria-valuenow={percent}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label={`Registration progress: step ${current} of ${total}`}
+        className="w-full h-1.5 bg-warm-200 rounded-full overflow-hidden"
+      >
         <div
           className="h-full bg-teal-500 rounded-full transition-all duration-500 ease-out"
           style={{ width: `${percent}%` }}

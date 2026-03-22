@@ -66,7 +66,7 @@ export function GoogleAuthButton({
       type="button"
       onClick={() => login()}
       disabled={loading}
-      className={`w-full flex items-center justify-center gap-3 border border-warm-200 rounded-lg py-3 text-sm font-medium text-gray-700 bg-white hover:bg-warm-50 active:bg-warm-100 transition-colors focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer ${className}`}
+      className={`w-full h-12 flex items-center justify-center gap-3 border border-warm-300 rounded-lg text-sm font-medium text-gray-700 bg-warm-50 hover:bg-warm-100 active:bg-warm-200 transition-colors focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer ${className}`}
     >
       {loading ? (
         <span className="w-4 h-4 border-2 border-gray-300 border-t-teal-500 rounded-full animate-spin" />

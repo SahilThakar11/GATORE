@@ -14,6 +14,7 @@ import {
 import { useMyReservations, type Reservation } from "../hooks/useReservations";
 import { ReservationModal } from "../components/reservation/ReservationModal";
 import { useCafe, useCafeGames } from "../hooks/useCafe";
+import { FilterPill } from "../components/ui/FilterPill";
 import type { Venue, CafeTable, Game } from "../hooks/useReservationFlow";
 
 type TabFilter = "all" | "upcoming" | "past" | "cancelled";
@@ -55,13 +56,21 @@ function isUpcoming(r: Reservation) {
 // ─── Skeleton ─────────────────────────────────────────────────────────────────
 function ReservationSkeleton() {
   return (
-    <div className="bg-white border border-gray-100 rounded-xl p-5 animate-pulse">
-      <div className="flex gap-5">
-        <div className="w-14 h-14 rounded-xl bg-gray-100 shrink-0" />
-        <div className="flex-1 flex flex-col gap-2.5">
-          <div className="h-4 bg-gray-100 rounded w-1/2" />
-          <div className="h-3 bg-gray-100 rounded w-1/3" />
-          <div className="h-3 bg-gray-100 rounded w-2/3" />
+    <div
+      role="status"
+      aria-label="Loading reservation"
+      className="bg-warm-100 rounded-[8px] animate-pulse"
+      style={{
+        padding: "20px 24px",
+        boxShadow: "0px 2px 8px 0px rgba(0,0,0,0.08)",
+      }}
+    >
+      <div className="flex gap-4">
+        <div className="w-16 h-16 rounded-[8px] bg-warm-200 shrink-0" />
+        <div className="flex-1 flex flex-col gap-2.5 justify-center">
+          <div className="h-4 bg-warm-200 rounded w-1/2" />
+          <div className="h-3 bg-warm-200 rounded w-1/3" />
+          <div className="h-3 bg-warm-200 rounded w-2/3" />
         </div>
       </div>
     </div>
@@ -85,14 +94,30 @@ function ReservationCard({
   const canEdit = reservation.status === "pending" && upcoming;
   const games = reservation.gameReservations;
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [hovered, setHovered] = useState(false);
 
   return (
-    <div className="bg-warm-100 border border-warm-300 rounded-xl p-5 hover:shadow-md transition-all duration-200">
+    <div
+      className="bg-warm-100 rounded-[8px] transition-all duration-200 p-5 sm:px-7 sm:py-6"
+      style={{
+        border: `1px solid ${hovered ? "#14B8A6" : "#E8D4C4"}`,
+        boxShadow: hovered
+          ? "0px 8px 24px 0px rgba(0,0,0,0.12)"
+          : "0px 2px 8px 0px rgba(0,0,0,0.06)",
+        transition: "box-shadow 200ms, border-color 200ms",
+      }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
       <div className="flex flex-col sm:flex-row items-start gap-5">
         {/* Café logo */}
         <Link
           to={`/cafe/${cafe.id}`}
-          className="w-14 h-14 rounded-xl overflow-hidden bg-gray-100 border border-gray-100 shrink-0"
+          className="w-16 h-16 rounded-[8px] overflow-hidden shrink-0"
+          style={{
+            boxShadow:
+              "0px 4px 6px -1px rgba(0,0,0,0.10), 0px 2px 4px -2px rgba(0,0,0,0.10)",
+          }}
         >
           {cafe.logoUrl ? (
             <img
@@ -113,13 +138,14 @@ function ReservationCard({
             <div>
               <Link
                 to={`/cafe/${cafe.id}`}
-                className="text-base font-bold text-gray-900 hover:text-teal-700 transition-colors leading-tight"
+                className="text-base font-semibold hover:text-teal-700 transition-colors leading-tight"
+                style={{ color: "#292524" }}
               >
                 {cafe.name}
               </Link>
-              <div className="flex items-center gap-1 text-gray-400 mt-0.5">
-                <MapPin size={11} />
-                <span className="text-xs">
+              <div className="flex items-center gap-1 mt-0.5">
+                <MapPin size={11} aria-hidden="true" style={{ color: "#78716C", flexShrink: 0 }} />
+                <span className="text-xs" style={{ color: "#78716C" }}>
                   {cafe.address}, {cafe.city}
                 </span>
               </div>
@@ -133,21 +159,21 @@ function ReservationCard({
 
           {/* Details */}
           <div className="flex items-center flex-wrap gap-x-4 gap-y-1.5 mt-3">
-            <div className="flex items-center gap-1.5 text-gray-500">
-              <CalendarDays size={13} />
+            <div className="flex items-center gap-1.5" style={{ color: "#57534E" }}>
+              <CalendarDays size={13} aria-hidden="true" />
               <span className="text-xs font-medium">
                 {formatDate(reservation.reservationDate)}
               </span>
             </div>
-            <div className="flex items-center gap-1.5 text-gray-500">
-              <Clock size={13} />
+            <div className="flex items-center gap-1.5" style={{ color: "#57534E" }}>
+              <Clock size={13} aria-hidden="true" />
               <span className="text-xs">
                 {formatTime(reservation.startTime)} –{" "}
                 {formatTime(reservation.endTime)}
               </span>
             </div>
-            <div className="flex items-center gap-1.5 text-gray-500">
-              <Users size={13} />
+            <div className="flex items-center gap-1.5" style={{ color: "#57534E" }}>
+              <Users size={13} aria-hidden="true" />
               <span className="text-xs">
                 {reservation.partySize} guest
                 {reservation.partySize !== 1 ? "s" : ""}
@@ -157,9 +183,12 @@ function ReservationCard({
 
           {/* Games */}
           {games.length > 0 && (
-            <div className="flex items-center gap-1.5 text-teal-700 mt-2">
-              <Gamepad2 size={13} />
-              <span className="text-xs font-medium">
+            <div className="flex items-center gap-1.5 mt-2.5">
+              <Gamepad2 size={13} aria-hidden="true" className="text-teal-700 shrink-0" />
+              <span
+                className="text-xs font-medium px-2 py-0.5 rounded-full"
+                style={{ backgroundColor: "#E8D4C4", color: "#292524" }}
+              >
                 {games.map((g) => g.game.name).join(", ")}
               </span>
             </div>
@@ -167,7 +196,7 @@ function ReservationCard({
 
           {/* Special requests */}
           {reservation.specialRequests && (
-            <p className="text-xs text-gray-400 italic mt-2">
+            <p className="text-xs italic mt-2" style={{ color: "#78716C" }}>
               "{reservation.specialRequests}"
             </p>
           )}
@@ -180,7 +209,7 @@ function ReservationCard({
                   onClick={() => onEdit(reservation)}
                   className="flex items-center gap-1.5 text-xs font-medium text-teal-700 hover:text-teal-800 transition-colors cursor-pointer"
                 >
-                  <Pencil size={13} /> Edit reservation
+                  <Pencil size={13} aria-hidden="true" /> Edit reservation
                 </button>
               )}
               <button
@@ -190,24 +219,24 @@ function ReservationCard({
               >
                 {cancelling === reservation.id ? (
                   <>
-                    <Loader2 size={13} className="animate-spin" /> Cancelling...
+                    <Loader2 size={13} className="animate-spin" aria-hidden="true" /> Cancelling...
                   </>
                 ) : (
                   <>
-                    <XCircle size={13} /> Cancel reservation
+                    <XCircle size={13} aria-hidden="true" /> Cancel reservation
                   </>
                 )}
               </button>
             </div>
           )}
 
-          {/* Cancel confirmation dialog */}
+          {/* Cancel confirmation */}
           {showCancelConfirm && (
-            <div className="mt-3 bg-red-50 border border-red-200 rounded-xl p-4">
-              <p className="text-sm font-semibold text-gray-800">
+            <div className="mt-3 bg-red-50 border border-red-200 rounded-[8px] p-4">
+              <p className="text-sm font-semibold" style={{ color: "#292524" }}>
                 Cancel this reservation?
               </p>
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs mt-1" style={{ color: "#57534E" }}>
                 This action cannot be undone. Your reservation at{" "}
                 <span className="font-medium">{cafe.name}</span> will be
                 cancelled.
@@ -219,15 +248,18 @@ function ReservationCard({
                     setShowCancelConfirm(false);
                   }}
                   disabled={cancelling === reservation.id}
-                  className="px-3 py-1.5 rounded-lg bg-red-500 hover:bg-red-600 text-white text-xs font-semibold transition-colors disabled:opacity-50"
+                  className="px-3 py-1.5 rounded-[6px] bg-red-500 hover:bg-red-600 text-white text-xs font-semibold transition-colors disabled:opacity-50 cursor-pointer"
                 >
-                  {cancelling === reservation.id
-                    ? "Cancelling..."
-                    : "Yes, cancel"}
+                  {cancelling === reservation.id ? "Cancelling..." : "Yes, cancel"}
                 </button>
                 <button
                   onClick={() => setShowCancelConfirm(false)}
-                  className="px-3 py-1.5 rounded-lg border border-gray-200 bg-white text-gray-600 text-xs font-semibold hover:border-gray-300 transition-colors"
+                  className="px-3 py-1.5 rounded-[6px] border text-xs font-semibold transition-colors cursor-pointer"
+                  style={{
+                    borderColor: "#E8D4C4",
+                    backgroundColor: "#FFFBF7",
+                    color: "#57534E",
+                  }}
                 >
                   Keep reservation
                 </button>
@@ -260,7 +292,6 @@ export default function ReservationsPage() {
     editBggIdToDbId[g.bggId] = g.id;
   });
 
-  // Build venue + edit props once cafe data has loaded
   const editVenue: Venue | null =
     editCafe && editingReservation
       ? {
@@ -277,14 +308,12 @@ export default function ReservationsPage() {
 
   const editProps = editingReservation
     ? (() => {
-        // Build time string from ISO startTime → "6:00 PM"
         const st = new Date(editingReservation.startTime);
         const timeLabel = st.toLocaleTimeString("en-US", {
           hour: "numeric",
           minute: "2-digit",
         });
         const dateStr = editingReservation.reservationDate.slice(0, 10);
-
         const game = editingReservation.gameReservations[0];
         const selectedGame: Game | undefined = game
           ? {
@@ -299,7 +328,6 @@ export default function ReservationsPage() {
               tags: [],
             }
           : undefined;
-
         return {
           id: editingReservation.id,
           date: dateStr,
@@ -319,7 +347,6 @@ export default function ReservationsPage() {
   const handleEditClose = () => {
     setEditingReservation(null);
     setEditCafeId(null);
-    // Reload page to reflect changes
     window.location.reload();
   };
 
@@ -341,12 +368,15 @@ export default function ReservationsPage() {
   ];
 
   return (
-    <div className="bg-[#faf8f4] min-h-screen">
-      <div className="max-w-4xl mx-auto px-7 py-10">
+    <div className="bg-warm-50 min-h-screen">
+      <div className="max-w-4xl mx-auto px-4 sm:px-7 pt-10 pb-10">
+
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-3xl font-black text-gray-900">My Reservations</h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <h1 className="text-3xl font-black" style={{ color: "#292524" }}>
+            My Reservations
+          </h1>
+          <p className="text-sm mt-1" style={{ color: "#57534E" }}>
             View and manage your upcoming and past bookings
           </p>
         </div>
@@ -354,32 +384,27 @@ export default function ReservationsPage() {
         {/* Tab filters */}
         <div className="flex gap-2 flex-wrap mb-5">
           {tabs.map((tab) => (
-            <button
+            <FilterPill
               key={tab.key}
+              label={tab.label}
+              active={activeTab === tab.key}
               onClick={() => setActiveTab(tab.key)}
-              className={`text-xs font-semibold px-3.5 py-1.5 rounded-full border transition-all ${
-                activeTab === tab.key
-                  ? "bg-teal-600 border-teal-600 text-white"
-                  : "bg-white border-gray-200 text-gray-600 hover:border-teal-300 hover:text-teal-700"
-              }`}
-            >
-              {tab.label}
-            </button>
+            />
           ))}
         </div>
 
         {/* Count */}
         {!loading && !error && (
-          <p className="text-xs text-gray-400 mb-4">
+          <p className="text-xs mb-4" style={{ color: "#57534E" }}>
             {filtered.length} reservation{filtered.length !== 1 ? "s" : ""}
           </p>
         )}
 
         {/* Error */}
         {error && (
-          <div className="text-center py-10 text-red-400">
+          <div className="text-center py-10" style={{ color: "#F87171" }}>
             <p className="text-sm font-medium">Failed to load reservations</p>
-            <p className="text-xs mt-1">{error}</p>
+            <p className="text-xs mt-1" style={{ color: "#57534E" }}>{error}</p>
           </div>
         )}
 
@@ -408,9 +433,14 @@ export default function ReservationsPage() {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-16 text-gray-400">
-                <CalendarX2 size={32} className="mx-auto mb-3 opacity-30" />
-                <p className="text-sm font-semibold text-gray-500">
+              <div className="text-center py-16" style={{ color: "#A8A29E" }}>
+                <CalendarX2
+                  size={32}
+                  className="mx-auto mb-3"
+                  style={{ opacity: 0.3 }}
+                  aria-hidden="true"
+                />
+                <p className="text-sm font-semibold" style={{ color: "#57534E" }}>
                   No reservations found
                 </p>
                 <p className="text-xs mt-1">

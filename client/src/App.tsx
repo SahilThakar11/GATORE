@@ -21,6 +21,7 @@ import Contact from "./pages/Contact";
 import CafeDetailPage from "./pages/CafeDetailPage";
 import { ReservationManagement } from "./pages/ReservationManagement";
 import Reservations from "./pages/Reservations";
+import Profile from "./pages/Profile";
 import BusinessDashboard from "./pages/BusinessDashboard";
 import BusinessSettings from "./pages/BusinessSettings";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
@@ -83,6 +84,14 @@ export default function App() {
                     element={
                       <ProtectedRoute>
                         <Reservations />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/profile"
+                    element={
+                      <ProtectedRoute>
+                        <Profile />
                       </ProtectedRoute>
                     }
                   />
