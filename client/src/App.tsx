@@ -3,7 +3,9 @@ import { useEffect } from "react";
 
 function ScrollToTop() {
   const { pathname } = useLocation();
-  useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
   return null;
 }
 import Header from "./components/Header";
@@ -17,6 +19,7 @@ import Pricing from "./pages/Pricing";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import CafeDetailPage from "./pages/CafeDetailPage";
+import { ReservationManagement } from "./pages/ReservationManagement";
 import Reservations from "./pages/Reservations";
 import BusinessDashboard from "./pages/BusinessDashboard";
 import BusinessSettings from "./pages/BusinessSettings";
@@ -40,6 +43,10 @@ export default function App() {
               <BusinessDashboard />
             </ProtectedRoute>
           }
+        />
+        <Route
+          path="/dashboard/reservations"
+          element={<ReservationManagement />}
         />
         <Route
           path="/dashboard/settings"
