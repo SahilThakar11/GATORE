@@ -26,6 +26,7 @@ import BusinessDashboard from "./pages/BusinessDashboard";
 import BusinessSettings from "./pages/BusinessSettings";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { useAuth } from "./context/AuthContext";
+import ComponentPreview from "./pages/ComponentPreview";
 
 export default function App() {
   const { user } = useAuth();
@@ -36,6 +37,9 @@ export default function App() {
   return (
     <div className="min-h-screen bg-white">
       <Routes>
+        {/* ── Dev preview ────────────────────── */}
+        <Route path="/component-preview" element={<ComponentPreview />} />
+
         {/* ── Business dashboard ─────────────── */}
         <Route
           path="/dashboard"
