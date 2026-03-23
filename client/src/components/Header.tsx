@@ -93,10 +93,10 @@ export default function Header() {
                   key={link.to}
                   to={link.to}
                   className={({ isActive }) =>
-                    `text-[16px] font-normal transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 rounded ${
+                    `relative pb-0.5 text-[16px] font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 rounded after:absolute after:bottom-0 after:left-0 after:h-[2px] after:bg-teal-800 after:transition-all after:duration-200 ${
                       isActive
-                        ? "text-teal-700"
-                        : "text-neutral-600 hover:text-teal-700"
+                        ? "text-teal-800 after:w-full"
+                        : "text-teal-800 hover:text-teal-700 after:w-0 hover:after:w-full"
                     }`
                   }
                 >
@@ -113,7 +113,7 @@ export default function Header() {
                 <>
                   <button
                     onClick={() => auth.open("signin")}
-                    className="text-[16px] font-normal text-neutral-600 hover:text-teal-700 transition-colors duration-150 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 rounded"
+                    className="relative pb-0.5 text-[16px] font-medium text-teal-800 bg-transparent border-0 p-0 transition-colors duration-150 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 rounded after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-0 after:bg-teal-800 after:transition-all after:duration-200 hover:text-teal-700 hover:after:w-full"
                   >
                     Sign in
                   </button>
@@ -156,10 +156,10 @@ export default function Header() {
               to="/find-a-cafe"
               onClick={closeMobile}
               className={({ isActive }) =>
-                `block px-5 py-2.5 rounded-lg text-[16px] font-normal transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 ${
+                `block px-5 py-2.5 rounded-lg text-[16px] font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 ${
                   isActive
-                    ? "text-teal-700 bg-teal-100"
-                    : "text-neutral-600 hover:text-teal-700 hover:bg-teal-100"
+                    ? "text-teal-800 bg-teal-100"
+                    : "text-teal-800 hover:text-teal-700 hover:bg-teal-100"
                 }`
               }
             >
@@ -169,10 +169,10 @@ export default function Header() {
               to="/find-a-game"
               onClick={closeMobile}
               className={({ isActive }) =>
-                `block px-5 py-2.5 rounded-lg text-[16px] font-normal transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 ${
+                `block px-5 py-2.5 rounded-lg text-[16px] font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 ${
                   isActive
-                    ? "text-teal-700 bg-teal-100"
-                    : "text-neutral-600 hover:text-teal-700 hover:bg-teal-100"
+                    ? "text-teal-800 bg-teal-100"
+                    : "text-teal-800 hover:text-teal-700 hover:bg-teal-100"
                 }`
               }
             >
@@ -184,10 +184,10 @@ export default function Header() {
                 to={link.to}
                 onClick={closeMobile}
                 className={({ isActive }) =>
-                  `block px-3 py-2.5 rounded-lg text-[16px] font-normal transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 ${
+                  `block px-3 py-2.5 rounded-lg text-[16px] font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 ${
                     isActive
-                      ? "text-teal-700 bg-teal-100"
-                      : "text-neutral-600 hover:text-teal-700 hover:bg-teal-100"
+                      ? "text-teal-800 bg-teal-100"
+                      : "text-teal-800 hover:text-teal-700 hover:bg-teal-100"
                   }`
                 }
               >
@@ -224,7 +224,7 @@ export default function Header() {
                       closeMobile();
                       auth.open("signin");
                     }}
-                    className="w-full text-left px-3 py-2.5 rounded-lg text-[16px] font-normal text-neutral-600 hover:text-teal-700 hover:bg-teal-100 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
+                    className="w-full text-left px-3 py-2.5 rounded-lg text-[16px] font-medium text-teal-800 hover:text-teal-700 hover:bg-teal-100 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
                   >
                     Sign in
                   </button>
@@ -471,8 +471,10 @@ function FindCafeDropdown() {
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-haspopup="menu"
-        className={`flex items-center gap-1 text-[16px] font-normal transition-colors duration-150 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 rounded ${
-          isActive ? "text-teal-700" : "text-neutral-600 hover:text-teal-700"
+        className={`relative pb-0.5 flex items-center gap-1 text-[16px] font-medium bg-transparent border-0 p-0 transition-colors duration-150 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 rounded after:absolute after:bottom-0 after:left-0 after:h-[2px] after:bg-teal-800 after:transition-all after:duration-200 ${
+          isActive
+            ? "text-teal-800 after:w-full"
+            : "text-teal-800 hover:text-teal-700 after:w-0 hover:after:w-full"
         }`}
       >
         Find a café
@@ -563,9 +565,8 @@ function UserDropdown({
 
   useEffect(() => {
     if (!open) return;
-    const focusable = menuRef.current?.querySelectorAll<HTMLElement>(
-      "a, button",
-    );
+    const focusable =
+      menuRef.current?.querySelectorAll<HTMLElement>("a, button");
     if (focusable?.length) focusable[0].focus();
     const handleKey = (e: KeyboardEvent) => {
       if (!focusable?.length) return;
