@@ -54,8 +54,8 @@ export default function About() {
       />
 
       {/* Mission */}
-      <section className="max-w-4xl mx-auto px-7 py-16">
-        <div className="bg-white rounded-2xl border border-gray-100 p-10 flex flex-col gap-5 shadow-sm">
+      <section className="max-w-4xl mx-auto px-5 sm:px-7 py-16">
+        <div className="bg-white rounded-2xl border border-warm-300 p-8 sm:p-10 flex flex-col gap-5 shadow-sm">
           <span className="text-xs font-semibold tracking-widest uppercase text-teal-700">
             Our mission
           </span>
@@ -74,10 +74,13 @@ export default function About() {
       </section>
 
       {/* Values */}
-      <section className="bg-white border-t border-b border-gray-100 py-16 px-7">
-        <div className="max-w-7xl mx-auto">
+      <section className="bg-warm-50 border-t border-b border-warm-200 py-16 px-5 sm:px-7">
+        <div className="max-w-5xl mx-auto">
           <div className="text-center mb-10">
-            <h2 className="text-2xl font-bold text-gray-900">
+            <span className="text-xs font-semibold tracking-widest uppercase text-teal-700">
+              Our principles
+            </span>
+            <h2 className="text-2xl font-bold text-gray-900 mt-2">
               What we stand for
             </h2>
             <div className="w-10 h-0.5 bg-teal-500 mx-auto mt-3" />
@@ -86,7 +89,7 @@ export default function About() {
             {VALUES.map(({ title, desc }) => (
               <div
                 key={title}
-                className="flex gap-4 p-6 rounded-xl border border-warm-300 bg-warm-100 hover:border-teal-200 transition-colors"
+                className="flex gap-4 p-6 rounded-xl border border-warm-300 bg-white hover:border-teal-200 transition-colors"
               >
                 <div className="w-2 shrink-0 rounded-full bg-teal-500 self-stretch" />
                 <div>
@@ -104,9 +107,12 @@ export default function About() {
       </section>
 
       {/* Team */}
-      <section className="max-w-7xl mx-auto px-7 py-16">
+      <section className="max-w-5xl mx-auto px-5 sm:px-7 py-16">
         <div className="text-center mb-10">
-          <h2 className="text-2xl font-bold text-gray-900">The team</h2>
+          <span className="text-xs font-semibold tracking-widest uppercase text-teal-700">
+            Who we are
+          </span>
+          <h2 className="text-2xl font-bold text-gray-900 mt-2">The team</h2>
           <div className="w-10 h-0.5 bg-teal-500 mx-auto mt-3" />
           <p className="text-xl font-bold text-neutral-600 mt-3">
             Team Crimson Underline
@@ -116,18 +122,21 @@ export default function About() {
           {TEAM.map(({ name, role, initials }) => (
             <div
               key={name}
-              className="bg-warm-100 rounded-xl border border-warm-300 p-6 flex flex-col items-center gap-3 hover:shadow-md hover:border-teal-200 transition-all"
+              className="bg-white rounded-xl border border-warm-300 overflow-hidden hover:shadow-md hover:border-teal-200 transition-all"
             >
-              <div className="w-14 h-14 rounded-full bg-teal-600 flex items-center justify-center">
-                <span className="text-lg font-bold text-white tracking-wide">
-                  {initials}
-                </span>
-              </div>
-              <div className="text-center">
-                <p className="text-sm font-bold text-gray-900">{name}</p>
-                <p className="text-xs text-teal-700 font-medium mt-0.5">
-                  {role}
-                </p>
+              <div className="h-2 bg-teal-600 w-full" />
+              <div className="p-6 flex flex-col items-center gap-3">
+                <div className="w-14 h-14 rounded-full bg-teal-600 flex items-center justify-center">
+                  <span className="text-lg font-bold text-white tracking-wide">
+                    {initials}
+                  </span>
+                </div>
+                <div className="text-center">
+                  <p className="text-sm font-bold text-gray-900">{name}</p>
+                  <p className="text-xs text-teal-700 font-medium mt-0.5">
+                    {role}
+                  </p>
+                </div>
               </div>
             </div>
           ))}
@@ -135,7 +144,7 @@ export default function About() {
       </section>
 
       {/* CTA */}
-      <section className="bg-teal-700 py-14 px-7 text-center">
+      <section className="bg-gradient-to-br from-teal-700 to-teal-800 py-14 px-5 sm:px-7 text-center">
         <h2 className="text-2xl font-bold text-white mb-2">
           Want to bring your café to GATORE?
         </h2>
