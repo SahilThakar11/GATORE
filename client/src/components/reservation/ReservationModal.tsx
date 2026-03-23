@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   X,
   Calendar,
@@ -11,6 +11,7 @@ import {
   ChevronLeft,
   User,
   LogIn,
+  PartyPopper,
 } from "lucide-react";
 import {
   useReservationFlow,
@@ -24,6 +25,8 @@ import { useAuthModal } from "../../hooks/useAuthModal";
 import { AuthModal } from "../auth/AuthModal";
 import { Input } from "../ui/Input";
 import { BookingSummary } from "./BookingSummary";
+import { PrimaryButton } from "../ui/PrimaryButton";
+import { SecondaryButton } from "../ui/SecondaryButton";
 import {
   isValidEmail,
   formatCardNumber,
@@ -80,7 +83,7 @@ function ProgressBar({
   const visibleIndex =
     skipPayment && currentStep > 3 ? currentStep - 1 : currentStep;
   return (
-    <div className="flex items-center justify-center gap-0 px-6 py-3 bg-[#faf8f4] border-b border-gray-100">
+    <div className="flex items-center justify-center gap-0 px-6 py-3 bg-gradient-to-b from-warm-50 to-warm-100 border-b border-gray-100">
       {steps.map((label, idx) => {
         const isCompleted = idx < visibleIndex;
         const isCurrent = idx === visibleIndex;
@@ -127,7 +130,7 @@ function ProgressBar({
             {/* Connector line */}
             {!isLast && (
               <div
-                className={`h-0.5 w-8 mb-4 mx-1 transition-all ${idx < currentStep ? "bg-teal-500" : "bg-gray-200"}`}
+                className={`h-0.5 w-8 mb-4 mx-1 transition-all ${idx < visibleIndex ? "bg-teal-500" : "bg-gray-200"}`}
               />
             )}
           </React.Fragment>
@@ -207,6 +210,7 @@ export const ReservationModal: React.FC<ReservationModalProps> = ({
   } = useReservationFlow();
 
   // ─── Local state ───────────────────────────────────────────────────────────
+  const dateInputRef = useRef<HTMLInputElement>(null);
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
   const [partySize, setPartySize] = useState(2);
@@ -421,7 +425,7 @@ export const ReservationModal: React.FC<ReservationModalProps> = ({
           onClick={handleClose}
         />
 
-        <div className="relative w-full max-w-2xl max-h-[92vh] bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+        <div className="relative w-full max-w-2xl max-h-[92vh] bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col font-['DM_Sans']">
           {/* ── Header ── */}
           <div
             className="px-6 py-4 text-white flex items-center gap-4 relative bg-teal-800"
@@ -437,7 +441,7 @@ export const ReservationModal: React.FC<ReservationModalProps> = ({
           >
             <div className="absolute inset-0 bg-black/45 rounded-t-2xl" />
             <div className="relative flex items-center gap-3 flex-1 min-w-0">
-              <div className="w-14 h-14 rounded-xl overflow-hidden bg-teal-700 border-2 border-white/30 shrink-0 flex items-center justify-center">
+              <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-xl overflow-hidden bg-teal-700 border-2 border-white/30 shrink-0 flex items-center justify-center">
                 {venue.logo ? (
                   <img
                     src={venue.logo}
@@ -452,12 +456,12 @@ export const ReservationModal: React.FC<ReservationModalProps> = ({
               </div>
               <div className="min-w-0">
                 <p className="text-[10px] font-semibold text-white/60 uppercase tracking-widest">
-                  {isEditMode ? "Edit reservation at" : "Reserve at"}
+                  {isEditMode ? "Edit reservation at" : "Reserving at"}
                 </p>
-                <h2 className="text-base font-black text-white truncate">
+                <h2 className="text-lg font-black text-white truncate">
                   {venue.name}
                 </h2>
-                <p className="text-white/70 text-xs flex items-center gap-1 mt-0.5">
+                <p className="text-white/90 text-xs flex items-center gap-1 mt-0.5">
                   <MapPin size={10} />
                   {venue.address}, {venue.city}
                 </p>
@@ -465,9 +469,10 @@ export const ReservationModal: React.FC<ReservationModalProps> = ({
             </div>
             <button
               onClick={handleClose}
-              className="relative w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors shrink-0"
+              aria-label="Close"
+              className="relative w-7 h-7 rounded-full bg-white border border-teal-700 text-teal-700 hover:bg-teal-50 flex items-center justify-center transition-colors shrink-0 cursor-pointer"
             >
-              <X size={15} className="text-white" />
+              <X size={14} aria-hidden="true" />
             </button>
           </div>
 
@@ -475,6 +480,7 @@ export const ReservationModal: React.FC<ReservationModalProps> = ({
           <ProgressBar currentStep={currentStep} skipPayment={isEditMode} />
           {/* ── Scrollable content ── */}
           <div className="flex-1 overflow-y-auto">
+            <div key={currentStep} className="step-animate">
             {/* ─── STEP 0: WHEN ─────────────────────────────────────────── */}
             {currentStep === 0 && (
               <div className="p-6 space-y-6">
@@ -488,6 +494,7 @@ export const ReservationModal: React.FC<ReservationModalProps> = ({
                 </div>
 
                 <Input
+                  ref={dateInputRef}
                   type="date"
                   label="Date"
                   value={date}
@@ -496,15 +503,25 @@ export const ReservationModal: React.FC<ReservationModalProps> = ({
                     setTime(""); // clear time — new date may have different slots
                   }}
                   min={new Date().toISOString().split("T")[0]}
-                  leftIcon={<Calendar className="w-4 h-4" />}
+                  className="hide-calendar-indicator"
+                  rightIcon={
+                    <button
+                      type="button"
+                      onClick={() => dateInputRef.current?.showPicker()}
+                      className="text-gray-400 hover:text-teal-600 transition-colors"
+                    >
+                      <Calendar className="w-4 h-4" />
+                    </button>
+                  }
                 />
 
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-3">
                     Time
                   </label>
+                  <div className="bg-warm-100 rounded-xl p-3">
                   {!date ? (
-                    <p className="text-sm text-gray-400">
+                    <p className="text-sm text-gray-400 py-1">
                       Select a date to see available times
                     </p>
                   ) : availLoading ? (
@@ -512,69 +529,81 @@ export const ReservationModal: React.FC<ReservationModalProps> = ({
                       {[...Array(6)].map((_, i) => (
                         <div
                           key={i}
-                          className="h-10 bg-gray-100 rounded-lg animate-pulse"
+                          className="h-12 bg-gray-100 rounded-lg animate-pulse"
                           style={{ animationDelay: `${i * 60}ms` }}
                         />
                       ))}
                     </div>
                   ) : allTimeSlots.length > 0 ? (
-                    <div className="grid grid-cols-4 gap-2">
+                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
                       {allTimeSlots.map((slot) => (
                         <button
                           key={slot.label}
                           onClick={() => slot.available && setTime(slot.label)}
                           disabled={!slot.available}
-                          className={`flex items-center justify-center gap-1 text-xs font-semibold px-2 py-2.5 rounded-lg border transition-all ${
+                          className={`flex items-center justify-center text-xs sm:text-sm font-bold px-2 py-3 rounded-lg border transition-all font-['DM_Sans'] cursor-pointer ${
                             !slot.available
                               ? "bg-red-50 border-red-200 text-red-400 cursor-not-allowed line-through"
                               : time === slot.label
-                                ? "bg-teal-600 border-teal-600 text-white shadow-sm"
-                                : "bg-white border-gray-200 text-gray-600 hover:border-teal-300"
+                                ? "bg-teal-600 border-teal-600 text-white shadow-sm shadow-teal-800/30"
+                                : "bg-white border-warm-300 text-gray-600 hover:border-teal-300"
                           }`}
                         >
-                          <Clock size={10} />
                           {slot.label}
                         </button>
                       ))}
                     </div>
                   ) : (
-                    <p className="text-sm text-gray-400">
+                    <p className="text-sm text-gray-400 py-1">
                       No available time slots for this date
                     </p>
                   )}
+                  </div>
                 </div>
 
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-3">
                     Party size
                   </label>
-                  <div className="flex items-center gap-4">
-                    <button
-                      onClick={() => setPartySize((p) => Math.max(1, p - 1))}
-                      className="w-9 h-9 rounded-full border-2 border-gray-200 text-gray-600 hover:border-teal-400 hover:text-teal-700 transition-all font-bold text-lg flex items-center justify-center"
-                    >
-                      −
-                    </button>
-                    <div className="flex items-center gap-1.5">
-                      {[...Array(Math.min(partySize, 6))].map((_, i) => (
-                        <Users key={i} size={16} className="text-teal-600" />
-                      ))}
-                      {partySize > 6 && (
-                        <span className="text-sm font-bold text-teal-700">
-                          +{partySize - 6}
-                        </span>
-                      )}
+                  <div className="bg-warm-100 rounded-xl p-3">
+                    <div className="flex items-center gap-3 w-full">
+                      <button
+                        onClick={() => setPartySize((p) => Math.max(1, p - 1))}
+                        className="w-11 h-11 rounded-lg bg-white border-2 border-warm-300 hover:border-warm-400 text-teal-800 transition-all font-bold text-lg flex items-center justify-center shrink-0 leading-none cursor-pointer"
+                      >
+                        −
+                      </button>
+                      <div className="flex items-center justify-center gap-1 flex-1 min-w-0">
+                        {[...Array(Math.min(partySize, 8))].map((_, i) => (
+                          <img
+                            key={i}
+                            src="/icons/pawn.svg"
+                            alt=""
+                            aria-hidden="true"
+                            className="w-5 h-5 object-contain shrink-0"
+                            style={{
+                              filter:
+                                "brightness(0) saturate(100%) invert(39%) sepia(64%) saturate(398%) hue-rotate(145deg) brightness(94%) contrast(94%)",
+                            }}
+                          />
+                        ))}
+                        {partySize > 8 && (
+                          <span className="text-sm font-bold text-teal-700 ml-0.5">
+                            +{partySize - 8}
+                          </span>
+                        )}
+                      </div>
+                      <button
+                        onClick={() => setPartySize((p) => Math.min(12, p + 1))}
+                        className="w-11 h-11 rounded-lg bg-white border-2 border-warm-300 hover:border-warm-400 text-teal-800 transition-all font-bold text-lg flex items-center justify-center shrink-0 leading-none cursor-pointer"
+                      >
+                        +
+                      </button>
                     </div>
-                    <button
-                      onClick={() => setPartySize((p) => Math.min(12, p + 1))}
-                      className="w-9 h-9 rounded-full border-2 border-gray-200 text-gray-600 hover:border-teal-400 hover:text-teal-700 transition-all font-bold text-lg flex items-center justify-center"
-                    >
-                      +
-                    </button>
-                    <span className="text-sm font-semibold text-gray-700">
-                      {partySize} {partySize === 1 ? "guest" : "guests"}
-                    </span>
                   </div>
+                  <p className="text-center text-sm font-semibold text-gray-700 mt-1">
+                    {partySize} {partySize === 1 ? "guest" : "guests"}
+                  </p>
                 </div>
 
                 {/* No table warning */}
@@ -612,17 +641,17 @@ export const ReservationModal: React.FC<ReservationModalProps> = ({
                         onClick={() =>
                           setComplexityFilter(active ? null : level)
                         }
-                        className={`flex items-center gap-2 text-xs font-semibold px-3 py-2 rounded-full border transition-all ${
+                        className={`flex items-center gap-2 text-xs font-semibold px-3 py-2 rounded-full border transition-all cursor-pointer ${
                           active
                             ? "bg-teal-600 border-teal-600 text-white"
-                            : "bg-white border-gray-200 text-gray-600 hover:border-teal-300"
+                            : "bg-white border-warm-300 text-gray-800 hover:border-teal-300"
                         }`}
                       >
-                        <span className="flex gap-0.5">
+                        <span className="flex gap-1">
                           {[...Array(3)].map((_, i) => (
                             <span
                               key={i}
-                              className={`w-1.5 h-1.5 rounded-full ${i < dots ? (active ? "bg-white" : "bg-amber-700") : "bg-gray-300"}`}
+                              className={`w-2 h-2 rounded-full ${i < dots ? (active ? "bg-white" : "bg-warm-700") : (active ? "bg-white/30" : "bg-warm-300")}`}
                             />
                           ))}
                         </span>
@@ -633,7 +662,7 @@ export const ReservationModal: React.FC<ReservationModalProps> = ({
                 </div>
 
                 {/* Game list */}
-                <div className="space-y-3 max-h-[320px] overflow-y-auto pr-1">
+                <div className="space-y-3 max-h-[320px] sm:max-h-[460px] overflow-y-auto pr-1">
                   {gamesLoading && <GameSkeleton />}
                   {gamesError && (
                     <p className="text-sm text-red-500 text-center py-4">
@@ -662,57 +691,73 @@ export const ReservationModal: React.FC<ReservationModalProps> = ({
                           key={game.id}
                           onClick={() => !isReserved && handleGameToggle(game)}
                           disabled={isReserved}
-                          className={`w-full flex items-start gap-4 p-4 rounded-xl border-2 transition-all text-left ${
+                          className={`w-full flex items-start gap-4 p-4 rounded-xl border transition-all duration-150 text-left ${
                             isReserved
                               ? "border-red-200 bg-red-50 opacity-70 cursor-not-allowed"
                               : isSelected
-                                ? "border-teal-500 bg-teal-50 shadow-sm"
-                                : "border-gray-200 bg-white hover:border-gray-300"
+                                ? "border-teal-600 bg-teal-50 shadow-sm cursor-pointer"
+                                : "border-warm-300 bg-warm-50 hover:border-teal-500 hover:shadow-sm cursor-pointer"
                           }`}
                         >
-                          <img
-                            src={game.image}
-                            alt={game.name}
-                            className={`w-16 h-16 rounded-lg object-cover shrink-0 ${
-                              isReserved ? "grayscale" : ""
-                            }`}
-                          />
+                          <div className="relative w-20 h-20 shrink-0">
+                            <img
+                              src={game.image}
+                              alt={game.name}
+                              className={`w-full h-full rounded-lg object-cover border border-gray-100 ${
+                                isReserved ? "grayscale" : ""
+                              }`}
+                            />
+                            {isSelected && (
+                              <div className="absolute inset-0 rounded-lg bg-teal-900/50 flex items-center justify-center">
+                                <div className="w-9 h-9 rounded-full bg-teal-600 shadow-lg flex items-center justify-center">
+                                  <svg
+                                    className="w-5 h-5 text-white"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth={3}
+                                  >
+                                    <path d="M5 13l4 4L19 7" />
+                                  </svg>
+                                </div>
+                              </div>
+                            )}
+                          </div>
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-start justify-between gap-2 mb-1">
+                            <div className="flex items-start justify-between gap-2 mb-1.5">
                               <p
-                                className={`font-semibold text-sm leading-tight ${
+                                className={`font-bold text-sm leading-snug ${
                                   isReserved ? "text-gray-400" : "text-gray-900"
                                 }`}
                               >
                                 {game.name}
                               </p>
-                              <div className="flex items-center gap-1 shrink-0">
-                                {isReserved ? (
-                                  <span className="text-xs bg-red-100 text-red-600 border border-red-200 px-2 py-0.5 rounded-full font-semibold">
-                                    Reserved
-                                  </span>
-                                ) : (
-                                  <>
-                                    {[...Array(3)].map((_, i) => (
-                                      <span
-                                        key={i}
-                                        className={`w-1.5 h-1.5 rounded-full ${i < dots ? "bg-amber-700" : "bg-gray-200"}`}
-                                      />
-                                    ))}
-                                    <span className="text-xs text-gray-400 ml-1">
-                                      {game.complexity}
-                                    </span>
-                                  </>
-                                )}
-                              </div>
+                              {isReserved && (
+                                <span className="text-xs bg-red-100 text-red-600 border border-red-200 px-2 py-0.5 rounded-full font-semibold shrink-0">
+                                  Reserved
+                                </span>
+                              )}
                             </div>
-                            <div className="flex items-center gap-3 text-xs text-gray-500 mb-1.5">
-                              <span className="flex items-center gap-1">
-                                <Users size={10} />
+                            {!isReserved && (
+                              <div className="flex items-center gap-1.5 mb-2">
+                                {[...Array(3)].map((_, i) => (
+                                  <span
+                                    key={i}
+                                    className={`w-2 h-2 rounded-full ${i < dots ? "bg-warm-700" : "bg-warm-300"}`}
+                                  />
+                                ))}
+                                <span className="text-xs text-gray-800 font-semibold ml-0.5">
+                                  {game.complexity}
+                                </span>
+                              </div>
+                            )}
+                            <div className="flex items-center gap-4 text-xs text-gray-600 mb-2">
+                              <span className="flex items-center gap-1.5">
+                                <Users size={13} />
                                 {game.players}
                               </span>
-                              <span className="flex items-center gap-1">
-                                <Clock size={10} />
+                              <span className="flex items-center gap-1.5">
+                                <Clock size={13} />
                                 {game.duration} min
                               </span>
                             </div>
@@ -720,7 +765,7 @@ export const ReservationModal: React.FC<ReservationModalProps> = ({
                               {game.tags.map((t) => (
                                 <span
                                   key={t}
-                                  className="text-xs bg-orange-50 text-orange-700 border border-orange-100 px-2 py-0.5 rounded-full font-medium"
+                                  className="text-xs bg-warm-200 text-warm-700 px-2 py-0.5 rounded-md font-medium"
                                 >
                                   {t}
                                 </span>
@@ -732,16 +777,6 @@ export const ReservationModal: React.FC<ReservationModalProps> = ({
                     })}
                 </div>
 
-                <button
-                  onClick={() => {
-                    setSelectedGameId(undefined);
-                    selectGame(undefined);
-                    nextStep();
-                  }}
-                  className="w-full text-sm text-gray-400 hover:text-gray-600 py-2 transition-colors"
-                >
-                  Skip — I'll browse when I arrive
-                </button>
               </div>
             )}
 
@@ -981,78 +1016,61 @@ export const ReservationModal: React.FC<ReservationModalProps> = ({
             {/* ─── STEP 5: SUCCESS ──────────────────────────────────────── */}
             {currentStep === 5 && data.booking && (
               <div className="p-6 space-y-5 text-center">
-                <div className="pt-2 space-y-3">
-                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-teal-100">
-                    <CheckCircle size={34} className="text-teal-600" />
+                <div className="pt-4 space-y-4">
+                  <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-teal-100 ring-8 ring-teal-50">
+                    <CheckCircle size={40} className="text-teal-600" />
                   </div>
-                  <h3 className="text-2xl font-black text-gray-900">
-                    {isEditMode ? "Reservation updated!" : "You're all set!"}
-                  </h3>
-                  <p className="text-sm text-gray-500">
-                    Confirmation sent to{" "}
-                    <span className="font-semibold text-gray-700">
-                      {displayEmail}
-                    </span>
-                  </p>
+                  <div className="space-y-1">
+                    <h3 className="text-2xl font-black text-gray-900">
+                      {isEditMode ? "Reservation updated!" : "You're all set!"}
+                    </h3>
+                    <p className="text-sm text-gray-500">
+                      Confirmation sent to{" "}
+                      <span className="font-semibold text-gray-700">
+                        {displayEmail}
+                      </span>
+                    </p>
+                  </div>
                 </div>
                 <BookingSummary booking={data.booking as any} showPricing />
                 <p className="text-xs text-gray-400">
-                  Need to cancel? Contact the café directly.
+                  Need to change plans? You can manage your reservation from your profile.
                 </p>
               </div>
             )}
+            </div>{/* end step-animate */}
           </div>
 
           {/* ── Footer ── */}
-          <div className="border-t border-gray-100 bg-white px-6 py-4">
+          <div className="border-t border-warm-200 bg-warm-50 px-4 py-4">
             {currentStep < 5 ? (
               <div className="space-y-3">
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    onClick={currentStep === 0 ? handleClose : prevStep}
-                    disabled={submitting}
-                    className="px-4 py-3 rounded-xl border-2 border-gray-200 text-sm font-semibold text-gray-700 hover:border-gray-300 transition-all disabled:opacity-50"
-                  >
-                    {currentStep === 0 ? "Cancel" : "Back"}
-                  </button>
-                  <button
-                    onClick={currentStep === 4 ? handleConfirm : nextStep}
-                    disabled={!canProceed || submitting}
-                    className="px-4 py-3 rounded-xl bg-teal-600 hover:bg-teal-700 disabled:opacity-40 disabled:cursor-not-allowed text-sm font-bold text-white transition-all flex items-center justify-center gap-2"
-                  >
-                    {submitting ? (
-                      <>
-                        <svg
-                          className="animate-spin w-4 h-4"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                        >
-                          <circle
-                            className="opacity-25"
-                            cx="12"
-                            cy="12"
-                            r="10"
-                            stroke="currentColor"
-                            strokeWidth="4"
-                          />
-                          <path
-                            className="opacity-75"
-                            fill="currentColor"
-                            d="M4 12a8 8 0 018-8v8H4z"
-                          />
-                        </svg>
-                        Confirming…
-                      </>
-                    ) : currentStep === 4 ? (
-                      isEditMode ? (
-                        "Save changes"
-                      ) : (
-                        "Confirm reservation"
-                      )
-                    ) : (
-                      "Continue"
-                    )}
-                  </button>
+                <div className="flex gap-3">
+                  <div className="flex-1 [&>button]:w-full">
+                    <SecondaryButton
+                      label={currentStep === 0 ? "Cancel" : "Back"}
+                      onClick={currentStep === 0 ? handleClose : prevStep}
+                      disabled={submitting}
+                      leftIcon={currentStep > 0 ? <ChevronLeft size={16} aria-hidden="true" /> : undefined}
+                      size="small"
+                    />
+                  </div>
+                  <div className="flex-1 [&>button]:w-full">
+                    <PrimaryButton
+                      label={
+                        currentStep === 4
+                          ? isEditMode ? "Save changes" : "Confirm reservation"
+                          : currentStep === 1 && !selectedGameId
+                            ? "Skip for now"
+                            : "Continue"
+                      }
+                      onClick={currentStep === 4 ? handleConfirm : nextStep}
+                      disabled={!canProceed}
+                      isLoading={submitting}
+                      size="sm"
+                      rightIcon={currentStep === 1 && !!selectedGameId ? <PartyPopper size={15} /> : undefined}
+                    />
+                  </div>
                 </div>
                 <p className="text-center text-xs text-gray-400">
                   Powered by{" "}
@@ -1061,12 +1079,13 @@ export const ReservationModal: React.FC<ReservationModalProps> = ({
               </div>
             ) : (
               <div className="space-y-3">
-                <button
-                  onClick={handleClose}
-                  className="w-full px-4 py-3 rounded-xl bg-teal-600 hover:bg-teal-700 text-sm font-bold text-white transition-all"
-                >
-                  Done
-                </button>
+                <div className="[&>button]:w-full">
+                  <PrimaryButton
+                    label="Done"
+                    onClick={handleClose}
+                    size="sm"
+                  />
+                </div>
                 <p className="text-center text-xs text-gray-400">
                   Powered by{" "}
                   <span className="text-teal-700 font-semibold">GATORE</span>
