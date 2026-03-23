@@ -46,7 +46,11 @@ export default function App() {
         />
         <Route
           path="/dashboard/reservations"
-          element={<ReservationManagement />}
+          element={
+            <ProtectedRoute requiredRole="business">
+              <ReservationManagement />
+            </ProtectedRoute>
+          }
         />
         <Route
           path="/dashboard/settings"
