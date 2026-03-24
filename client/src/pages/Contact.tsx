@@ -1,8 +1,11 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { PageHero } from "../components/PageHero";
-import { Mail, MapPin, Clock } from "lucide-react";
+import { Mail, MapPin, Clock, ArrowRight } from "lucide-react";
 import { Input } from "../components/ui/Input";
-import { Button } from "../components/ui/Button";
+import { Dropdown } from "../components/ui/Dropdown";
+import { PrimaryButton } from "../components/ui/PrimaryButton";
+import { TextButton } from "../components/ui/TextButton";
 
 const CONTACT_INFO = [
   {
@@ -68,7 +71,7 @@ export default function Contact() {
   };
 
   return (
-    <div className="bg-[#faf8f4] min-h-screen">
+    <main className="bg-warm-50 min-h-screen">
       <PageHero
         eyebrow="Get in touch"
         title="We'd love to"
@@ -76,163 +79,183 @@ export default function Contact() {
         subtitle="Whether you're a café owner, a curious customer, or just have a question — we're here."
       />
 
-      <section className="max-w-6xl mx-auto px-7 py-16">
-        <div className="flex gap-12 items-start">
-          {/* Left — contact info */}
-          <div className="w-72 shrink-0 flex flex-col gap-6">
-            <div className="flex flex-col gap-5">
-              {CONTACT_INFO.map(({ icon: Icon, label, value, sub }) => (
-                <div key={label} className="flex gap-4 items-start">
-                  <div className="w-9 h-9 rounded-lg bg-teal-50 border border-teal-100 flex items-center justify-center shrink-0 mt-0.5">
-                    <Icon size={16} className="text-teal-600" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-0.5">
-                      {label}
-                    </p>
-                    <p className="text-sm font-semibold text-gray-800">
-                      {value}
-                    </p>
-                    <p className="text-xs text-gray-400 mt-0.5">{sub}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
+      <section
+        aria-labelledby="contact-heading"
+        className="max-w-4xl mx-auto px-4 sm:px-7 py-16 flex flex-col gap-10"
+      >
+        <h2 id="contact-heading" className="sr-only">
+          Contact us
+        </h2>
 
-            {/* Decorative teal card */}
-            <div className="bg-teal-700 rounded-xl p-5 mt-2">
-              <p className="text-sm font-bold text-white mb-1.5">
-                Are you a café owner?
-              </p>
-              <p className="text-xs text-teal-200 leading-relaxed mb-3">
-                Learn how GATORE can help you manage reservations, track your
-                game library, and grow your community.
-              </p>
-              <a
-                href="/partner"
-                className="text-xs font-semibold text-teal-300 hover:text-white transition-colors"
-              >
-                View partner details →
-              </a>
-            </div>
-          </div>
-
-          {/* Right — form */}
-          <div className="flex-1">
-            {submitted ? (
-              /* Success state */
-              <div className="bg-white rounded-2xl border border-gray-100 p-10 flex flex-col items-center text-center gap-4 shadow-sm">
-                <div className="w-14 h-14 rounded-full bg-teal-50 flex items-center justify-center">
-                  <div className="w-10 h-10 rounded-full bg-teal-600 flex items-center justify-center">
-                    <span className="text-white text-xl">✓</span>
-                  </div>
-                </div>
-                <h3 className="text-xl font-bold text-gray-900">
-                  Message sent!
-                </h3>
-                <p className="text-sm text-gray-500 max-w-xs leading-relaxed">
-                  Thanks for reaching out, {form.name.split(" ")[0]}. We'll get
-                  back to you at{" "}
-                  <span className="font-medium text-gray-700">
-                    {form.email}
-                  </span>{" "}
-                  within one business day.
+        {/* Contact info row */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pb-10 border-b border-warm-300 px-4 sm:px-0">
+          {CONTACT_INFO.map(({ icon: Icon, label, value, sub }) => (
+            <div key={label} className="flex gap-4 items-start sm:justify-center">
+              <div className="shrink-0 mt-1">
+                <Icon size={18} className="text-teal-700" aria-hidden="true" />
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-gray-600 uppercase tracking-wider mb-0.5">
+                  {label}
                 </p>
-                <button
-                  onClick={() => {
-                    setSubmitted(false);
-                    setForm({
-                      name: "",
-                      email: "",
-                      reason: REASONS[0],
-                      message: "",
-                    });
-                  }}
-                  className="text-sm text-teal-700 font-medium hover:underline mt-2"
-                >
-                  Send another message
-                </button>
+                <p className="text-sm font-semibold text-gray-800">{value}</p>
+                <p className="text-xs text-gray-600 mt-0.5">{sub}</p>
               </div>
-            ) : (
-              <div className="bg-white rounded-2xl border border-gray-100 p-8 shadow-sm flex flex-col gap-5">
-                <h2 className="text-lg font-bold text-gray-900">
-                  Send us a message
-                </h2>
+            </div>
+          ))}
+        </div>
 
-                <div className="flex gap-4">
-                  <div className="flex-1">
-                    <Input
-                      label="Your name"
-                      type="text"
-                      placeholder="Full name"
-                      value={form.name}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                        update({ name: e.target.value })
-                      }
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <Input
-                      label="Email address"
-                      type="email"
-                      placeholder="you@example.com"
-                      value={form.email}
-                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                        update({ email: e.target.value })
-                      }
-                    />
-                  </div>
-                </div>
-
-                {/* Reason select */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">
-                    What can we help with?
-                  </label>
-                  <select
-                    value={form.reason}
-                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-                      update({ reason: e.target.value })
-                    }
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm text-gray-700 focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none bg-white"
-                  >
-                    {REASONS.map((r) => (
-                      <option key={r} value={r}>
-                        {r}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Message */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Message
-                  </label>
-                  <textarea
-                    rows={5}
-                    placeholder="Tell us more..."
-                    value={form.message}
-                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
-                      update({ message: e.target.value })
-                    }
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm text-gray-700 focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none resize-none"
-                  />
-                </div>
-
-                <Button
-                  variant="primary"
-                  fullWidth
-                  onClick={handleSubmit}
-                  disabled={!isValid || loading}
-                >
-                  {loading ? "Sending..." : "Send message"}
-                </Button>
+        {/* Form */}
+        {submitted ? (
+          <div className="bg-white rounded-[8px] border border-warm-300 p-10 flex flex-col items-center text-center gap-4 shadow-sm">
+            <div className="w-14 h-14 rounded-full bg-teal-50 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-full bg-teal-600 flex items-center justify-center">
+                <span className="text-white text-xl" aria-hidden="true">
+                  ✓
+                </span>
               </div>
-            )}
+            </div>
+            <h3 className="text-xl font-bold text-gray-900">Message sent!</h3>
+            <p className="text-sm text-gray-600 max-w-xs leading-relaxed">
+              Thanks for reaching out, {form.name.split(" ")[0]}. We'll get back
+              to you at{" "}
+              <span className="font-medium text-gray-800">{form.email}</span>{" "}
+              within one business day.
+            </p>
+            <button
+              onClick={() => {
+                setSubmitted(false);
+                setForm({
+                  name: "",
+                  email: "",
+                  reason: REASONS[0],
+                  message: "",
+                });
+              }}
+              className="text-sm text-teal-700 font-medium hover:underline mt-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-600 rounded"
+            >
+              Send another message
+            </button>
           </div>
+        ) : (
+          <div className="bg-white rounded-[8px] border border-warm-300 p-5 sm:p-8 shadow-sm flex flex-col gap-5">
+            {/* Form heading */}
+            <div>
+              <span
+                className="text-xs font-semibold tracking-widest uppercase text-teal-700"
+                aria-hidden="true"
+              >
+                Contact form
+              </span>
+              <h2 className="text-2xl font-bold text-gray-900 mt-2">
+                Send us a message
+              </h2>
+              <div
+                className="w-20 h-1 bg-warm-400 rounded-full mt-3"
+                aria-hidden="true"
+              />
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex-1">
+                <Input
+                  label="Your name"
+                  type="text"
+                  placeholder="Full name"
+                  value={form.name}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    update({ name: e.target.value })
+                  }
+                  className="bg-warm-50"
+                />
+              </div>
+              <div className="flex-1">
+                <Input
+                  label="Email address"
+                  type="email"
+                  placeholder="you@example.com"
+                  value={form.email}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    update({ email: e.target.value })
+                  }
+                  className="bg-warm-50"
+                />
+              </div>
+            </div>
+
+            {/* Reason */}
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                What can we help with?
+              </label>
+              <Dropdown
+                trigger="label"
+                triggerLabel={form.reason}
+                fullWidth
+                triggerClassName="bg-warm-50"
+                items={REASONS.map((r) => ({
+                  label: r,
+                  onClick: () => update({ reason: r }),
+                }))}
+              />
+            </div>
+
+            {/* Message */}
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">
+                Message
+              </label>
+              <textarea
+                rows={5}
+                placeholder="Tell us more..."
+                value={form.message}
+                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                  update({ message: e.target.value })
+                }
+                className="w-full px-4 py-3 border border-warm-300 rounded-[8px] text-gray-700 placeholder:text-gray-500 focus:ring-2 focus:ring-teal-500 focus:border-transparent outline-none resize-none bg-warm-50"
+              />
+            </div>
+
+            <div className="[&_button]:w-full">
+              <PrimaryButton
+                label={loading ? "Sending..." : "Send message"}
+                onClick={handleSubmit}
+                disabled={!isValid}
+                isLoading={loading}
+                size="md"
+                grayDisabled
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Café owner promo */}
+        <div
+          className="rounded-[8px] p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+          style={{
+            background:
+              "linear-gradient(135deg, #0f4c3a 0%, #0f766e 50%, #134e4a 100%)",
+          }}
+        >
+          <div>
+            <p className="text-base font-bold text-white mb-1">
+              Are you a café owner?
+            </p>
+            <p className="text-sm text-teal-50 leading-relaxed max-w-sm">
+              Learn how GATORE can help you manage reservations, track your game
+              library, and grow your community.
+            </p>
+          </div>
+          <Link to="/partner" className="shrink-0" tabIndex={-1}>
+            <TextButton
+              label="View partner details"
+              white
+              size="small"
+              rightIcon={<ArrowRight size={14} aria-hidden="true" />}
+            />
+          </Link>
         </div>
       </section>
-    </div>
+    </main>
   );
 }

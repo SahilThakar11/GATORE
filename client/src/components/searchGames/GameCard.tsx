@@ -69,7 +69,7 @@ export function GameCard({
         className={`relative flex items-start gap-4 p-4 w-full text-left flex-1 ${selectable ? "cursor-pointer" : "cursor-default"}`}
       >
         {/* Game image */}
-        <div className="w-30 h-30 md:w-24 md:h-24 lg:w-30 lg:h-30 rounded-lg overflow-hidden bg-gray-100 shrink-0 border border-gray-100">
+        <div className="w-22 h-22 sm:w-24 sm:h-24 lg:w-30 lg:h-30 rounded-lg overflow-hidden bg-gray-100 shrink-0 border border-gray-100">
           {game.image ? (
             <img
               src={game.image}

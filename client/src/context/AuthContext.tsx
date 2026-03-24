@@ -12,6 +12,7 @@ interface AuthContextType {
   accessToken: string | null;
   isAuthenticated: boolean;
   setAuth: (user: AuthUser, accessToken: string, refreshToken: string) => void;
+  updateUser: (updates: Partial<AuthUser>) => void;
   logout: () => void;
 }
 
@@ -49,6 +50,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setAccessToken(newAccessToken);
   };
 
+  const updateUser = (updates: Partial<AuthUser>) => {
+    setUser((prev) => {
+      if (!prev) return prev;
+      const updated = { ...prev, ...updates };
+      localStorage.setItem("authUser", JSON.stringify(updated));
+      return updated;
+    });
+  };
+
   const logout = () => {
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
@@ -64,6 +74,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         accessToken,
         isAuthenticated: !!user,
         setAuth,
+        updateUser,
         logout,
       }}
     >

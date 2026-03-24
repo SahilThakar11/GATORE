@@ -9,17 +9,19 @@ interface PrimaryButtonProps {
   isLoading?: boolean;
   size?: ButtonSize;
   rightIcon?: React.ReactNode;
+  /** Use gray-300/gray-500 for the disabled state instead of the default white */
+  grayDisabled?: boolean;
 }
 
 const SHADOW_DEFAULT = "0px 4px 14px 0px rgba(15,118,110,0.25)";
 
 const SIZE_STYLES: Record<
   ButtonSize,
-  { padding: string; fontSize: string; spinnerSize: number }
+  { sizeClass: string; spinnerSize: number }
 > = {
-  sm: { padding: "12px 16px", fontSize: "14px", spinnerSize: 14 },
-  md: { padding: "12px 24px", fontSize: "16px", spinnerSize: 16 },
-  lg: { padding: "14px 28px", fontSize: "18px", spinnerSize: 18 },
+  sm: { sizeClass: "py-3 px-4 text-sm",                                    spinnerSize: 14 },
+  md: { sizeClass: "py-3 px-4 text-sm sm:px-6 sm:text-base",               spinnerSize: 16 },
+  lg: { sizeClass: "py-3 px-4 text-sm sm:py-3.5 sm:px-7 sm:text-lg",       spinnerSize: 18 },
 };
 
 export function PrimaryButton({
@@ -29,6 +31,7 @@ export function PrimaryButton({
   isLoading = false,
   size = "md",
   rightIcon,
+  grayDisabled = false,
 }: PrimaryButtonProps) {
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
@@ -44,7 +47,7 @@ export function PrimaryButton({
 
   const bg = (() => {
     if (isLoading) return "#FFFFFF";
-    if (disabled)  return "#FFFFFF";
+    if (disabled)  return grayDisabled ? "#D1D5DB" : "#FFFFFF";
     if (active)    return "#CCFBF1";
     if (hovered)   return "#115E59";
     if (focused)   return "#FFFFFF";
@@ -53,7 +56,7 @@ export function PrimaryButton({
 
   const borderColor = (() => {
     if (isLoading) return "#0F766E";
-    if (disabled)  return "#D6D3D1";
+    if (disabled)  return grayDisabled ? "#D1D5DB" : "#D6D3D1";
     if (active)    return "#134E4A";
     if (hovered)   return "#115E59";
     if (focused)   return "#0F766E";
@@ -62,14 +65,14 @@ export function PrimaryButton({
 
   const textColor = (() => {
     if (isLoading) return "#0F766E";
-    if (disabled)  return "#78716C";
+    if (disabled)  return grayDisabled ? "#6B7280" : "#78716C";
     if (active)    return "#134E4A";
     if (hovered)   return "#FFFFFF";
     if (focused)   return "#0F766E";
     return "#FFFFFF";
   })();
 
-  const { padding, fontSize, spinnerSize } = SIZE_STYLES[size];
+  const { sizeClass, spinnerSize } = SIZE_STYLES[size];
 
   return (
     <button
@@ -84,9 +87,8 @@ export function PrimaryButton({
       onBlur={() => { setFocused(false); mouseDownRef.current = false; }}
       onMouseDown={() => { mouseDownRef.current = true; setActive(true); }}
       onMouseUp={() => setActive(false)}
+      className={sizeClass}
       style={{
-        padding,
-        fontSize,
         borderRadius: "8px",
         gap: "8px",
         fontWeight: 600,

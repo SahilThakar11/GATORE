@@ -21,11 +21,13 @@ import Contact from "./pages/Contact";
 import CafeDetailPage from "./pages/CafeDetailPage";
 import { ReservationManagement } from "./pages/ReservationManagement";
 import Reservations from "./pages/Reservations";
+import Profile from "./pages/Profile";
 import BusinessDashboard from "./pages/BusinessDashboard";
 import BusinessSettings from "./pages/BusinessSettings";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import BusinessSetupGuard from "./components/dashboard/BusinessSetupGuard";
 import { useAuth } from "./context/AuthContext";
+import ComponentPreview from "./pages/ComponentPreview";
 
 export default function App() {
   const { user } = useAuth();
@@ -36,6 +38,9 @@ export default function App() {
   return (
     <div className="min-h-screen bg-white">
       <Routes>
+        {/* ── Dev preview ────────────────────── */}
+        <Route path="/component-preview" element={<ComponentPreview />} />
+
         {/* ── Business dashboard ─────────────── */}
         <Route
           path="/dashboard"
@@ -94,6 +99,14 @@ export default function App() {
                     element={
                       <ProtectedRoute>
                         <Reservations />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/profile"
+                    element={
+                      <ProtectedRoute>
+                        <Profile />
                       </ProtectedRoute>
                     }
                   />

@@ -1,21 +1,40 @@
 import { ChevronLeft } from "lucide-react";
+import { Input } from "../../ui/Input";
 import { PrimaryButton } from "../../ui/PrimaryButton";
 import { SecondaryButton } from "../../ui/SecondaryButton";
 import type { AuthFormData } from "../../../hooks/useAuthModal";
 import { GAME_TYPES, GROUP_SIZES, COMPLEXITIES } from "../../../utils/const";
+
 interface Props {
   formData: AuthFormData;
   updateData: (patch: Partial<AuthFormData>) => void;
-  onContinue: () => void;
+  onSave: () => void;
   onBack: () => void;
+  loading: boolean;
 }
 
-export function StepPreferences({
+function formatPhone(raw: string): string {
+  const digits = raw.replace(/\D/g, "").slice(0, 10);
+  if (digits.length <= 3) return digits;
+  if (digits.length <= 6) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+  return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+}
+
+export function StepEditProfile({
   formData,
   updateData,
-  onContinue,
+  onSave,
   onBack,
+  loading,
 }: Props) {
+  const isValid = formData.name.trim().length > 0;
+  const phoneDigits = formData.phone.replace(/\D/g, "");
+  const phoneError =
+    formData.phone.length > 0 && phoneDigits.length !== 10
+      ? "Please enter a valid 10-digit phone number"
+      : undefined;
+  const canSave = isValid && !phoneError;
+
   const toggleGame = (id: string) => {
     const next = formData.gameTypes.includes(id)
       ? formData.gameTypes.filter((g) => g !== id)
@@ -27,25 +46,50 @@ export function StepPreferences({
     <>
       <div className="px-5 pt-5 pb-4 flex flex-col gap-5 flex-1 overflow-y-auto">
         {/* Header */}
-        <div className="flex items-start justify-between">
-          <div>
-            <h2
-              id="auth-step-heading"
-              className="text-xl sm:text-2xl font-bold text-neutral-800"
-            >
-              Game preferences
-            </h2>
-            <p className="text-xs sm:text-sm text-neutral-600 mt-1">
-              Help us recommend games you'll love
-            </p>
-          </div>
-          <span className="text-xs font-medium bg-warm-200 text-neutral-800 px-2.5 py-1 rounded-lg shrink-0 mt-1">
-            Optional
-          </span>
+        <div>
+          <h2 id="auth-step-heading" className="text-xl sm:text-2xl font-bold text-neutral-800">
+            Edit profile
+          </h2>
+          <p className="text-xs sm:text-sm text-neutral-600 mt-1">
+            Update your details and preferences
+          </p>
         </div>
 
-        {/* Game types */}
+        {/* Contact info section */}
+        <div className="flex flex-col gap-4">
+          <p className="text-xs font-semibold text-neutral-600 tracking-wider uppercase">
+            Contact Info
+          </p>
+          <Input
+            label="Your name"
+            type="text"
+            placeholder="What should we call you?"
+            value={formData.name}
+            onChange={(e) => updateData({ name: e.target.value })}
+            autoFocus
+            disabled={loading}
+          />
+          <Input
+            label={
+              <span>
+                Phone number{" "}
+                <span className="text-neutral-600 font-normal">(optional)</span>
+              </span>
+            }
+            type="tel"
+            placeholder="(416) 555-0100"
+            value={formData.phone}
+            onChange={(e) => updateData({ phone: formatPhone(e.target.value) })}
+            error={phoneError}
+            disabled={loading}
+          />
+        </div>
+
+        {/* Game types section */}
         <div>
+          <p className="text-xs font-semibold text-neutral-600 tracking-wider uppercase mb-3">
+            Game Preferences
+          </p>
           <p className="text-xs sm:text-sm font-medium text-neutral-800 mb-2">
             What types of games do you enjoy?
           </p>
@@ -57,7 +101,8 @@ export function StepPreferences({
                   key={g.id}
                   onClick={() => toggleGame(g.id)}
                   aria-pressed={selected}
-                  className={`flex flex-col items-center justify-center gap-1.5 py-3 px-2 rounded-xl border text-sm font-normal transition-all cursor-pointer ${
+                  disabled={loading}
+                  className={`flex flex-col items-center justify-center gap-1.5 py-3 px-2 rounded-xl border text-sm font-normal transition-all cursor-pointer disabled:opacity-50 ${
                     selected
                       ? `${g.color} text-neutral-600 hover:opacity-80`
                       : "border-warm-200 bg-white text-neutral-600"
@@ -71,7 +116,7 @@ export function StepPreferences({
           </div>
         </div>
 
-        {/* Group size */}
+        {/* Group size section */}
         <div>
           <p className="text-xs sm:text-sm font-medium text-neutral-800 mb-2">
             Typical group size?
@@ -84,16 +129,15 @@ export function StepPreferences({
                   key={g.id}
                   onClick={() => updateData({ groupSize: g.id })}
                   aria-pressed={selected}
-                  className={`text-left px-6 py-4 rounded-xl border transition-all w-78.5 ${
+                  disabled={loading}
+                  className={`text-left px-6 py-4 rounded-xl border transition-all disabled:opacity-50 ${
                     selected
                       ? "bg-teal-700 border-teal-700 text-white"
                       : "bg-white border-warm-300 text-neutral-800 hover:border-neutral-300"
                   }`}
                 >
                   <p className="text-xs sm:text-sm font-semibold">{g.label}</p>
-                  <p
-                    className={`text-xs mt-0.5 ${selected ? "text-teal-50" : "text-neutral-500"}`}
-                  >
+                  <p className={`text-xs mt-0.5 ${selected ? "text-teal-50" : "text-neutral-500"}`}>
                     {g.sublabel}
                   </p>
                 </button>
@@ -102,7 +146,7 @@ export function StepPreferences({
           </div>
         </div>
 
-        {/* Complexity */}
+        {/* Complexity section */}
         <div>
           <p className="text-xs sm:text-sm font-medium text-neutral-800 mb-2">
             Preferred complexity?
@@ -115,7 +159,8 @@ export function StepPreferences({
                   key={c.id}
                   onClick={() => updateData({ complexity: c.id })}
                   aria-pressed={selected}
-                  className={`flex items-center gap-1.5 px-6 py-4 rounded-lg border text-sm font-medium transition-all w-36.25 ${
+                  disabled={loading}
+                  className={`flex items-center gap-1.5 px-6 py-4 rounded-lg border text-sm font-medium transition-all w-36.25 disabled:opacity-50 ${
                     selected
                       ? "bg-teal-700 border-teal-700 text-white"
                       : "bg-white border-gray-200 text-gray-700 hover:border-gray-300"
@@ -130,12 +175,8 @@ export function StepPreferences({
                           style={{
                             backgroundColor:
                               i < c.dots
-                                ? selected
-                                  ? "#ffffff"
-                                  : "#6B4D33"
-                                : selected
-                                  ? "#54d8be"
-                                  : "#E8D4C4",
+                                ? selected ? "#ffffff" : "#6B4D33"
+                                : selected ? "#54d8be" : "#E8D4C4",
                           }}
                         />
                       ))}
@@ -147,26 +188,24 @@ export function StepPreferences({
             })}
           </div>
         </div>
-
       </div>
+
+      {/* Footer */}
       <div className="mt-auto flex gap-3 bg-warm-50 px-4 py-4 border border-warm-200">
         <div className="flex-1 [&>button]:w-full">
           <SecondaryButton
-            label="Back"
+            label="Cancel"
             onClick={onBack}
+            disabled={loading}
             leftIcon={<ChevronLeft size={16} aria-hidden="true" />}
           />
         </div>
         <div className="flex-1 [&>button]:w-full">
           <PrimaryButton
-            label={
-              formData.gameTypes.length === 0 &&
-              (!formData.groupSize || formData.groupSize === "any") &&
-              (!formData.complexity || formData.complexity === "any")
-                ? "Skip — I'll roll with it later"
-                : "Continue"
-            }
-            onClick={onContinue}
+            label={loading ? "Saving..." : "Save changes"}
+            onClick={onSave}
+            disabled={!canSave || loading}
+            isLoading={loading}
           />
         </div>
       </div>
