@@ -10,6 +10,7 @@ interface TextButtonProps {
   size?: ButtonSize;
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
+  "aria-label"?: string;
 }
 
 const SIZE_STYLES: Record<
@@ -30,6 +31,7 @@ export function TextButton({
   size = "medium",
   leftIcon,
   rightIcon,
+  "aria-label": ariaLabel,
 }: TextButtonProps) {
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
@@ -53,6 +55,7 @@ export function TextButton({
     <button
       onClick={isInert ? undefined : onClick}
       disabled={isInert}
+      aria-label={ariaLabel}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => {
         setHovered(false);

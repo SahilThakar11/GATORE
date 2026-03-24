@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
   CalendarDays,
@@ -37,10 +37,10 @@ function formatTime(iso: string) {
 
 function statusBadge(status: string) {
   const map: Record<string, string> = {
-    confirmed: "bg-green-50 text-green-600 border-green-200",
-    pending: "bg-amber-50 text-amber-600 border-amber-200",
-    cancelled: "bg-red-50 text-red-400 border-red-200",
-    completed: "bg-gray-100 text-gray-500 border-gray-200",
+    confirmed: "bg-green-50 text-green-700 border-green-200",
+    pending: "bg-amber-50 text-amber-700 border-amber-200",
+    cancelled: "bg-red-50 text-red-600 border-red-200",
+    completed: "bg-gray-100 text-gray-600 border-gray-200",
   };
   return map[status] || "bg-gray-100 text-gray-500 border-gray-200";
 }
@@ -94,6 +94,14 @@ function ReservationCard({
   const games = reservation.gameReservations;
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [hovered, setHovered] = useState(false);
+  const cancelConfirmRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (showCancelConfirm) {
+      const first = cancelConfirmRef.current?.querySelector<HTMLButtonElement>("button");
+      first?.focus();
+    }
+  }, [showCancelConfirm]);
 
   return (
     <div
@@ -122,6 +130,8 @@ function ReservationCard({
         {/* Café logo */}
         <Link
           to={`/cafe/${cafe.id}`}
+          aria-hidden="true"
+          tabIndex={-1}
           className="w-24 h-24 rounded-[8px] overflow-hidden shrink-0"
           style={{
             boxShadow:
@@ -154,7 +164,7 @@ function ReservationCard({
               </Link>
               <div className="flex items-center gap-1 mt-0.5">
                 <MapPin size={13} aria-hidden="true" style={{ color: "#57534E", flexShrink: 0 }} />
-                <span className="text-xs" style={{ color: "#78716C" }}>
+                <span className="text-xs" style={{ color: "#57534E" }}>
                   {cafe.address}, {cafe.city}
                 </span>
               </div>
@@ -221,6 +231,7 @@ function ReservationCard({
                 className="text-xs font-medium px-2 py-0.5 rounded-[8px]"
                 style={{ backgroundColor: "#E8D4C4", color: "#292524" }}
               >
+                <span className="sr-only">Games: </span>
                 {games.map((g) => g.game.name).join(", ")}
               </span>
             </div>
@@ -239,6 +250,7 @@ function ReservationCard({
               {canEdit && (
                 <TextButton
                   label="Edit reservation"
+                  aria-label={`Edit reservation at ${cafe.name}`}
                   size="xs"
                   leftIcon={<Pencil size={12} aria-hidden="true" />}
                   onClick={() => onEdit(reservation)}
@@ -247,7 +259,8 @@ function ReservationCard({
               <button
                 onClick={() => setShowCancelConfirm(true)}
                 disabled={cancelling === reservation.id}
-                className="flex items-center gap-1.5 text-xs font-medium text-red-400 hover:text-red-600 transition-colors cursor-pointer disabled:opacity-50"
+                aria-label={`Cancel reservation at ${cafe.name}`}
+                className="flex items-center gap-1.5 text-xs font-medium text-red-600 hover:text-red-700 transition-colors cursor-pointer disabled:opacity-50"
               >
                 {cancelling === reservation.id ? (
                   <>
@@ -264,8 +277,8 @@ function ReservationCard({
 
           {/* Cancel confirmation */}
           {showCancelConfirm && (
-            <div className="mt-3 bg-red-50 border border-red-200 rounded-[8px] p-4">
-              <p className="text-sm font-semibold" style={{ color: "#292524" }}>
+            <div ref={cancelConfirmRef} role="alertdialog" aria-labelledby={`cancel-title-${reservation.id}`} className="mt-3 bg-red-50 border border-red-200 rounded-[8px] p-4">
+              <p id={`cancel-title-${reservation.id}`} className="text-sm font-semibold" style={{ color: "#292524" }}>
                 Cancel this reservation?
               </p>
               <p className="text-xs mt-1" style={{ color: "#57534E" }}>
@@ -400,7 +413,7 @@ export default function ReservationsPage() {
   ];
 
   return (
-    <div className="bg-warm-50 min-h-screen">
+    <main className="bg-warm-50 min-h-screen">
       <div className="max-w-4xl mx-auto px-4 sm:px-7 pt-10 pb-10">
 
         {/* Header */}
@@ -427,14 +440,14 @@ export default function ReservationsPage() {
 
         {/* Count */}
         {!loading && !error && (
-          <p className="text-xs mb-4" style={{ color: "#57534E" }}>
+          <p className="text-xs mb-4" style={{ color: "#57534E" }} aria-live="polite" aria-atomic="true">
             {filtered.length} reservation{filtered.length !== 1 ? "s" : ""}
           </p>
         )}
 
         {/* Error */}
         {error && (
-          <div className="text-center py-10" style={{ color: "#F87171" }}>
+          <div role="alert" className="text-center py-10" style={{ color: "#F87171" }}>
             <p className="text-sm font-medium">Failed to load reservations</p>
             <p className="text-xs mt-1" style={{ color: "#57534E" }}>{error}</p>
           </div>
@@ -453,17 +466,18 @@ export default function ReservationsPage() {
         {!loading && !error && (
           <>
             {filtered.length > 0 ? (
-              <div className="flex flex-col gap-4">
+              <ul className="flex flex-col gap-4 list-none p-0 m-0">
                 {filtered.map((r) => (
-                  <ReservationCard
-                    key={r.id}
-                    reservation={r}
-                    onCancel={cancelReservation}
-                    onEdit={handleEdit}
-                    cancelling={cancelling}
-                  />
+                  <li key={r.id}>
+                    <ReservationCard
+                      reservation={r}
+                      onCancel={cancelReservation}
+                      onEdit={handleEdit}
+                      cancelling={cancelling}
+                    />
+                  </li>
                 ))}
-              </div>
+              </ul>
             ) : (
               <div className="text-center py-16" style={{ color: "#A8A29E" }}>
                 <CalendarX2
@@ -501,6 +515,6 @@ export default function ReservationsPage() {
           editReservation={editProps}
         />
       )}
-    </div>
+    </main>
   );
 }
