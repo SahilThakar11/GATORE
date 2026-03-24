@@ -72,14 +72,15 @@ export default function OperatingHoursTab({ onBack }: { onBack: () => void }) {
     setHours(updated);
   };
 
-  const handleSave = async () => {
+  const handleSave = async (): Promise<boolean> => {
     const hoursArray = DAYS.map((day) => ({
       dayOfWeek: day,
       openTime: timeStringToMinutes(hours[day].open),
       closeTime: timeStringToMinutes(hours[day].close),
       isClosed: !hours[day].enabled,
     }));
-    await updateHours(hoursArray);
+    const result = await updateHours(hoursArray);
+    return result?.success ?? false;
   };
 
   if (loading) {

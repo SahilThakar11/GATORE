@@ -92,6 +92,40 @@ export const getProfile = async (req: AuthRequest, res: Response): Promise<void>
   }
 };
 
+// GET /api/business-system/setup-prefill
+// Returns access-request data so the setup wizard can autofill the form.
+export const getSetupPrefill = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const userId = req.user?.userId;
+    if (!userId) {
+      res.status(401).json({ success: false, message: "Authentication required." });
+      return;
+    }
+
+    const accessRequest = await prisma.businessAccessRequest.findFirst({
+      where: { userId , status: "approved" },
+      orderBy: { createdAt: "desc" },
+      select: {
+        cafeName: true,
+        ownerName: true,
+        email: true,
+        phone: true,
+        city: true,
+      },
+    });
+
+    if (!accessRequest) {
+      res.json({ success: true, data: null });
+      return;
+    }
+
+    res.json({ success: true, data: accessRequest });
+  } catch (error) {
+    console.error("Get setup prefill error:", error);
+    res.status(500).json({ success: false, message: "Failed to retrieve prefill data." });
+  }
+};
+
 // PUT /api/business-system/profile
 export const updateProfile = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -100,7 +134,7 @@ export const updateProfile = async (req: AuthRequest, res: Response): Promise<vo
 
     const {
       name, tagline, description, address, city, province, postalCode,
-      phone, website, contactName, contactEmail, businessType, timezone,
+      phone, website, contactName, contactEmail, businessType, timezone, logoUrl,
     } = req.body;
 
     // Validate
@@ -137,6 +171,7 @@ export const updateProfile = async (req: AuthRequest, res: Response): Promise<vo
         ...(contactEmail !== undefined && { contactEmail }),
         ...(businessType !== undefined && { businessType }),
         ...(timezone !== undefined && { timezone }),
+        ...(logoUrl !== undefined && { logoUrl }),
       },
     });
 
@@ -154,10 +189,33 @@ export const updateProfile = async (req: AuthRequest, res: Response): Promise<vo
 // POST /api/business-system/setup
 export const completeSetup = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const restaurantId = await getBusinessRestaurant(req, res);
-    if (!restaurantId) return;
+    const userId = req.user?.userId;
+    if (!userId) {
+      res.status(401).json({ success: false, message: "Authentication required." });
+      return;
+    }
 
-    const { profile, tables, hours, pricing } = req.body;
+    // Get or create the restaurant for this user
+    let user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { restaurantId: true },
+    });
+
+    let restaurantId = user?.restaurantId ?? null;
+
+    if (!restaurantId) {
+      // First-time setup: create the restaurant record now
+      const newRestaurant = await prisma.restaurant.create({
+        data: { name: "My Café" },
+      });
+      await prisma.user.update({
+        where: { id: userId },
+        data: { restaurantId: newRestaurant.id },
+      });
+      restaurantId = newRestaurant.id;
+    }
+
+    const { profile, tables, hours, pricing, logoUrl } = req.body;
 
     // ── Validate profile ──
     if (profile) {
@@ -233,20 +291,21 @@ export const completeSetup = async (req: AuthRequest, res: Response): Promise<vo
     }
 
     // 1. Update restaurant profile
-    if (profile) {
+    if (profile || logoUrl) {
       await prisma.restaurant.update({
         where: { id: restaurantId },
         data: {
-          ...(profile.name && { name: profile.name }),
-          ...(profile.contactEmail && { contactEmail: profile.contactEmail }),
-          ...(profile.contactName && { contactName: profile.contactName }),
-          ...(profile.website && { website: profile.website }),
-          ...(profile.businessType && { businessType: profile.businessType }),
-          ...(profile.phone && { phone: profile.phone }),
-          ...(profile.address && { address: profile.address }),
-          ...(profile.city && { city: profile.city }),
-          ...(profile.province && { province: profile.province }),
-          ...(profile.postalCode && { postalCode: profile.postalCode }),
+          ...(profile?.name && { name: profile.name }),
+          ...(profile?.contactEmail && { contactEmail: profile.contactEmail }),
+          ...(profile?.contactName && { contactName: profile.contactName }),
+          ...(profile?.website && { website: profile.website }),
+          ...(profile?.businessType && { businessType: profile.businessType }),
+          ...(profile?.phone && { phone: profile.phone }),
+          ...(profile?.address && { address: profile.address }),
+          ...(profile?.city && { city: profile.city }),
+          ...(profile?.province && { province: profile.province }),
+          ...(profile?.postalCode && { postalCode: profile.postalCode }),
+          ...(logoUrl && { logoUrl }),
         },
       });
     }
@@ -946,6 +1005,64 @@ export const createWalkInReservation = async (req: AuthRequest, res: Response): 
   } catch (error) {
     console.error("Create walk-in reservation error:", error);
     res.status(500).json({ success: false, message: "Failed to create reservation." });
+  }
+};
+
+// ═════════════════════════════════════════════════════════════════════════════
+//  ACCOUNT DELETION
+// ═════════════════════════════════════════════════════════════════════════════
+
+// DELETE /api/business-system/account
+export const deleteBusinessAccount = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const userId = req.user?.userId;
+    if (!userId) {
+      res.status(401).json({ success: false, message: "Authentication required." });
+      return;
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { restaurantId: true },
+    });
+
+    if (!user?.restaurantId) {
+      res.status(404).json({ success: false, message: "No restaurant linked to your account." });
+      return;
+    }
+
+    const restaurantId = user.restaurantId;
+
+    // 1. Delete GameReservations (child of Reservation, which has no cascade from Table)
+    await prisma.gameReservation.deleteMany({
+      where: { reservation: { table: { restaurantId } } },
+    });
+
+    // 2. Delete Reservations for this restaurant's tables
+    await prisma.reservation.deleteMany({
+      where: { table: { restaurantId } },
+    });
+
+    // 3. Delete the Restaurant (cascades: OperatingHours, Table, MenuItem, RestaurantGame)
+    await prisma.restaurant.delete({ where: { id: restaurantId } });
+
+    // 4. Delete all BusinessAccessRequests for this user
+    await prisma.businessAccessRequest.deleteMany({ where: { userId } });
+
+    // 5. Demote the user back to regular user (no hard delete — safer for audit trail)
+    await prisma.user.update({
+      where: { id: userId },
+      data: {
+        restaurantId: null,
+        role: "user",
+        isActive: true,
+      },
+    });
+
+    res.json({ success: true, message: "Business account deleted successfully." });
+  } catch (error) {
+    console.error("Delete business account error:", error);
+    res.status(500).json({ success: false, message: "Failed to delete business account." });
   }
 };
 

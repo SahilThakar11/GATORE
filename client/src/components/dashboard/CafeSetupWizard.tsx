@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   X,
   ChevronDown,
@@ -18,6 +18,7 @@ import {
   Users,
   Settings,
   Loader2,
+  ImagePlus,
 } from "lucide-react";
 import { StepProgress } from "../auth/StepProgress";
 import { Input } from "../ui/Input";
@@ -129,28 +130,60 @@ function SelectField({
    STEP 1 — BUSINESS INFO
    ═══════════════════════════════════════════════════════════════════ */
 
+const MAX_LOGO_SIZE = 2 * 1024 * 1024; // 2 MB
+const ACCEPTED_IMAGE_TYPES = ["image/png", "image/jpeg", "image/webp", "image/svg+xml"];
+
 function StepBusinessInfo({
   onContinue,
   onBack,
   profileData,
   setProfileData,
+  logoBase64,
+  setLogoBase64,
   businessName,
 }: {
   onContinue: () => void;
   onBack: () => void;
   profileData: Record<string, string>;
   setProfileData: React.Dispatch<React.SetStateAction<Record<string, string>>>;
+  logoBase64: string;
+  setLogoBase64: React.Dispatch<React.SetStateAction<string>>;
   businessName: string;
 }) {
   const [errors, setErrors] = useState<Record<string, string | null>>({});
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const update = (key: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
     setProfileData((prev) => ({ ...prev, [key]: e.target.value }));
     setErrors((prev) => ({ ...prev, [key]: null }));
   };
 
+  const handleLogoSelect = (file: File) => {
+    if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
+      setErrors((prev) => ({ ...prev, logo: "Please upload a PNG, JPG, WebP, or SVG image." }));
+      return;
+    }
+    if (file.size > MAX_LOGO_SIZE) {
+      setErrors((prev) => ({ ...prev, logo: "Image must be under 2 MB." }));
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      setLogoBase64(reader.result as string);
+      setErrors((prev) => ({ ...prev, logo: null }));
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (file) handleLogoSelect(file);
+  };
+
   const handleContinue = () => {
     const newErrors: Record<string, string | null> = {
+      logo: logoBase64 ? null : "A café logo is required.",
       contactEmail: validateEmail(profileData.contactEmail),
       contactName: validateRequired(profileData.contactName),
       website: validateUrl(profileData.website),
@@ -175,6 +208,65 @@ function StepBusinessInfo({
         <p className="text-sm text-gray-400 mt-0.5">
           Let's get your café ready for reservations
         </p>
+      </div>
+
+      {/* Logo Upload */}
+      <div>
+        <label className="block text-sm font-medium text-neutral-800 mb-2">
+          Café Logo <span className="text-red-500">*</span>
+        </label>
+        <div
+          onClick={() => fileInputRef.current?.click()}
+          onDrop={handleDrop}
+          onDragOver={(e) => e.preventDefault()}
+          className={`relative flex flex-col items-center justify-center border-2 border-dashed rounded-xl p-6 cursor-pointer transition-all ${
+            errors.logo
+              ? "border-red-300 bg-red-50/30"
+              : logoBase64
+                ? "border-teal-300 bg-teal-50/30"
+                : "border-gray-200 hover:border-teal-300 hover:bg-teal-50/20"
+          }`}
+        >
+          {logoBase64 ? (
+            <div className="flex items-center gap-4">
+              <img
+                src={logoBase64}
+                alt="Café logo preview"
+                className="w-16 h-16 rounded-xl object-cover border border-gray-200"
+              />
+              <div className="text-left">
+                <p className="text-sm font-medium text-gray-900">Logo uploaded</p>
+                <p className="text-xs text-teal-600 mt-0.5">Click or drag to replace</p>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center mb-2">
+                <ImagePlus size={22} className="text-gray-400" />
+              </div>
+              <p className="text-sm font-medium text-gray-700">
+                Click to upload or drag and drop
+              </p>
+              <p className="text-xs text-gray-400 mt-0.5">
+                PNG, JPG, WebP, or SVG (max 2 MB)
+              </p>
+            </>
+          )}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/png,image/jpeg,image/webp,image/svg+xml"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) handleLogoSelect(file);
+              e.target.value = "";
+            }}
+          />
+        </div>
+        {errors.logo && (
+          <p className="text-xs text-red-500 mt-1.5">{errors.logo}</p>
+        )}
       </div>
 
       <Input
@@ -993,8 +1085,21 @@ interface CafeSetupWizardProps {
     tables?: { name: string; capacity: number; type: string }[];
     hours?: { dayOfWeek: string; openTime: number; closeTime: number; isClosed: boolean }[];
     pricing?: Record<string, any>;
+    logoUrl?: string;
   }) => Promise<{ success: boolean }>;
   businessName?: string;
+  initialProfile?: {
+    contactEmail?: string | null;
+    contactName?: string | null;
+    phone?: string | null;
+    city?: string;
+    address?: string;
+    province?: string;
+    postalCode?: string | null;
+    website?: string | null;
+    businessType?: string | null;
+    logoUrl?: string | null;
+  } | null;
 }
 
 export default function CafeSetupWizard({
@@ -1002,12 +1107,36 @@ export default function CafeSetupWizard({
   onClose,
   onComplete,
   businessName = "Your Café",
+  initialProfile,
 }: CafeSetupWizardProps) {
   const [step, setStep] = useState<WizardStep>("business-info");
   const [saving, setSaving] = useState(false);
 
-  // Collected wizard data
+  // Collected wizard data — auto-fill from existing profile (business request data)
   const [profileData, setProfileData] = useState<Record<string, string>>({});
+  const [logoBase64, setLogoBase64] = useState<string>("");
+
+  // Auto-fill profile data from the existing restaurant record (populated from business request)
+  useEffect(() => {
+    if (!initialProfile) return;
+    setProfileData((prev) => {
+      // Only fill empty fields so user edits aren't overwritten
+      const fill: Record<string, string> = {};
+      if (!prev.contactEmail && initialProfile.contactEmail) fill.contactEmail = initialProfile.contactEmail;
+      if (!prev.contactName && initialProfile.contactName) fill.contactName = initialProfile.contactName;
+      if (!prev.phone && initialProfile.phone) fill.phone = initialProfile.phone;
+      if (!prev.city && initialProfile.city) fill.city = initialProfile.city;
+      if (!prev.address && initialProfile.address) fill.address = initialProfile.address;
+      if (!prev.province && initialProfile.province) fill.province = initialProfile.province;
+      if (!prev.postalCode && initialProfile.postalCode) fill.postalCode = initialProfile.postalCode;
+      if (!prev.website && initialProfile.website) fill.website = initialProfile.website;
+      if (!prev.businessType && initialProfile.businessType) fill.businessType = initialProfile.businessType;
+      return { ...prev, ...fill };
+    });
+    if (initialProfile.logoUrl && !logoBase64) {
+      setLogoBase64(initialProfile.logoUrl);
+    }
+  }, [initialProfile]);
   const [tablesData, setTablesData] = useState<TableEntry[]>([
     { id: "1", name: "Table 1", capacity: "", type: "" },
     { id: "2", name: "Table 2", capacity: "2", type: "" },
@@ -1082,6 +1211,7 @@ export default function CafeSetupWizard({
           isClosed: !hoursData[day]?.enabled,
         })),
         pricing: pricingData,
+        logoUrl: logoBase64 || undefined,
       });
       setSaving(false);
       if (result.success) goNext(); // go to success step
@@ -1146,6 +1276,8 @@ export default function CafeSetupWizard({
               onBack={goBack}
               profileData={profileData}
               setProfileData={setProfileData}
+              logoBase64={logoBase64}
+              setLogoBase64={setLogoBase64}
               businessName={businessName}
             />
           )}

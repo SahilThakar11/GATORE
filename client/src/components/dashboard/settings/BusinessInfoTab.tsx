@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Globe } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Globe, Building2, ImagePlus } from "lucide-react";
 import { Input } from "../../ui/Input";
 import { SettingsPanel } from "./SettingsPanel";
 import { SelectField } from "./SelectField";
@@ -13,10 +13,16 @@ import {
   validateRequired,
 } from "../../../utils/validations";
 
+const MAX_LOGO_SIZE = 2 * 1024 * 1024; // 2 MB
+const ACCEPTED_IMAGE_TYPES = ["image/png", "image/jpeg", "image/webp", "image/svg+xml"];
+
 export default function BusinessInfoTab({ onBack }: { onBack: () => void }) {
-  const { profile } = useBusinessDashboard();
+  const { profile, refresh } = useBusinessDashboard();
   const { updateProfile, saving } = useBusinessSettings();
   const [errors, setErrors] = useState<Record<string, string | undefined>>({});
+  const [logoBase64, setLogoBase64] = useState<string>("");
+  const [logoError, setLogoError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [form, setForm] = useState({
     contactEmail: "",
@@ -45,6 +51,10 @@ export default function BusinessInfoTab({ onBack }: { onBack: () => void }) {
         postalCode: profile.postalCode || "",
         timezone: profile.timezone || "EST (Eastern)",
       });
+      // Initialize preview from existing logo
+      if (profile.logoUrl && !logoBase64) {
+        setLogoBase64(profile.logoUrl);
+      }
     }
   }, [profile]);
 
@@ -53,7 +63,24 @@ export default function BusinessInfoTab({ onBack }: { onBack: () => void }) {
     setErrors((prev) => ({ ...prev, [key]: undefined }));
   };
 
-  const handleSave = async () => {
+  const handleLogoSelect = (file: File) => {
+    if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
+      setLogoError("Please upload a PNG, JPG, WebP, or SVG image.");
+      return;
+    }
+    if (file.size > MAX_LOGO_SIZE) {
+      setLogoError("Image must be under 2 MB.");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      setLogoBase64(reader.result as string);
+      setLogoError(null);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleSave = async (): Promise<boolean> => {
     const newErrors: Record<string, string | undefined> = {
       contactEmail: validateEmail(form.contactEmail) ?? undefined,
       contactName: validateRequired(form.contactName) ?? undefined,
@@ -65,9 +92,23 @@ export default function BusinessInfoTab({ onBack }: { onBack: () => void }) {
       postalCode: validatePostalCode(form.postalCode) ?? undefined,
     };
     setErrors(newErrors);
-    if (Object.values(newErrors).some((e) => e !== undefined)) return;
-    await updateProfile(form);
+    if (Object.values(newErrors).some((e) => e !== undefined)) return false;
+
+    // Include logoUrl only if it changed from the saved profile
+    const payload: Record<string, string | null | boolean> = { ...form };
+    if (logoBase64 && logoBase64 !== profile?.logoUrl) {
+      payload.logoUrl = logoBase64;
+    }
+
+    const result = await updateProfile(payload);
+    if (result?.success) {
+      await refresh();
+      return true;
+    }
+    return false;
   };
+
+  const currentLogo = logoBase64 || profile?.logoUrl;
 
   return (
     <SettingsPanel
@@ -77,6 +118,69 @@ export default function BusinessInfoTab({ onBack }: { onBack: () => void }) {
       onSave={handleSave}
       saving={saving}
     >
+      {/* Logo Upload */}
+      <div className="mb-6">
+        <label className="block text-sm font-medium text-neutral-800 mb-2">
+          Café Logo
+        </label>
+        <div
+          onClick={() => fileInputRef.current?.click()}
+          onDrop={(e) => {
+            e.preventDefault();
+            const file = e.dataTransfer.files[0];
+            if (file) handleLogoSelect(file);
+          }}
+          onDragOver={(e) => e.preventDefault()}
+          className={`relative flex items-center gap-4 border-2 border-dashed rounded-xl p-4 cursor-pointer transition-all ${
+            logoError
+              ? "border-red-300 bg-red-50/30"
+              : currentLogo
+                ? "border-teal-300 bg-teal-50/30"
+                : "border-gray-200 hover:border-teal-300 hover:bg-teal-50/20"
+          }`}
+        >
+          {currentLogo ? (
+            <>
+              <img
+                src={currentLogo}
+                alt="Café logo"
+                className="w-16 h-16 rounded-xl object-cover border border-gray-200 shrink-0"
+              />
+              <div>
+                <p className="text-sm font-medium text-gray-900">{profile?.name}</p>
+                <p className="text-xs text-teal-600 mt-0.5">Click or drag to replace logo</p>
+                <p className="text-xs text-gray-400 mt-0.5">PNG, JPG, WebP, or SVG (max 2 MB)</p>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="w-16 h-16 rounded-xl bg-gray-100 flex items-center justify-center shrink-0">
+                <ImagePlus size={22} className="text-gray-400" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-700">Upload café logo</p>
+                <p className="text-xs text-gray-400 mt-0.5">Click or drag and drop</p>
+                <p className="text-xs text-gray-400">PNG, JPG, WebP, or SVG (max 2 MB)</p>
+              </div>
+            </>
+          )}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/png,image/jpeg,image/webp,image/svg+xml"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) handleLogoSelect(file);
+              e.target.value = "";
+            }}
+          />
+        </div>
+        {logoError && (
+          <p className="text-xs text-red-500 mt-1.5">{logoError}</p>
+        )}
+      </div>
+
       <div className="flex flex-col gap-5">
         <Input
           label="Email Address"
@@ -128,9 +232,7 @@ export default function BusinessInfoTab({ onBack }: { onBack: () => void }) {
 
       {/* Business Address */}
       <div className="mt-8">
-        <h3 className="text-base font-bold text-gray-900 mb-4">
-          Business Address
-        </h3>
+        <h3 className="text-base font-bold text-gray-900 mb-4">Business Address</h3>
         <div className="flex flex-col gap-4">
           <Input label="Street Address" placeholder="123 Main Street" value={form.address} onChange={update("address")} error={errors.address} />
           <div className="grid grid-cols-3 gap-4">

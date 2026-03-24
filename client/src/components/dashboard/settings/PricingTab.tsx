@@ -26,7 +26,7 @@ export default function PricingTab({ onBack }: { onBack: () => void }) {
     });
   }, [fetchPricing]);
 
-  const handleSave = async () => {
+  const handleSave = async (): Promise<boolean> => {
     const newErrors: Record<string, string | undefined> = {};
     if (pricingType === "hourly" || pricingType === "hybrid") {
       newErrors.hourlyRate = validatePositiveNumber(hourlyRate, "Hourly Rate") ?? undefined;
@@ -35,14 +35,15 @@ export default function PricingTab({ onBack }: { onBack: () => void }) {
       newErrors.minSpend = validatePositiveNumber(minSpend, "Minimum Spend") ?? undefined;
     }
     setErrors(newErrors);
-    if (Object.values(newErrors).some((e) => e !== undefined)) return;
+    if (Object.values(newErrors).some((e) => e !== undefined)) return false;
 
-    await updatePricing({
+    const result = await updatePricing({
       pricingType,
       hourlyRate,
       minSpend: enableThreshold ? minSpend : null,
       enableThreshold,
     });
+    return result?.success ?? false;
   };
 
   const pricingOptions = [

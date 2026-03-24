@@ -10,6 +10,7 @@ import {
   Building2,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
+import { useBusinessDashboard } from "../../hooks/useBusinessDashboard";
 
 const NAV_ITEMS = [
   { label: "Dashboard", icon: LayoutDashboard, to: "/dashboard" },
@@ -19,7 +20,11 @@ const NAV_ITEMS = [
 
 export default function BusinessSidebar() {
   const [collapsed, setCollapsed] = useState(false);
-  const { user, logout } = useAuth();
+  const { logout } = useAuth();
+  const { profile } = useBusinessDashboard();
+
+  const businessName = profile?.name || "My Business";
+  const logoUrl = profile?.logoUrl;
 
   return (
     <aside
@@ -31,13 +36,23 @@ export default function BusinessSidebar() {
     >
       {/* ─── Logo / Business Name ───────────────────────────── */}
       <div className="flex items-center gap-3 px-4 pt-6 pb-5">
-        <div className="w-9 h-9 rounded-lg bg-teal-800 flex items-center justify-center shrink-0 border border-teal-700/50 shadow-inner">
-          <Building2 size={16} className="text-teal-200" />
+        <div className="w-9 h-9 rounded-lg shrink-0 overflow-hidden border border-teal-700/50 shadow-inner">
+          {logoUrl ? (
+            <img
+              src={logoUrl}
+              alt={businessName}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="w-full h-full bg-teal-800 flex items-center justify-center">
+              <Building2 size={16} className="text-teal-200" />
+            </div>
+          )}
         </div>
         {!collapsed && (
           <div className="overflow-hidden">
             <p className="text-white text-sm font-bold leading-tight truncate">
-              {user?.name || "My Business"}
+              {businessName}
             </p>
             <p className="text-teal-200/70 text-[11px] leading-tight">
               Business Portal
@@ -79,9 +94,8 @@ export default function BusinessSidebar() {
         {collapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
       </button>
 
-      {/* ─── Bottom: Mascot + Logout ────────────────────────── */}
+      {/* ─── Bottom: Logout ─────────────────────────────────── */}
       <div className="mt-auto px-3 pb-5 flex flex-col items-center gap-3">
-        {/* Logout */}
         <button
           onClick={logout}
           className={`flex items-center gap-2.5 text-teal-100/70 hover:text-white transition-colors w-full rounded-xl cursor-pointer ${

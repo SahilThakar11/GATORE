@@ -2,6 +2,7 @@ import { Router } from "express";
 import { authenticate, authorize } from "../middleware/auth";
 import {
   getProfile,
+  getSetupPrefill,
   updateProfile,
   completeSetup,
   getDashboardStats,
@@ -21,6 +22,7 @@ import {
   getReservations,
   createWalkInReservation,
   updateReservationStatus,
+  deleteBusinessAccount,
 } from "../controllers/businessSystemController";
 
 const router = Router();
@@ -33,6 +35,7 @@ router.get("/profile", getProfile as any);
 router.put("/profile", updateProfile as any);
 
 // ── Setup Wizard ─────────────────────────────────────────────────────────────
+router.get("/setup-prefill", getSetupPrefill as any);
 router.post("/setup", completeSetup as any);
 
 // ── Dashboard ────────────────────────────────────────────────────────────────
@@ -65,5 +68,8 @@ router.put("/pricing", updatePricing as any);
 router.get("/reservations", getReservations as any);
 router.post("/reservations", createWalkInReservation as any);
 router.patch("/reservations/:id/status", updateReservationStatus as any);
+
+// ── Account Deletion ─────────────────────────────────────────────────────────
+router.delete("/account", deleteBusinessAccount as any);
 
 export default router;

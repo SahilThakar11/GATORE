@@ -20,12 +20,13 @@ model User {
   googleId      String?        @unique
   isGuest       Boolean        @default(false)
   restaurantId  Int?           @map("restaurant_id")
-  otpCodes      OtpCode[]
-  refreshTokens RefreshToken[]
-  reservations  Reservation[]
-  staffActions  StaffAction[]
-  preference    UserPreference?
-  restaurant    Restaurant?    @relation(fields: [restaurantId], references: [id])
+  otpCodes             OtpCode[]
+  refreshTokens        RefreshToken[]
+  reservations         Reservation[]
+  staffActions         StaffAction[]
+  preference           UserPreference?
+  restaurant           Restaurant?             @relation(fields: [restaurantId], references: [id])
+  businessAccessRequests BusinessAccessRequest[]
 
   @@map("users")
 }
@@ -232,6 +233,8 @@ model BusinessAccessRequest {
   createdAt    DateTime    @default(now()) @map("created_at")
   restaurantId Int?        @map("restaurant_id")
   restaurant   Restaurant? @relation(fields: [restaurantId], references: [id])
+  userId       Int?        @map("user_id")
+  user         User?       @relation(fields: [userId], references: [id])
 
   @@map("business_access_requests")
 }

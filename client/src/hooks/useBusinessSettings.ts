@@ -87,7 +87,7 @@ export function useBusinessSettings() {
   // ── Profile ────────────────────────────────────────────────────────────────
 
   const updateProfile = useCallback(
-    async (data: Record<string, string | null>) => {
+    async (data: Record<string, string | null | boolean>) => {
       setSaving(true);
       setError(null);
       try {
@@ -264,6 +264,25 @@ export function useBusinessSettings() {
     [headers],
   );
 
+  const deleteAccount = useCallback(async () => {
+    setSaving(true);
+    setError(null);
+    try {
+      const res = await fetch(`${BASE_URL}/account`, {
+        method: "DELETE",
+        headers: headers(),
+      });
+      const json = await res.json();
+      if (!json.success) setError(json.message);
+      return json;
+    } catch {
+      setError("Failed to delete account.");
+      return { success: false };
+    } finally {
+      setSaving(false);
+    }
+  }, [headers]);
+
   return {
     saving,
     error,
@@ -287,5 +306,7 @@ export function useBusinessSettings() {
     // Pricing
     fetchPricing,
     updatePricing,
+    // Account
+    deleteAccount,
   };
 }

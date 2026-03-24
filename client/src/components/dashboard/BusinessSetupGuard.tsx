@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ArrowRight, Building2, Loader2, LogOut, CheckCircle2 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useBusinessDashboard } from "../../hooks/useBusinessDashboard";
+import type { SetupPrefill } from "../../hooks/useBusinessDashboard";
 import CafeSetupWizard from "./CafeSetupWizard";
 
 const SETUP_STEPS = [
@@ -16,9 +17,17 @@ export default function BusinessSetupGuard({
 }: {
   children: React.ReactNode;
 }) {
-  const { loading, needsSetup, profile, completeSetup } = useBusinessDashboard();
+  const { loading, needsSetup, profile, completeSetup, fetchPrefill } = useBusinessDashboard();
   const { logout } = useAuth();
   const [showWizard, setShowWizard] = useState(false);
+  const [prefill, setPrefill] = useState<SetupPrefill | null>(null);
+
+  // Load access-request prefill data once we know setup is needed
+  useEffect(() => {
+    if (!loading && needsSetup && !profile) {
+      fetchPrefill().then(setPrefill);
+    }
+  }, [loading, needsSetup, profile, fetchPrefill]);
 
   /* ── Loading ─────────────────────────────────────────────────────── */
   if (loading) {
@@ -92,7 +101,17 @@ export default function BusinessSetupGuard({
             if (result.success) setShowWizard(false);
             return result;
           }}
-          businessName={profile?.name ?? "Your Café"}
+          businessName={prefill?.cafeName ?? profile?.name ?? "Your Café"}
+          initialProfile={
+            prefill
+              ? {
+                  contactName: prefill.ownerName,
+                  contactEmail: prefill.email,
+                  phone: prefill.phone,
+                  city: prefill.city,
+                }
+              : profile
+          }
         />
       </div>
     );

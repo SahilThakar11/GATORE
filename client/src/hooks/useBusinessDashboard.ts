@@ -29,6 +29,14 @@ export interface DashboardStats {
   reservations: DashboardReservation[];
 }
 
+export interface SetupPrefill {
+  cafeName: string;
+  ownerName: string;
+  email: string;
+  phone: string | null;
+  city: string;
+}
+
 export interface BusinessProfile {
   id: number;
   name: string;
@@ -43,6 +51,7 @@ export interface BusinessProfile {
   contactName: string | null;
   contactEmail: string | null;
   businessType: string | null;
+  logoUrl: string | null;
   timezone: string | null;
   pricingType: string;
   hourlyRate: string | null;
@@ -58,7 +67,7 @@ export interface BusinessProfile {
 }
 
 export function useBusinessDashboard() {
-  const { accessToken } = useAuth();
+  const { accessToken, refreshAccessToken } = useAuth();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [profile, setProfile] = useState<BusinessProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -72,26 +81,45 @@ export function useBusinessDashboard() {
     [accessToken],
   );
 
+  // Wrapper that retries once after refreshing on 401
+  const fetchWithAuth = useCallback(
+    async (input: string, init: RequestInit): Promise<Response> => {
+      let res = await fetch(input, init);
+      if (res.status === 401) {
+        const newToken = await refreshAccessToken();
+        if (newToken) {
+          const retryInit = {
+            ...init,
+            headers: { ...(init.headers as Record<string, string>), Authorization: `Bearer ${newToken}` },
+          };
+          res = await fetch(input, retryInit);
+        }
+      }
+      return res;
+    },
+    [refreshAccessToken],
+  );
+
   const fetchProfile = useCallback(async () => {
     try {
-      const res = await fetch(`${BASE_URL}/profile`, { headers: headers() });
+      const res = await fetchWithAuth(`${BASE_URL}/profile`, { headers: headers() });
       const json = await res.json();
       if (json.success) setProfile(json.data);
       return json.data;
     } catch (err) {
       console.error("Fetch profile error:", err);
     }
-  }, [headers]);
+  }, [headers, fetchWithAuth]);
 
   const fetchDashboard = useCallback(async () => {
     try {
-      const res = await fetch(`${BASE_URL}/dashboard`, { headers: headers() });
+      const res = await fetchWithAuth(`${BASE_URL}/dashboard`, { headers: headers() });
       const json = await res.json();
       if (json.success) setStats(json.data);
     } catch (err) {
       console.error("Fetch dashboard error:", err);
     }
-  }, [headers]);
+  }, [headers, fetchWithAuth]);
 
   const fetchAll = useCallback(async () => {
     if (!accessToken) return;
@@ -117,8 +145,9 @@ export function useBusinessDashboard() {
       tables?: { name: string; capacity: number; type: string }[];
       hours?: { dayOfWeek: string; openTime: number; closeTime: number; isClosed: boolean }[];
       pricing?: Record<string, any>;
+      logoUrl?: string;
     }) => {
-      const res = await fetch(`${BASE_URL}/setup`, {
+      const res = await fetchWithAuth(`${BASE_URL}/setup`, {
         method: "POST",
         headers: headers(),
         body: JSON.stringify(data),
@@ -129,7 +158,7 @@ export function useBusinessDashboard() {
       }
       return json;
     },
-    [headers, fetchAll],
+    [headers, fetchAll, fetchWithAuth],
   );
 
   // Create walk-in reservation
@@ -143,7 +172,7 @@ export function useBusinessDashboard() {
       specialRequests?: string;
       source?: string;
     }) => {
-      const res = await fetch(`${BASE_URL}/reservations`, {
+      const res = await fetchWithAuth(`${BASE_URL}/reservations`, {
         method: "POST",
         headers: headers(),
         body: JSON.stringify(data),
@@ -154,13 +183,13 @@ export function useBusinessDashboard() {
       }
       return json;
     },
-    [headers, fetchDashboard],
+    [headers, fetchDashboard, fetchWithAuth],
   );
 
   // Update reservation status
   const updateReservationStatus = useCallback(
     async (id: number, status: string, notes?: string) => {
-      const res = await fetch(`${BASE_URL}/reservations/${id}/status`, {
+      const res = await fetchWithAuth(`${BASE_URL}/reservations/${id}/status`, {
         method: "PATCH",
         headers: headers(),
         body: JSON.stringify({ status, notes }),
@@ -171,7 +200,7 @@ export function useBusinessDashboard() {
       }
       return json;
     },
-    [headers, fetchDashboard],
+    [headers, fetchDashboard, fetchWithAuth],
   );
 
   // Fetch reservations for a specific date
@@ -181,14 +210,25 @@ export function useBusinessDashboard() {
       if (date) params.set("date", date);
       if (status) params.set("status", status);
 
-      const res = await fetch(`${BASE_URL}/reservations?${params}`, {
+      const res = await fetchWithAuth(`${BASE_URL}/reservations?${params}`, {
         headers: headers(),
       });
       const json = await res.json();
       return json.success ? json.data : [];
     },
-    [headers],
+    [headers, fetchWithAuth],
   );
+
+  // Fetch access-request prefill data for the setup wizard
+  const fetchPrefill = useCallback(async (): Promise<SetupPrefill | null> => {
+    try {
+      const res = await fetchWithAuth(`${BASE_URL}/setup-prefill`, { headers: headers() });
+      const json = await res.json();
+      return json.success ? json.data : null;
+    } catch {
+      return null;
+    }
+  }, [headers, fetchWithAuth]);
 
   return {
     stats,
@@ -197,6 +237,7 @@ export function useBusinessDashboard() {
     error,
     needsSetup: !profile || !profile.isSetupComplete,
     completeSetup,
+    fetchPrefill,
     createWalkIn,
     updateReservationStatus,
     fetchReservations,

@@ -6,7 +6,6 @@ import {
   Armchair,
   Clock,
   User,
-  Bell,
   Gamepad2,
 } from "lucide-react";
 import BusinessLayout from "../components/dashboard/BusinessLayout";
@@ -16,7 +15,6 @@ import MenuTab from "../components/dashboard/settings/MenuTab";
 import TablesTab from "../components/dashboard/settings/TablesTab";
 import OperatingHoursTab from "../components/dashboard/settings/OperatingHoursTab";
 import AccountTab from "../components/dashboard/settings/AccountTab";
-import NotificationsTab from "../components/dashboard/settings/NotificationsTab";
 import GameLibraryTab from "../components/dashboard/settings/GameLibraryTab";
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -31,7 +29,6 @@ const SETTINGS_TABS = [
   { key: "games", label: "Game Library", icon: Gamepad2 },
   { key: "hours", label: "Operating Hours", icon: Clock },
   { key: "account", label: "Account", icon: User },
-  { key: "notifications", label: "Notifications", icon: Bell },
 ] as const;
 
 type TabKey = (typeof SETTINGS_TABS)[number]["key"];
@@ -60,8 +57,6 @@ export default function BusinessSettings() {
         return <OperatingHoursTab onBack={back} />;
       case "account":
         return <AccountTab onBack={back} />;
-      case "notifications":
-        return <NotificationsTab onBack={back} />;
     }
   };
 
