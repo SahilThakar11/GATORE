@@ -601,7 +601,7 @@ function UserDropdown({
         <ChevronDown
           size={15}
           aria-hidden="true"
-          className={`text-neutral-400 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+          className={`text-neutral-500 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
         />
       </button>
 

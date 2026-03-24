@@ -10,15 +10,17 @@ interface TextButtonProps {
   size?: ButtonSize;
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
+  /** Use white text instead of teal — for use on dark backgrounds */
+  white?: boolean;
 }
 
 const SIZE_STYLES: Record<
   ButtonSize,
-  { padding: string; fontSize: string; spinnerSize: number }
+  { sizeClass: string; spinnerSize: number }
 > = {
-  small: { padding: "8px 16px", fontSize: "14px", spinnerSize: 14 },
-  medium: { padding: "10px 24px", fontSize: "16px", spinnerSize: 16 },
-  large: { padding: "14px 28px", fontSize: "18px", spinnerSize: 18 },
+  small:  { sizeClass: "py-2 px-4 text-sm",                                  spinnerSize: 14 },
+  medium: { sizeClass: "py-2 px-4 text-sm sm:py-2.5 sm:px-6 sm:text-base",   spinnerSize: 16 },
+  large:  { sizeClass: "py-2 px-4 text-sm sm:py-3.5 sm:px-7 sm:text-lg",     spinnerSize: 18 },
 };
 
 export function TextButton({
@@ -29,6 +31,7 @@ export function TextButton({
   size = "medium",
   leftIcon,
   rightIcon,
+  white = false,
 }: TextButtonProps) {
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
@@ -37,8 +40,13 @@ export function TextButton({
 
   const isInert = isLoading || disabled;
 
-  const color =
-    isInert && !isLoading
+  const color = white
+    ? isInert && !isLoading
+      ? "rgba(255,255,255,0.4)"
+      : active
+        ? "rgba(255,255,255,0.7)"
+        : "#FFFFFF"
+    : isInert && !isLoading
       ? "#D6D3D1"
       : active
         ? "#0C4A6E"
@@ -46,7 +54,7 @@ export function TextButton({
           ? "#115E59"
           : "#0F766E";
 
-  const { padding, fontSize, spinnerSize } = SIZE_STYLES[size];
+  const { sizeClass, spinnerSize } = SIZE_STYLES[size];
 
   return (
     <button
@@ -69,9 +77,8 @@ export function TextButton({
         setActive(true);
       }}
       onMouseUp={() => setActive(false)}
+      className={sizeClass}
       style={{
-        padding,
-        fontSize,
         borderRadius: "8px",
         gap: "8px",
         fontWeight: hovered || active ? 700 : 600,
@@ -80,7 +87,7 @@ export function TextButton({
         backgroundColor: "transparent",
         color,
         border: "none",
-        outline: focused ? "2px solid #0F766E" : undefined,
+        outline: focused ? `2px solid ${white ? "#FFFFFF" : "#0F766E"}` : undefined,
         outlineOffset: focused ? "3px" : undefined,
         cursor: isInert ? "not-allowed" : "pointer",
         pointerEvents: isInert ? "none" : undefined,

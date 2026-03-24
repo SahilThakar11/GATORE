@@ -15,11 +15,11 @@ interface TertiaryButtonProps {
 
 const SIZE_STYLES: Record<
   ButtonSize,
-  { padding: string; fontSize: string; spinnerSize: number }
+  { sizeClass: string; spinnerSize: number }
 > = {
-  small:  { padding: "8px 16px",  fontSize: "14px", spinnerSize: 14 },
-  medium: { padding: "10px 24px", fontSize: "16px", spinnerSize: 16 },
-  large:  { padding: "14px 28px", fontSize: "18px", spinnerSize: 18 },
+  small:  { sizeClass: "py-2 px-4 text-sm",                                  spinnerSize: 14 },
+  medium: { sizeClass: "py-2 px-4 text-sm sm:py-2.5 sm:px-6 sm:text-base",   spinnerSize: 16 },
+  large:  { sizeClass: "py-2 px-4 text-sm sm:py-3.5 sm:px-7 sm:text-lg",     spinnerSize: 18 },
 };
 
 export function TertiaryButton({
@@ -49,7 +49,7 @@ export function TertiaryButton({
 
   const textColor = isInert && !isLoading ? "#D6D3D1" : "#0F766E";
 
-  const { padding, fontSize, spinnerSize } = SIZE_STYLES[size];
+  const { sizeClass, spinnerSize } = SIZE_STYLES[size];
 
   return (
     <button
@@ -61,9 +61,8 @@ export function TertiaryButton({
       onBlur={() => { setFocused(false); mouseDownRef.current = false; }}
       onMouseDown={() => { mouseDownRef.current = true; setActive(true); }}
       onMouseUp={() => setActive(false)}
+      className={sizeClass}
       style={{
-        padding,
-        fontSize,
         borderRadius: "8px",
         gap: "10px",
         fontWeight: 600,

@@ -9,7 +9,7 @@ function FaqItem({ q, a }: { q: string; a: string }) {
         {q}
         <span
           aria-hidden="true"
-          className="text-gray-400 group-open:rotate-180 transition-transform duration-200 shrink-0"
+          className="text-gray-500 group-open:rotate-180 transition-transform duration-200 shrink-0"
         >
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
             <path
@@ -22,7 +22,7 @@ function FaqItem({ q, a }: { q: string; a: string }) {
           </svg>
         </span>
       </summary>
-      <div className="px-5 pb-4 text-sm text-gray-500 leading-relaxed border-t border-warm-200 pt-3">
+      <div className="px-5 pb-4 text-sm text-gray-600 leading-relaxed border-t border-warm-200 pt-3">
         {a}
       </div>
     </details>
@@ -161,7 +161,7 @@ export default function Pricing() {
                   {plan.period && (
                     <span
                       className={`text-sm mb-1 ${
-                        plan.highlight ? "text-teal-100" : "text-gray-500"
+                        plan.highlight ? "text-teal-100" : "text-gray-600"
                       }`}
                     >
                       {plan.period}
@@ -170,7 +170,7 @@ export default function Pricing() {
                 </div>
                 <p
                   className={`text-sm mt-2 leading-relaxed ${
-                    plan.highlight ? "text-teal-100" : "text-gray-500"
+                    plan.highlight ? "text-teal-100" : "text-gray-600"
                   }`}
                 >
                   {plan.description}
@@ -185,7 +185,7 @@ export default function Pricing() {
                       size={15}
                       aria-hidden="true"
                       className={`shrink-0 mt-0.5 ${
-                        plan.highlight ? "text-teal-200" : "text-teal-500"
+                        plan.highlight ? "text-teal-100" : "text-teal-500"
                       }`}
                     />
                     <span
@@ -202,11 +202,12 @@ export default function Pricing() {
               {/* CTA */}
               <Link
                 to={plan.ctaLink}
-                className={`w-full text-center text-sm font-semibold py-3 rounded-[8px] transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${
+                className={`w-full text-center font-semibold rounded-[8px] transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${
                   plan.highlight
                     ? "bg-white text-teal-700 hover:bg-teal-50 focus-visible:ring-white focus-visible:ring-offset-teal-700"
                     : "bg-teal-700 text-white hover:bg-teal-800 focus-visible:ring-teal-600"
                 }`}
+                style={{ fontSize: "16px", padding: "12px 24px", fontFamily: "'DM Sans', sans-serif" }}
               >
                 {plan.cta}
               </Link>
