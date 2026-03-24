@@ -1,5 +1,8 @@
-import { Button } from "../../ui/Button";
+import { ChevronLeft } from "lucide-react";
 import { Input } from "../../ui/Input";
+import { PrimaryButton } from "../../ui/PrimaryButton";
+import { SecondaryButton } from "../../ui/SecondaryButton";
+import { TextButton } from "../../ui/TextButton";
 import type { AuthFormData } from "../../../hooks/useAuthModal";
 import { GoogleAuthButton, type GoogleUser } from "../GoogleAuthButton";
 
@@ -27,8 +30,8 @@ export function StepEmail({
   return (
     <div className="px-5 pt-5 pb-4 flex flex-col gap-5 flex-1">
       <div>
-        <h2 className="text-2xl font-bold text-gray-900">Let's get started</h2>
-        <p className="text-sm text-gray-500 mt-1">
+        <h2 id="auth-step-heading" className="text-xl sm:text-2xl font-bold text-neutral-800">Let's get started</h2>
+        <p className="text-xs sm:text-sm text-neutral-600 mt-1">
           Enter your email to create an account
         </p>
       </div>
@@ -45,9 +48,9 @@ export function StepEmail({
       />
 
       <div className="flex items-center gap-3">
-        <div className="flex-1 h-px bg-gray-200" />
-        <span className="text-sm text-gray-400">or</span>
-        <div className="flex-1 h-px bg-gray-200" />
+        <div className="flex-1 h-px bg-warm-300" />
+        <span className="text-sm text-gray-600">or</span>
+        <div className="flex-1 h-px bg-warm-300" />
       </div>
 
       <GoogleAuthButton
@@ -55,28 +58,18 @@ export function StepEmail({
         onError={(e) => console.error(e)}
       />
 
-      <p className="text-center text-sm text-gray-500">
+      <p className="text-center text-xs sm:text-sm text-neutral-600">
         Already have an account?{" "}
-        <button
-          onClick={onSwitchToSignIn}
-          className="text-teal-700 font-medium hover:underline"
-        >
-          Sign in
-        </button>
+        <TextButton label="Sign in" onClick={onSwitchToSignIn} size="small" />
       </p>
 
-      <div className="mt-auto flex gap-3">
-        <Button variant="outline" fullWidth onClick={onBack} disabled={loading}>
-          Back
-        </Button>
-        <Button
-          variant="primary"
-          fullWidth
-          onClick={onContinue}
-          disabled={!isValid || loading}
-        >
-          {loading ? "Sending..." : "Continue"}
-        </Button>
+      <div className="mt-auto flex gap-3 bg-warm-50 px-4 py-4 border border-warm-200 -mx-5 -mb-4">
+        <div className="flex-1 [&>button]:w-full">
+          <SecondaryButton label="Back" onClick={onBack} disabled={loading} leftIcon={<ChevronLeft size={16} aria-hidden="true" />} />
+        </div>
+        <div className="flex-1 [&>button]:w-full">
+          <PrimaryButton label="Continue" onClick={onContinue} disabled={!isValid || loading} isLoading={loading} />
+        </div>
       </div>
     </div>
   );

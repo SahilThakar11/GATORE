@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { EyeOff, Eye } from "lucide-react";
-import { Button } from "../../ui/Button";
 import { Input } from "../../ui/Input";
+import { PrimaryButton } from "../../ui/PrimaryButton";
 import type { AuthFormData } from "../../../hooks/useAuthModal";
 
 interface Props {
@@ -29,6 +29,14 @@ export function StepPassword({
     { label: "One special character", pass: /[!@#$%^&*(),.?":{}|<>]/.test(pw) },
   ];
   const allPassed = rules.every((r) => r.pass);
+  const passedCount = rules.filter((r) => r.pass).length;
+  const strengthPct = (passedCount / rules.length) * 100;
+  const strengthColor =
+    passedCount <= 1
+      ? "bg-red-500"
+      : passedCount <= 3
+        ? "bg-amber-600"
+        : "bg-teal-600";
 
   const isValid =
     allPassed && formData.password === formData.confirmPassword;
@@ -36,16 +44,16 @@ export function StepPassword({
   return (
     <div className="px-5 pt-5 pb-4 flex flex-col gap-5 flex-1">
       <div>
-        <h2 className="text-2xl font-bold text-gray-900">Create a password</h2>
-        <p className="text-sm text-gray-500 mt-1">
+        <h2 id="auth-step-heading" className="text-xl sm:text-2xl font-bold text-neutral-800">Create a password</h2>
+        <p className="text-xs sm:text-sm text-neutral-600 mt-1">
           Make it strong and memorable
         </p>
       </div>
 
       {/* No back button on this step — email is already verified */}
       <div className="flex items-center gap-2 bg-teal-50 border border-teal-100 rounded-lg px-3.5 py-2.5">
-        <span className="text-teal-500 text-sm">✓</span>
-        <p className="text-sm text-teal-700">
+        <span className="text-teal-500 text-sm" aria-hidden="true">✓</span>
+        <p className="text-xs sm:text-sm text-teal-700">
           Email verified — <span className="font-medium">{formData.email}</span>
         </p>
       </div>
@@ -62,21 +70,38 @@ export function StepPassword({
             type="button"
             onClick={() => setShowPw((v) => !v)}
             tabIndex={-1}
+            aria-label={showPw ? "Hide password" : "Show password"}
           >
-            {showPw ? <Eye size={18} /> : <EyeOff size={18} />}
+            {showPw ? <Eye size={18} aria-hidden="true" /> : <EyeOff size={18} aria-hidden="true" />}
           </button>
         }
       />
 
-      {/* Password strength rules */}
+      {/* Password strength bar + rules */}
       {pw.length > 0 && (
-        <div className="grid grid-cols-2 gap-x-4 gap-y-1 -mt-3">
+        <div className="-mt-3">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+              <div
+                className={`h-full rounded-full transition-all duration-300 ${strengthColor}`}
+                style={{ width: `${strengthPct}%` }}
+              />
+            </div>
+            <span className={`text-xs font-medium ${passedCount <= 1 ? "text-red-600" : passedCount <= 3 ? "text-amber-700" : "text-teal-700"}`}>
+              {passedCount <= 1 ? "Weak" : passedCount <= 3 ? "Fair" : "Strong"}
+            </span>
+          </div>
+        </div>
+      )}
+      {pw.length > 0 && (
+        <div aria-live="polite" className="grid grid-cols-2 gap-x-4 gap-y-1 -mt-3">
           {rules.map((r) => (
             <p
               key={r.label}
-              className={`text-xs flex items-center gap-1 ${r.pass ? "text-teal-700" : "text-gray-400"}`}
+              aria-label={`${r.label}: ${r.pass ? "requirement met" : "requirement not met"}`}
+              className={`text-xs flex items-center gap-1 ${r.pass ? "text-teal-700" : "text-gray-600"}`}
             >
-              <span>{r.pass ? "✓" : "○"}</span> {r.label}
+              <span aria-hidden="true">{r.pass ? "✓" : "○"}</span> {r.label}
             </p>
           ))}
         </div>
@@ -100,22 +125,16 @@ export function StepPassword({
             type="button"
             onClick={() => setShowConfirm((v) => !v)}
             tabIndex={-1}
+            aria-label={showConfirm ? "Hide password" : "Show password"}
           >
-            {showConfirm ? <Eye size={18} /> : <EyeOff size={18} />}
+            {showConfirm ? <Eye size={18} aria-hidden="true" /> : <EyeOff size={18} aria-hidden="true" />}
           </button>
         }
       />
 
       {/* Only Continue — no Back button since email is already verified */}
-      <div className="mt-auto">
-        <Button
-          variant="primary"
-          fullWidth
-          onClick={onContinue}
-          disabled={!isValid || loading}
-        >
-          {loading ? "Setting up..." : "Continue"}
-        </Button>
+      <div className="mt-auto bg-warm-50 px-4 py-4 border border-warm-200 -mx-5 -mb-4 [&>button]:w-full">
+        <PrimaryButton label={loading ? "Setting up..." : "Continue"} onClick={onContinue} disabled={!isValid || loading} />
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { X } from "lucide-react";
 import { StepProgress } from "./StepProgress";
 import { ErrorBanner } from "../ui/ErrorBanner";
@@ -9,6 +9,7 @@ import { StepProfile } from "./steps/StepProfile";
 import { StepPreferences } from "./steps/StepPreferences";
 import { StepSuccess } from "./steps/StepSuccess";
 import { StepSignIn } from "./steps/StepSignIn";
+import { StepEditProfile } from "./steps/StepEditProfile";
 import { useAuthModal } from "../../hooks/useAuthModal";
 import gatoreLogo from "/logo.png";
 import { AuthHeader } from "./Header";
@@ -41,6 +42,8 @@ export function AuthModal({ isOpen, onClose, auth }: AuthModalProps) {
     submitProfile,
     submitSignIn,
     submitPreferences,
+    goToEdit,
+    submitEdit,
   } = auth;
 
   // Lock body scroll
@@ -60,9 +63,32 @@ export function AuthModal({ isOpen, onClose, auth }: AuthModalProps) {
     return () => window.removeEventListener("keydown", handler);
   }, [onClose]);
 
+  // Focus trap
+  const modalRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!isOpen) return;
+    const modal = modalRef.current;
+    if (!modal) return;
+    const focusable = modal.querySelectorAll<HTMLElement>(
+      'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    );
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    const trap = (e: KeyboardEvent) => {
+      if (e.key !== "Tab") return;
+      if (e.shiftKey) {
+        if (document.activeElement === first) { e.preventDefault(); last.focus(); }
+      } else {
+        if (document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
+    };
+    modal.addEventListener("keydown", trap);
+    return () => modal.removeEventListener("keydown", trap);
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
-  const showProgress = step !== "success" && step !== "signin";
+  const showProgress = step !== "success" && step !== "signin" && step !== "edit";
 
   return (
     <div
@@ -71,13 +97,20 @@ export function AuthModal({ isOpen, onClose, auth }: AuthModalProps) {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="relative w-full max-w-[700px] bg-white rounded-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden">
+      <div
+        ref={modalRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="auth-step-heading"
+        className="relative w-full max-w-[700px] bg-white rounded-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden"
+      >
         {/* Close button */}
         <button
           onClick={onClose}
-          className="absolute top-3 right-3 z-10 w-7 h-7 flex items-center justify-center rounded-full bg-black/20 hover:bg-black/30 text-white transition-colors"
+          aria-label="Close"
+          className="absolute top-3 right-3 z-10 w-7 h-7 flex items-center justify-center rounded-full bg-white border border-teal-700 text-teal-700 hover:bg-teal-50 transition-colors focus-visible:outline-2 focus-visible:outline-teal-700 cursor-pointer"
         >
-          <X size={14} />
+          <X size={14} aria-hidden="true" />
         </button>
 
         <AuthHeader logoSrc={gatoreLogo} />
@@ -150,7 +183,16 @@ export function AuthModal({ isOpen, onClose, auth }: AuthModalProps) {
             />
           )}
           {step === "success" && (
-            <StepSuccess formData={formData} onClose={onClose} />
+            <StepSuccess formData={formData} onClose={onClose} onEdit={goToEdit} />
+          )}
+          {step === "edit" && (
+            <StepEditProfile
+              formData={formData}
+              updateData={updateData}
+              onSave={submitEdit}
+              onBack={goBack}
+              loading={loading}
+            />
           )}
         </div>
 

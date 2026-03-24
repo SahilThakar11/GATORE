@@ -16,7 +16,7 @@ export const Card: React.FC<CardProps> = ({
   onClick,
 }) => {
   const variants = {
-    default: "bg-gray-50 border border-gray-100",
+    default: "bg-warm-50 border border-warm-200",
     elevated: "bg-white shadow-md",
     outlined: "bg-white border-2 border-gray-200",
   };

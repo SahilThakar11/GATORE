@@ -1,7 +1,9 @@
 import { useState } from "react";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, ChevronLeft } from "lucide-react";
 import { Input } from "../../../components/ui/Input";
-import { Button } from "../../../components/ui/Button";
+import { PrimaryButton } from "../../../components/ui/PrimaryButton";
+import { SecondaryButton } from "../../../components/ui/SecondaryButton";
+import { TextButton } from "../../../components/ui/TextButton";
 import { GoogleAuthButton, type GoogleUser } from "../GoogleAuthButton";
 import { type AuthFormData } from "../../../hooks/useAuthModal";
 
@@ -33,8 +35,8 @@ export function StepSignIn({
   return (
     <div className="px-5 pt-5 pb-4 flex flex-col gap-5 flex-1">
       <div>
-        <h2 className="text-2xl font-bold text-gray-900">Welcome back</h2>
-        <p className="text-sm text-gray-500 mt-1">
+        <h2 id="auth-step-heading" className="text-xl sm:text-2xl font-bold text-neutral-800">Welcome back</h2>
+        <p className="text-xs sm:text-sm text-neutral-600 mt-1">
           Sign in to your GATORE account
         </p>
       </div>
@@ -62,18 +64,19 @@ export function StepSignIn({
             type="button"
             onClick={() => setShowPw((v) => !v)}
             tabIndex={-1}
+            aria-label={showPw ? "Hide password" : "Show password"}
             className="text-gray-400 hover:text-gray-600"
           >
-            {showPw ? <Eye size={18} /> : <EyeOff size={18} />}
+            {showPw ? <Eye size={18} aria-hidden="true" /> : <EyeOff size={18} aria-hidden="true" />}
           </button>
         }
       />
 
       {/* Divider */}
       <div className="flex items-center gap-3">
-        <div className="flex-1 h-px bg-gray-200" />
-        <span className="text-sm text-gray-400">or</span>
-        <div className="flex-1 h-px bg-gray-200" />
+        <div className="flex-1 h-px bg-warm-300" />
+        <span className="text-sm text-gray-600">or</span>
+        <div className="flex-1 h-px bg-warm-300" />
       </div>
 
       <GoogleAuthButton
@@ -83,33 +86,18 @@ export function StepSignIn({
       />
 
       {/* Switch to signup */}
-      <p className="text-center text-sm text-gray-500">
+      <p className="text-center text-xs sm:text-sm text-neutral-600">
         Don't have an account?{" "}
-        <button
-          onClick={onSwitchToSignup}
-          className="text-teal-700 font-medium hover:underline"
-        >
-          Sign up
-        </button>
+        <TextButton label="Sign up" onClick={onSwitchToSignup} size="small" />
       </p>
 
-      <div className="mt-auto flex gap-3">
-        <Button
-          variant="outline"
-          fullWidth
-          onClick={onClose}
-          disabled={loading}
-        >
-          Cancel
-        </Button>
-        <Button
-          variant="primary"
-          fullWidth
-          onClick={onSubmit}
-          disabled={!isValid || loading}
-        >
-          {loading ? "Signing in..." : "Sign in"}
-        </Button>
+      <div className="mt-auto flex gap-3 bg-warm-50 px-4 py-4 border border-warm-200 -mx-5 -mb-4">
+        <div className="flex-1 [&>button]:w-full">
+          <SecondaryButton label="Cancel" onClick={onClose} disabled={loading} leftIcon={<ChevronLeft size={16} aria-hidden="true" />} />
+        </div>
+        <div className="flex-1 [&>button]:w-full">
+          <PrimaryButton label={loading ? "Signing in..." : "Sign in"} onClick={onSubmit} disabled={!isValid || loading} />
+        </div>
       </div>
     </div>
   );

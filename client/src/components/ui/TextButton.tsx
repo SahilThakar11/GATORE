@@ -1,6 +1,6 @@
 import React, { useState, useRef } from "react";
 
-type ButtonSize = "small" | "medium" | "large";
+type ButtonSize = "xs" | "small" | "medium" | "large";
 
 interface TextButtonProps {
   label: string;
@@ -12,15 +12,23 @@ interface TextButtonProps {
   rightIcon?: React.ReactNode;
   /** Use white text instead of teal — for use on dark backgrounds */
   white?: boolean;
+  "aria-label"?: string;
 }
 
 const SIZE_STYLES: Record<
   ButtonSize,
   { sizeClass: string; spinnerSize: number }
 > = {
-  small:  { sizeClass: "py-2 px-4 text-sm",                                  spinnerSize: 14 },
-  medium: { sizeClass: "py-2 px-4 text-sm sm:py-2.5 sm:px-6 sm:text-base",   spinnerSize: 16 },
-  large:  { sizeClass: "py-2 px-4 text-sm sm:py-3.5 sm:px-7 sm:text-lg",     spinnerSize: 18 },
+  small: { sizeClass: "py-2 px-4 text-sm", spinnerSize: 14 },
+  medium: {
+    sizeClass: "py-2 px-4 text-sm sm:py-2.5 sm:px-6 sm:text-base",
+    spinnerSize: 16,
+  },
+  large: {
+    sizeClass: "py-2 px-4 text-sm sm:py-3.5 sm:px-7 sm:text-lg",
+    spinnerSize: 18,
+  },
+  xs: { sizeClass: "py-1 px-3 text-xs", spinnerSize: 12 },
 };
 
 export function TextButton({
@@ -32,6 +40,7 @@ export function TextButton({
   leftIcon,
   rightIcon,
   white = false,
+  "aria-label": ariaLabel,
 }: TextButtonProps) {
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
@@ -60,6 +69,7 @@ export function TextButton({
     <button
       onClick={isInert ? undefined : onClick}
       disabled={isInert}
+      aria-label={ariaLabel}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => {
         setHovered(false);
@@ -87,7 +97,9 @@ export function TextButton({
         backgroundColor: "transparent",
         color,
         border: "none",
-        outline: focused ? `2px solid ${white ? "#FFFFFF" : "#0F766E"}` : undefined,
+        outline: focused
+          ? `2px solid ${white ? "#FFFFFF" : "#0F766E"}`
+          : undefined,
         outlineOffset: focused ? "3px" : undefined,
         cursor: isInert ? "not-allowed" : "pointer",
         pointerEvents: isInert ? "none" : undefined,

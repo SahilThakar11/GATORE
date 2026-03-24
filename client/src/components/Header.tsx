@@ -10,6 +10,7 @@ import {
   Building2,
   Search,
   Dices,
+  UserCircle,
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { NAV_LINKS } from "../utils/const";
@@ -198,6 +199,14 @@ export default function Header() {
             <div className="border-t border-teal-200 mt-2 pt-3 flex flex-col gap-2">
               {isAuthenticated && user ? (
                 <>
+                  <Link
+                    to="/profile"
+                    onClick={closeMobile}
+                    className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-[16px] text-neutral-600 hover:text-teal-700 hover:bg-teal-100 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
+                  >
+                    <UserCircle size={17} aria-hidden="true" />
+                    My Profile
+                  </Link>
                   <Link
                     to="/reservations"
                     onClick={closeMobile}
@@ -611,6 +620,15 @@ function UserDropdown({
           role="menu"
           className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-xl shadow-lg py-1.5 z-50"
         >
+          <Link
+            to="/profile"
+            role="menuitem"
+            onClick={() => setOpen(false)}
+            className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-neutral-700 hover:bg-teal-50 hover:text-teal-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
+          >
+            <UserCircle size={15} aria-hidden="true" />
+            My Profile
+          </Link>
           <Link
             to="/reservations"
             role="menuitem"
