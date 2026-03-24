@@ -17,6 +17,7 @@ interface DropdownProps {
   align?: "left" | "right";
   fullWidth?: boolean;
   isPlaceholder?: boolean;
+  triggerClassName?: string;
 }
 
 export function Dropdown({
@@ -27,6 +28,7 @@ export function Dropdown({
   align = trigger === "kebab" ? "right" : "left",
   fullWidth = false,
   isPlaceholder = false,
+  triggerClassName = "",
 }: DropdownProps) {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -66,6 +68,7 @@ export function Dropdown({
     border: "1px solid #E8D4C4",
     boxShadow: "0 4px 12px 0 rgba(0,0,0,0.10)",
     minWidth: "180px",
+    ...(fullWidth ? { width: "100%" } : {}),
     padding: "4px 0",
     position: "absolute",
     top: "calc(100% + 6px)",
@@ -116,7 +119,7 @@ export function Dropdown({
             cursor: "pointer",
             transition: "background 150ms",
           }}
-          className="bg-white hover:bg-[#FEF7F0]"
+          className={`hover:bg-[#FEF7F0] ${triggerClassName || "bg-white"}`}
         >
           {triggerIcon && (
             <span style={{ display: "flex", alignItems: "center", color: "#57534E", flexShrink: 0 }}>

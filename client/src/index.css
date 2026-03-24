@@ -2,7 +2,7 @@
 
 @theme {
   --color-warm-700: #6b4d33;
-  --color-warm-500: #C19A6B;
+  --color-warm-500: #c19a6b;
   --color-warm-300: #e8d4c4;
   --color-warm-400: #d4b896;
   --color-warm-200: #f5e6d8;
@@ -18,7 +18,7 @@ input[type="date"].hide-calendar-indicator::-webkit-calendar-picker-indicator {
 
 /* Header height — keep in sync with Header.tsx padding */
 :root {
-  --header-height: 80px;  /* mobile: pt-2 pb-2 + h-16 */
+  --header-height: 80px; /* mobile: pt-2 pb-2 + h-16 */
 }
 @media (min-width: 640px) {
   :root {
@@ -32,11 +32,37 @@ input[type="date"].hide-calendar-indicator::-webkit-calendar-picker-indicator {
 }
 
 @keyframes stepFadeIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0);   }
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 .step-animate {
   animation: stepFadeIn 0.22s ease-out;
+}
+
+/* Logo die spin on hover */
+@keyframes die-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.die-group {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+}
+
+.logo-link:hover .die-group {
+  animation: die-spin 0.65s ease-in-out;
+  filter: drop-shadow(0 2px 6px rgba(15, 118, 110, 0.35));
 }
 
 @layer base {
