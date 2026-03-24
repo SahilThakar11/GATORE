@@ -17,11 +17,21 @@ import {
   Calendar,
   Users,
   Settings,
+  Loader2,
 } from "lucide-react";
 import { StepProgress } from "../auth/StepProgress";
 import { Input } from "../ui/Input";
 import { Button } from "../ui/Button";
+import { timeStringToMinutes } from "../../hooks/useBusinessSettings";
 import gatoreLogo from "/logo.png";
+import {
+  validateEmail,
+  validatePhone,
+  validateUrl,
+  validatePostalCode,
+  validateRequired,
+  validatePositiveNumber,
+} from "../../utils/validations";
 
 /* ═══════════════════════════════════════════════════════════════════
    TYPES & CONSTANTS
@@ -122,16 +132,45 @@ function SelectField({
 function StepBusinessInfo({
   onContinue,
   onBack,
+  profileData,
+  setProfileData,
+  businessName,
 }: {
   onContinue: () => void;
   onBack: () => void;
+  profileData: Record<string, string>;
+  setProfileData: React.Dispatch<React.SetStateAction<Record<string, string>>>;
+  businessName: string;
 }) {
+  const [errors, setErrors] = useState<Record<string, string | null>>({});
+
+  const update = (key: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    setProfileData((prev) => ({ ...prev, [key]: e.target.value }));
+    setErrors((prev) => ({ ...prev, [key]: null }));
+  };
+
+  const handleContinue = () => {
+    const newErrors: Record<string, string | null> = {
+      contactEmail: validateEmail(profileData.contactEmail),
+      contactName: validateRequired(profileData.contactName),
+      website: validateUrl(profileData.website),
+      phone: validatePhone(profileData.phone),
+      address: validateRequired(profileData.address),
+      city: validateRequired(profileData.city),
+      province: validateRequired(profileData.province),
+      postalCode: validatePostalCode(profileData.postalCode),
+    };
+    setErrors(newErrors);
+    const hasError = Object.values(newErrors).some((e) => e !== null);
+    if (!hasError) onContinue();
+  };
+
   return (
     <div className="px-7 py-6 flex flex-col gap-5">
       <div>
         <h2 className="text-xl font-bold text-gray-900">
           Set up your business account for{" "}
-          <span className="text-gray-900">{"{Business Name}"}</span>
+          <span className="text-gray-900">{businessName}</span>
         </h2>
         <p className="text-sm text-gray-400 mt-0.5">
           Let's get your café ready for reservations
@@ -142,45 +181,64 @@ function StepBusinessInfo({
         label="Email Address"
         type="email"
         placeholder="contact@yourbusiness.com"
+        value={profileData.contactEmail || ""}
+        onChange={update("contactEmail")}
+        error={errors.contactEmail ?? undefined}
       />
-      <Input label="Contact Name" placeholder="contact@yourbusiness.com" />
+      <Input
+        label="Contact Name"
+        placeholder="Your name"
+        value={profileData.contactName || ""}
+        onChange={update("contactName")}
+        error={errors.contactName ?? undefined}
+      />
       <Input
         label="Business Website"
-        placeholder="https://www.yourbusiness.com/contact"
+        placeholder="https://www.yourbusiness.com"
         rightIcon={<Globe size={16} />}
+        value={profileData.website || ""}
+        onChange={update("website")}
+        error={errors.website ?? undefined}
       />
 
       <div className="grid grid-cols-2 gap-4">
         <SelectField
           label="Business Type"
           options={["Board Game Café", "Restaurant", "Bar", "Lounge", "Other"]}
-          value=""
-          onChange={() => {}}
+          value={profileData.businessType || ""}
+          onChange={(v) => setProfileData((prev) => ({ ...prev, businessType: v }))}
         />
         <Input
           label="Phone Number"
           type="tel"
           placeholder="(555) 123-4567"
+          value={profileData.phone || ""}
+          onChange={update("phone")}
+          error={errors.phone ?? undefined}
         />
       </div>
 
-      {/* Business Address */}
       <h3 className="text-base font-bold text-gray-900 mt-2">
         Business Address
       </h3>
-      <Input label="Street Address" placeholder="123 Main Street" />
+      <Input
+        label="Street Address"
+        placeholder="123 Main Street"
+        value={profileData.address || ""}
+        onChange={update("address")}
+        error={errors.address ?? undefined}
+      />
       <div className="grid grid-cols-3 gap-4">
-        <Input label="City" placeholder="City" />
-        <Input label="Province" placeholder="Province" />
-        <Input label="Postal Code" placeholder="Postal Code" />
+        <Input label="City" placeholder="City" value={profileData.city || ""} onChange={update("city")} error={errors.city ?? undefined} />
+        <Input label="Province" placeholder="Province" value={profileData.province || ""} onChange={update("province")} error={errors.province ?? undefined} />
+        <Input label="Postal Code" placeholder="Postal Code" value={profileData.postalCode || ""} onChange={update("postalCode")} error={errors.postalCode ?? undefined} />
       </div>
 
-      {/* Footer buttons */}
       <div className="flex gap-3 mt-2">
         <Button variant="outline" fullWidth onClick={onBack}>
           Back
         </Button>
-        <Button variant="primary" fullWidth onClick={onContinue}>
+        <Button variant="primary" fullWidth onClick={handleContinue}>
           Continue
         </Button>
       </div>
@@ -195,19 +253,25 @@ function StepBusinessInfo({
 function StepTables({
   onContinue,
   onBack,
+  tables,
+  setTables,
 }: {
   onContinue: () => void;
   onBack: () => void;
+  tables: TableEntry[];
+  setTables: React.Dispatch<React.SetStateAction<TableEntry[]>>;
 }) {
-  const [tables, setTables] = useState<TableEntry[]>([
-    { id: "1", name: "Table 1", capacity: "", type: "" },
-    { id: "2", name: "Table 2", capacity: "2", type: "" },
-  ]);
+  const [tableErrors, setTableErrors] = useState<Record<string, Record<string, string | null>>>({});
 
-  const updateTable = (id: string, patch: Partial<TableEntry>) =>
-    setTables((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, ...patch } : t))
-    );
+  const updateTable = (id: string, patch: Partial<TableEntry>) => {
+    setTables((prev) => prev.map((t) => (t.id === id ? { ...t, ...patch } : t)));
+    // Clear errors for the field that changed
+    const key = Object.keys(patch)[0];
+    setTableErrors((prev) => ({
+      ...prev,
+      [id]: { ...(prev[id] || {}), [key]: null },
+    }));
+  };
 
   const removeTable = (id: string) =>
     setTables((prev) => prev.filter((t) => t.id !== id));
@@ -216,13 +280,24 @@ function StepTables({
     const nextNum = tables.length + 1;
     setTables((prev) => [
       ...prev,
-      {
-        id: Date.now().toString(),
-        name: `Table ${nextNum}`,
-        capacity: "",
-        type: "",
-      },
+      { id: Date.now().toString(), name: `Table ${nextNum}`, capacity: "", type: "" },
     ]);
+  };
+
+  const handleContinue = () => {
+    const newErrors: Record<string, Record<string, string | null>> = {};
+    let hasError = false;
+    tables.forEach((t) => {
+      const errs: Record<string, string | null> = {
+        name: validateRequired(t.name),
+        capacity: t.capacity ? null : "Select a capacity.",
+        type: t.type ? null : "Select a table type.",
+      };
+      newErrors[t.id] = errs;
+      if (Object.values(errs).some((e) => e !== null)) hasError = true;
+    });
+    setTableErrors(newErrors);
+    if (!hasError) onContinue();
   };
 
   return (
@@ -236,42 +311,54 @@ function StepTables({
 
       {/* Table cards */}
       <div className="flex flex-col gap-4">
-        {tables.map((t) => (
-          <div
-            key={t.id}
-            className="border border-gray-200 rounded-xl p-5"
-          >
-            <div className="flex items-center justify-between mb-3">
-              <h4 className="text-sm font-bold text-gray-900">{t.name}</h4>
-              <button
-                onClick={() => removeTable(t.id)}
-                className="text-red-400 hover:text-red-600 transition-colors cursor-pointer"
-              >
-                <Trash2 size={16} />
-              </button>
+        {tables.map((t) => {
+          const errs = tableErrors[t.id] || {};
+          return (
+            <div
+              key={t.id}
+              className={`border rounded-xl p-5 ${
+                Object.values(errs).some((e) => e) ? "border-red-300" : "border-gray-200"
+              }`}
+            >
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="text-sm font-bold text-gray-900">{t.name}</h4>
+                <button
+                  onClick={() => removeTable(t.id)}
+                  className="text-red-400 hover:text-red-600 transition-colors cursor-pointer"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                <Input
+                  label="Table Name"
+                  placeholder={t.name}
+                  value={t.name}
+                  onChange={(e) => updateTable(t.id, { name: e.target.value })}
+                  error={errs.name ?? undefined}
+                />
+                <div className="space-y-1">
+                  <SelectField
+                    label="Capacity"
+                    options={["2", "4", "6", "8", "10", "12"]}
+                    value={t.capacity}
+                    onChange={(v) => updateTable(t.id, { capacity: v })}
+                  />
+                  {errs.capacity && <p className="text-xs text-red-500">{errs.capacity}</p>}
+                </div>
+                <div className="space-y-1">
+                  <SelectField
+                    label="Table Type"
+                    options={["Round", "Square", "Booth", "High-Top"]}
+                    value={t.type}
+                    onChange={(v) => updateTable(t.id, { type: v })}
+                  />
+                  {errs.type && <p className="text-xs text-red-500">{errs.type}</p>}
+                </div>
+              </div>
             </div>
-            <div className="grid grid-cols-3 gap-3">
-              <Input
-                label="Table Name"
-                placeholder={t.name}
-                value={t.name}
-                onChange={(e) => updateTable(t.id, { name: e.target.value })}
-              />
-              <SelectField
-                label="Capacity"
-                options={["2", "4", "6", "8", "10", "12"]}
-                value={t.capacity}
-                onChange={(v) => updateTable(t.id, { capacity: v })}
-              />
-              <SelectField
-                label="Table Type"
-                options={["Round", "Square", "Booth", "High-Top"]}
-                value={t.type}
-                onChange={(v) => updateTable(t.id, { type: v })}
-              />
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Add another table */}
@@ -296,7 +383,7 @@ function StepTables({
         <Button variant="outline" fullWidth onClick={onBack}>
           Back
         </Button>
-        <Button variant="primary" fullWidth onClick={onContinue}>
+        <Button variant="primary" fullWidth onClick={handleContinue}>
           Continue
         </Button>
       </div>
@@ -311,20 +398,14 @@ function StepTables({
 function StepHours({
   onContinue,
   onBack,
+  hours,
+  setHours,
 }: {
   onContinue: () => void;
   onBack: () => void;
+  hours: Record<string, DayHours>;
+  setHours: React.Dispatch<React.SetStateAction<Record<string, DayHours>>>;
 }) {
-  const [hours, setHours] = useState<Record<string, DayHours>>({
-    Monday: { enabled: true, open: "10:00 AM", close: "10:00 PM" },
-    Tuesday: { enabled: true, open: "10:00 AM", close: "10:00 PM" },
-    Wednesday: { enabled: true, open: "9:00 AM", close: "9:00 PM" },
-    Thursday: { enabled: true, open: "11:00 AM", close: "11:00 PM" },
-    Friday: { enabled: true, open: "10:00 AM", close: "10:00 PM" },
-    Saturday: { enabled: true, open: "9:00 AM", close: "9:00 PM" },
-    Sunday: { enabled: true, open: "11:00 AM", close: "11:00 PM" },
-  });
-
   const updateDay = (day: string, patch: Partial<DayHours>) =>
     setHours((prev) => ({ ...prev, [day]: { ...prev[day], ...patch } }));
 
@@ -610,12 +691,36 @@ function StepMenu({
 function StepPricing({
   onContinue,
   onBack,
+  pricingData,
+  setPricingData,
 }: {
   onContinue: () => void;
   onBack: () => void;
+  pricingData: { pricingType: string; hourlyRate: string; enableThreshold: boolean; minSpend: string };
+  setPricingData: React.Dispatch<React.SetStateAction<{ pricingType: string; hourlyRate: string; enableThreshold: boolean; minSpend: string }>>;
 }) {
-  const [pricingType, setPricingType] = useState("hourly");
-  const [enableThreshold, setEnableThreshold] = useState(true);
+  const [errors, setErrors] = useState<Record<string, string | null>>({});
+
+  const pricingType = pricingData.pricingType;
+  const setPricingType = (v: string) => {
+    setPricingData((p) => ({ ...p, pricingType: v }));
+    setErrors({});
+  };
+  const enableThreshold = pricingData.enableThreshold;
+  const setEnableThreshold = (v: boolean | ((prev: boolean) => boolean)) =>
+    setPricingData((p) => ({ ...p, enableThreshold: typeof v === "function" ? v(p.enableThreshold) : v }));
+
+  const handleContinue = () => {
+    const newErrors: Record<string, string | null> = {};
+    if (pricingType === "hourly" || pricingType === "hybrid") {
+      newErrors.hourlyRate = validatePositiveNumber(pricingData.hourlyRate, "Hourly Rate");
+    }
+    if (enableThreshold) {
+      newErrors.minSpend = validatePositiveNumber(pricingData.minSpend, "Minimum Spend");
+    }
+    setErrors(newErrors);
+    if (Object.values(newErrors).every((e) => e === null)) onContinue();
+  };
 
   const pricingOptions = [
     {
@@ -687,7 +792,16 @@ function StepPricing({
           </div>
 
           <div className="flex flex-col gap-4">
-            <Input label="Hourly Rate" placeholder="$ 8.00" />
+            <Input
+              label="Hourly Rate"
+              placeholder="$ 8.00"
+              value={pricingData.hourlyRate}
+              onChange={(e) => {
+                setPricingData((p) => ({ ...p, hourlyRate: e.target.value }));
+                setErrors((prev) => ({ ...prev, hourlyRate: null }));
+              }}
+              error={errors.hourlyRate ?? undefined}
+            />
             <p className="text-[11px] text-gray-400 -mt-2">
               Amount charged per hour of play time
             </p>
@@ -711,12 +825,21 @@ function StepPricing({
 
             {enableThreshold && (
               <>
-                <Input label="Minimum Spend Amount" placeholder="$ 15.00" />
+                <Input
+                  label="Minimum Spend Amount"
+                  placeholder="$ 15.00"
+                  value={pricingData.minSpend}
+                  onChange={(e) => {
+                    setPricingData((p) => ({ ...p, minSpend: e.target.value }));
+                    setErrors((prev) => ({ ...prev, minSpend: null }));
+                  }}
+                  error={errors.minSpend ?? undefined}
+                />
                 <div className="bg-[#eef2ff] border border-blue-200 rounded-lg p-3 flex gap-2">
                   <span className="text-blue-500 shrink-0 font-bold border border-blue-500 rounded-full w-4 h-4 flex items-center justify-center text-[10px] mt-0.5">i</span>
                   <p className="text-xs text-blue-800 leading-snug">
                     If customers spend{" "}
-                    <span className="font-bold">$15.00</span> or more on
+                    <span className="font-bold">${parseFloat(pricingData.minSpend) || 0}</span> or more on
                     food/drinks, the table fee will be waived automatically.
                   </p>
                 </div>
@@ -737,15 +860,17 @@ function StepPricing({
             </p>
             <hr className="mb-4 border-gray-100" />
             <p className="text-2xl font-black text-gray-900 mb-4">
-              $8.00<span className="text-sm font-normal text-gray-500">/hour</span>
+              ${parseFloat(pricingData.hourlyRate) || 0}<span className="text-sm font-normal text-gray-500">/hour</span>
             </p>
             <div className="flex flex-col gap-2 text-sm text-gray-600">
-              <span>✓ 1 hour: $8.00</span>
-              <span>✓ 2 hours: $16.00</span>
-              <span>✓ 3 hours: $24.00</span>
-              <span className="text-teal-600 font-medium">
-                ✓ Free with $15.00+ purchase
-              </span>
+              <span>✓ 1 hour: ${(parseFloat(pricingData.hourlyRate) || 0).toFixed(2)}</span>
+              <span>✓ 2 hours: ${((parseFloat(pricingData.hourlyRate) || 0) * 2).toFixed(2)}</span>
+              <span>✓ 3 hours: ${((parseFloat(pricingData.hourlyRate) || 0) * 3).toFixed(2)}</span>
+              {enableThreshold && (
+                <span className="text-teal-600 font-medium">
+                  ✓ Free with ${parseFloat(pricingData.minSpend) || 0}+ purchase
+                </span>
+              )}
             </div>
           </div>
           <p className="text-[11px] text-gray-500 mt-4 leading-snug p-3 bg-warm-50 border border-warm-100 rounded-lg">
@@ -759,7 +884,7 @@ function StepPricing({
         <Button variant="outline" fullWidth onClick={onBack}>
           Back
         </Button>
-        <Button variant="primary" fullWidth onClick={onContinue}>
+        <Button variant="primary" fullWidth onClick={handleContinue}>
           Continue
         </Button>
       </div>
@@ -767,8 +892,10 @@ function StepPricing({
   );
 }
 
+
 /* ═══════════════════════════════════════════════════════════════════
    STEP 7 — SUCCESS
+
    ═══════════════════════════════════════════════════════════════════ */
 
 function StepSuccess({
@@ -861,13 +988,45 @@ function StepSuccess({
 interface CafeSetupWizardProps {
   isOpen: boolean;
   onClose: () => void;
+  onComplete?: (data: {
+    profile?: Record<string, string>;
+    tables?: { name: string; capacity: number; type: string }[];
+    hours?: { dayOfWeek: string; openTime: number; closeTime: number; isClosed: boolean }[];
+    pricing?: Record<string, any>;
+  }) => Promise<{ success: boolean }>;
+  businessName?: string;
 }
 
 export default function CafeSetupWizard({
   isOpen,
   onClose,
+  onComplete,
+  businessName = "Your Café",
 }: CafeSetupWizardProps) {
   const [step, setStep] = useState<WizardStep>("business-info");
+  const [saving, setSaving] = useState(false);
+
+  // Collected wizard data
+  const [profileData, setProfileData] = useState<Record<string, string>>({});
+  const [tablesData, setTablesData] = useState<TableEntry[]>([
+    { id: "1", name: "Table 1", capacity: "", type: "" },
+    { id: "2", name: "Table 2", capacity: "2", type: "" },
+  ]);
+  const [hoursData, setHoursData] = useState<Record<string, DayHours>>({
+    Monday: { enabled: true, open: "10:00 AM", close: "10:00 PM" },
+    Tuesday: { enabled: true, open: "10:00 AM", close: "10:00 PM" },
+    Wednesday: { enabled: true, open: "9:00 AM", close: "9:00 PM" },
+    Thursday: { enabled: true, open: "11:00 AM", close: "11:00 PM" },
+    Friday: { enabled: true, open: "10:00 AM", close: "10:00 PM" },
+    Saturday: { enabled: true, open: "9:00 AM", close: "9:00 PM" },
+    Sunday: { enabled: true, open: "11:00 AM", close: "11:00 PM" },
+  });
+  const [pricingData, setPricingData] = useState({
+    pricingType: "hourly",
+    hourlyRate: "8.00",
+    enableThreshold: true,
+    minSpend: "15.00",
+  });
 
   // Lock body scroll
   useEffect(() => {
@@ -894,13 +1053,41 @@ export default function CafeSetupWizard({
   const goNext = () => {
     const idx = FLOW.indexOf(step);
     if (idx < FLOW.length - 1) setStep(FLOW[idx + 1]);
-    else onClose(); // finished
+    else onClose();
   };
 
   const goBack = () => {
     const idx = FLOW.indexOf(step);
     if (idx > 0) setStep(FLOW[idx - 1]);
     else onClose();
+  };
+
+  // When pricing step continues, submit all data
+  const handlePricingContinue = async () => {
+    if (onComplete) {
+      setSaving(true);
+      const result = await onComplete({
+        profile: profileData,
+        tables: tablesData
+          .filter((t) => t.name)
+          .map((t) => ({
+            name: t.name,
+            capacity: parseInt(t.capacity) || 4,
+            type: t.type || "Round",
+          })),
+        hours: DAYS.map((day) => ({
+          dayOfWeek: day,
+          openTime: timeStringToMinutes(hoursData[day]?.open || "10:00 AM"),
+          closeTime: timeStringToMinutes(hoursData[day]?.close || "10:00 PM"),
+          isClosed: !hoursData[day]?.enabled,
+        })),
+        pricing: pricingData,
+      });
+      setSaving(false);
+      if (result.success) goNext(); // go to success step
+    } else {
+      goNext();
+    }
   };
 
   return (
@@ -919,7 +1106,7 @@ export default function CafeSetupWizard({
           <X size={14} />
         </button>
 
-        {/* Header — same style as AuthModal but with custom subtitle */}
+        {/* Header */}
         <div className="flex items-center gap-3 px-7 py-8 pt-6 justify-center bg-white rounded-t-2xl">
           <div className="flex items-center gap-3 border-b border-teal-500 w-full px-0 py-4 -mx-7 -mb-4">
             <img
@@ -941,16 +1128,32 @@ export default function CafeSetupWizard({
         {/* Step progress */}
         {step !== "success" && <StepProgress current={stepNum} total={total} />}
 
+        {/* Saving overlay */}
+        {saving && (
+          <div className="absolute inset-0 z-20 bg-white/80 flex items-center justify-center rounded-2xl">
+            <div className="flex flex-col items-center gap-3">
+              <Loader2 size={32} className="animate-spin text-teal-600" />
+              <p className="text-sm text-gray-600 font-medium">Setting up your café...</p>
+            </div>
+          </div>
+        )}
+
         {/* Step content — scrollable */}
         <div className="flex-1 overflow-y-auto">
           {step === "business-info" && (
-            <StepBusinessInfo onContinue={goNext} onBack={goBack} />
+            <StepBusinessInfo
+              onContinue={goNext}
+              onBack={goBack}
+              profileData={profileData}
+              setProfileData={setProfileData}
+              businessName={businessName}
+            />
           )}
           {step === "tables" && (
-            <StepTables onContinue={goNext} onBack={goBack} />
+            <StepTables onContinue={goNext} onBack={goBack} tables={tablesData} setTables={setTablesData} />
           )}
           {step === "hours" && (
-            <StepHours onContinue={goNext} onBack={goBack} />
+            <StepHours onContinue={goNext} onBack={goBack} hours={hoursData} setHours={setHoursData} />
           )}
           {step === "games" && (
             <StepGames onContinue={goNext} onBack={goBack} />
@@ -959,7 +1162,12 @@ export default function CafeSetupWizard({
             <StepMenu onFinish={goNext} onBack={goBack} />
           )}
           {step === "pricing" && (
-            <StepPricing onContinue={goNext} onBack={goBack} />
+            <StepPricing
+              onContinue={handlePricingContinue}
+              onBack={goBack}
+              pricingData={pricingData}
+              setPricingData={setPricingData}
+            />
           )}
           {step === "success" && (
             <StepSuccess onFinish={onClose} />

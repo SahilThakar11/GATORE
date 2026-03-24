@@ -1,15 +1,19 @@
-import { ArrowLeft, Save } from "lucide-react";
+import { ArrowLeft, Save, Loader2 } from "lucide-react";
 import { Button } from "../../ui/Button";
 
 export function SettingsPanel({
   title,
   subtitle,
   onBack,
+  onSave,
+  saving,
   children,
 }: {
   title: string;
   subtitle: string;
   onBack: () => void;
+  onSave?: () => void;
+  saving?: boolean;
   children: React.ReactNode;
 }) {
   return (
@@ -50,10 +54,10 @@ export function SettingsPanel({
           <Button variant="outline" fullWidth onClick={onBack}>
             Cancel
           </Button>
-          <Button variant="primary" fullWidth>
+          <Button variant="primary" fullWidth onClick={onSave} disabled={saving}>
             <span className="flex items-center justify-center gap-2">
-              <Save size={15} />
-              Save Changes
+              {saving ? <Loader2 size={15} className="animate-spin" /> : <Save size={15} />}
+              {saving ? "Saving..." : "Save Changes"}
             </span>
           </Button>
         </div>

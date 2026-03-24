@@ -1,44 +1,65 @@
-import { useState } from "react";
-import { Armchair, X, Plus } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Armchair, X, Plus, Loader2, AlertCircle } from "lucide-react";
 import { SettingsPanel } from "./SettingsPanel";
 import { SelectField } from "./SelectField";
-
-interface TableConfig {
-  id: string;
-  name: string;
-  type: "Round" | "Square";
-  seats: number;
-}
-
-const MOCK_TABLES: TableConfig[] = [
-  { id: "1", name: "Table 1", type: "Round", seats: 4 },
-  { id: "2", name: "Table 2", type: "Square", seats: 4 },
-  { id: "3", name: "Table 3", type: "Round", seats: 4 },
-  { id: "4", name: "Table 4", type: "Square", seats: 8 },
-];
+import { useBusinessSettings, type TableConfig } from "../../../hooks/useBusinessSettings";
 
 export default function TablesTab({ onBack }: { onBack: () => void }) {
-  const [tables, setTables] = useState<TableConfig[]>(MOCK_TABLES);
+  const { fetchTables, addTable, removeTable } = useBusinessSettings();
+  const [tables, setTables] = useState<TableConfig[]>([]);
   const [newCapacity, setNewCapacity] = useState("");
   const [newType, setNewType] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [addError, setAddError] = useState<string | null>(null);
 
-  const removeTable = (id: string) =>
-    setTables((prev) => prev.filter((t) => t.id !== id));
+  useEffect(() => {
+    fetchTables().then((data) => {
+      setTables(data);
+      setLoading(false);
+    });
+  }, [fetchTables]);
 
-  const addTable = () => {
-    const nextNum = tables.length + 1;
-    setTables((prev) => [
-      ...prev,
-      {
-        id: Date.now().toString(),
-        name: `Table ${nextNum}`,
-        type: (newType as "Round" | "Square") || "Round",
-        seats: parseInt(newCapacity) || 4,
-      },
-    ]);
-    setNewCapacity("");
-    setNewType("");
+  const handleRemove = async (id: number) => {
+    const result = await removeTable(id);
+    if (result.success) setTables((prev) => prev.filter((t) => t.id !== id));
   };
+
+  const handleAdd = async () => {
+    // Validate selections
+    if (!newCapacity || !newType) {
+      setAddError(
+        !newCapacity && !newType
+          ? "Please select a capacity and table type."
+          : !newCapacity
+          ? "Please select a capacity."
+          : "Please select a table type."
+      );
+      return;
+    }
+    setAddError(null);
+
+    const nextNum = tables.length + 1;
+    const result = await addTable({
+      name: `Table ${nextNum}`,
+      capacity: parseInt(newCapacity) || 4,
+      type: newType || "Round",
+    });
+    if (result.success) {
+      setTables((prev) => [...prev, result.data]);
+      setNewCapacity("");
+      setNewType("");
+    }
+  };
+
+  if (loading) {
+    return (
+      <SettingsPanel title="Tables & Seating" subtitle="Manage your table configurations" onBack={onBack}>
+        <div className="flex items-center justify-center py-12">
+          <Loader2 size={24} className="animate-spin text-teal-600" />
+        </div>
+      </SettingsPanel>
+    );
+  }
 
   return (
     <SettingsPanel
@@ -66,11 +87,11 @@ export default function TablesTab({ onBack }: { onBack: () => void }) {
                     {t.type}
                   </span>
                 </div>
-                <p className="text-xs text-gray-400">{t.seats} seats</p>
+                <p className="text-xs text-gray-400">{t.capacity} seats</p>
               </div>
             </div>
             <button
-              onClick={() => removeTable(t.id)}
+              onClick={() => handleRemove(t.id)}
               className="text-gray-300 hover:text-red-400 transition-colors cursor-pointer"
             >
               <X size={16} />
@@ -91,7 +112,7 @@ export default function TablesTab({ onBack }: { onBack: () => void }) {
               label="Capacity"
               options={["2", "4", "6", "8", "10", "12"]}
               value={newCapacity}
-              onChange={setNewCapacity}
+              onChange={(v) => { setNewCapacity(v); setAddError(null); }}
             />
           </div>
           <div className="flex-1">
@@ -99,16 +120,24 @@ export default function TablesTab({ onBack }: { onBack: () => void }) {
               label="Table Type"
               options={["Round", "Square", "Booth", "High-Top"]}
               value={newType}
-              onChange={setNewType}
+              onChange={(v) => { setNewType(v); setAddError(null); }}
             />
           </div>
           <button
-            onClick={addTable}
+            onClick={handleAdd}
             className="w-11 h-11 flex items-center justify-center rounded-xl bg-teal-50 border-2 border-teal-200 text-teal-600 hover:bg-teal-100 transition-colors cursor-pointer shrink-0"
           >
             <Plus size={18} />
           </button>
         </div>
+
+        {/* Inline error */}
+        {addError && (
+          <div className="flex items-center gap-1.5 mt-2 text-xs text-red-500">
+            <AlertCircle size={13} />
+            {addError}
+          </div>
+        )}
       </div>
     </SettingsPanel>
   );

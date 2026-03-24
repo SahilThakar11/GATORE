@@ -1,11 +1,21 @@
 import { useState } from "react";
-import { X, ChevronDown } from "lucide-react";
+import { X, ChevronDown, Loader2 } from "lucide-react";
 import { Input } from "../ui/Input";
 import { Button } from "../ui/Button";
 
 interface NewReservationModalProps {
   isOpen: boolean;
   onClose: () => void;
+  tables?: { id: number; name: string; capacity: number }[];
+  onCreateWalkIn?: (data: {
+    customerName: string;
+    email?: string;
+    phone?: string;
+    partySize: number;
+    tableId: number;
+    specialRequests?: string;
+    source?: string;
+  }) => Promise<{ success: boolean; message?: string }>;
 }
 
 /* ─── Styled select wrapper ─────────────────────────────────────── */
@@ -16,7 +26,7 @@ function SelectField({
   onChange,
 }: {
   label: string;
-  options: string[];
+  options: { label: string; value: string }[];
   value: string;
   onChange: (v: string) => void;
 }) {
@@ -31,10 +41,10 @@ function SelectField({
           onChange={(e) => onChange(e.target.value)}
           className="w-full appearance-none px-4 py-3 border border-warm-200 rounded-lg text-sm text-gray-600 outline-none transition-colors focus:ring-2 focus:ring-teal-500 cursor-pointer"
         >
-          <option value="">Default Option</option>
+          <option value="">Select...</option>
           {options.map((opt) => (
-            <option key={opt} value={opt}>
-              {opt}
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
             </option>
           ))}
         </select>
@@ -51,6 +61,8 @@ function SelectField({
 export default function NewReservationModal({
   isOpen,
   onClose,
+  tables = [],
+  onCreateWalkIn,
 }: NewReservationModalProps) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -59,23 +71,59 @@ export default function NewReservationModal({
   const [table, setTable] = useState("");
   const [source, setSource] = useState("");
   const [specialRequests, setSpecialRequests] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
-  const handleCreate = () => {
-    // Mock — just close for now
-    onClose();
+  const handleCreate = async () => {
+    if (!name.trim() || !guests || !table) {
+      setError("Name, guests, and table are required.");
+      return;
+    }
+
+    if (onCreateWalkIn) {
+      setLoading(true);
+      setError(null);
+      const result = await onCreateWalkIn({
+        customerName: name,
+        email: email || undefined,
+        phone: phone || undefined,
+        partySize: parseInt(guests),
+        tableId: parseInt(table),
+        specialRequests: specialRequests || undefined,
+        source: source || undefined,
+      });
+      setLoading(false);
+      if (!result.success) {
+        setError(result.message || "Failed to create reservation.");
+      } else {
+        // Reset form
+        setName(""); setEmail(""); setPhone(""); setGuests("");
+        setTable(""); setSource(""); setSpecialRequests("");
+      }
+    } else {
+      onClose();
+    }
   };
+
+  const guestOptions = Array.from({ length: 10 }, (_, i) => ({
+    label: String(i + 1),
+    value: String(i + 1),
+  }));
+
+  const tableOptions = tables.map((t) => ({
+    label: `${t.name} (${t.capacity} seats)`,
+    value: String(t.id),
+  }));
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/40 backdrop-blur-sm"
         onClick={onClose}
       />
 
-      {/* Panel */}
       <div className="relative bg-[#fefcf9] rounded-2xl shadow-2xl w-full max-w-lg mx-4 max-h-[90vh] flex flex-col">
         {/* ── Header ────────────────────────────────────────── */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
@@ -90,7 +138,12 @@ export default function NewReservationModal({
 
         {/* ── Body (scrollable) ─────────────────────────────── */}
         <div className="flex-1 overflow-y-auto px-6 py-6">
-          {/* Customer Information */}
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3 mb-4">
+              {error}
+            </div>
+          )}
+
           <h3 className="text-base font-bold text-gray-900 mb-4">
             Customer Information
           </h3>
@@ -102,7 +155,6 @@ export default function NewReservationModal({
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
-
             <div className="grid grid-cols-2 gap-4">
               <Input
                 label="Email address"
@@ -121,10 +173,8 @@ export default function NewReservationModal({
             </div>
           </div>
 
-          {/* Divider */}
           <div className="h-px bg-gradient-to-r from-transparent via-teal-300 to-transparent my-6" />
 
-          {/* Reservation Details */}
           <h3 className="text-base font-bold text-gray-900 mb-4">
             Reservation Details
           </h3>
@@ -133,13 +183,13 @@ export default function NewReservationModal({
             <div className="grid grid-cols-2 gap-4">
               <SelectField
                 label="Number of Guests"
-                options={["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]}
+                options={guestOptions}
                 value={guests}
                 onChange={setGuests}
               />
               <SelectField
-                label="Table Number"
-                options={["1", "2", "3", "4", "5", "6", "7", "8"]}
+                label="Table"
+                options={tableOptions}
                 value={table}
                 onChange={setTable}
               />
@@ -147,12 +197,16 @@ export default function NewReservationModal({
 
             <SelectField
               label="Reservation Source"
-              options={["Walk-in", "Phone", "Online", "Email"]}
+              options={[
+                { label: "Walk-in", value: "Walk-in" },
+                { label: "Phone", value: "Phone" },
+                { label: "Online", value: "Online" },
+                { label: "Email", value: "Email" },
+              ]}
               value={source}
               onChange={setSource}
             />
 
-            {/* Special Requests — textarea not covered by Input, keep inline */}
             <div className="space-y-2">
               <label className="block text-sm font-medium text-neutral-800">
                 Special Requests (Optional)
@@ -174,16 +228,20 @@ export default function NewReservationModal({
             <Button variant="outline" fullWidth onClick={onClose}>
               Cancel
             </Button>
-            <Button variant="primary" fullWidth onClick={handleCreate}>
-              Create Reservation
+            <Button variant="primary" fullWidth onClick={handleCreate} disabled={loading}>
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <Loader2 size={15} className="animate-spin" />
+                  Creating...
+                </span>
+              ) : (
+                "Create Reservation"
+              )}
             </Button>
           </div>
-
           <p className="text-center text-[11px] text-gray-400 mt-3">
             Powered by{" "}
-            <span className="font-bold text-teal-700 tracking-wide">
-              GATORE
-            </span>
+            <span className="font-bold text-teal-700 tracking-wide">GATORE</span>
           </p>
         </div>
       </div>

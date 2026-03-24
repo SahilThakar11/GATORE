@@ -24,6 +24,7 @@ import Reservations from "./pages/Reservations";
 import BusinessDashboard from "./pages/BusinessDashboard";
 import BusinessSettings from "./pages/BusinessSettings";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
+import BusinessSetupGuard from "./components/dashboard/BusinessSetupGuard";
 import { useAuth } from "./context/AuthContext";
 
 export default function App() {
@@ -40,7 +41,9 @@ export default function App() {
           path="/dashboard"
           element={
             <ProtectedRoute requiredRole="business">
-              <BusinessDashboard />
+              <BusinessSetupGuard>
+                <BusinessDashboard />
+              </BusinessSetupGuard>
             </ProtectedRoute>
           }
         />
@@ -48,7 +51,9 @@ export default function App() {
           path="/dashboard/reservations"
           element={
             <ProtectedRoute requiredRole="business">
-              <ReservationManagement />
+              <BusinessSetupGuard>
+                <ReservationManagement />
+              </BusinessSetupGuard>
             </ProtectedRoute>
           }
         />
@@ -56,7 +61,9 @@ export default function App() {
           path="/dashboard/settings"
           element={
             <ProtectedRoute requiredRole="business">
-              <BusinessSettings />
+              <BusinessSetupGuard>
+                <BusinessSettings />
+              </BusinessSetupGuard>
             </ProtectedRoute>
           }
         />

@@ -1,15 +1,16 @@
-import { useState } from "react";
-import { Check, ChevronDown } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Check, ChevronDown, Loader2 } from "lucide-react";
 import { SettingsPanel } from "./SettingsPanel";
+import {
+  useBusinessSettings,
+  type HoursConfig,
+  minutesToTimeString,
+  timeStringToMinutes,
+} from "../../../hooks/useBusinessSettings";
 
 const DAYS = [
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-  "Sunday",
+  "Monday", "Tuesday", "Wednesday", "Thursday",
+  "Friday", "Saturday", "Sunday",
 ];
 
 const TIME_OPTIONS = [
@@ -36,7 +37,30 @@ const DEFAULT_HOURS: Record<string, DayHours> = {
 };
 
 export default function OperatingHoursTab({ onBack }: { onBack: () => void }) {
+  const { fetchHours, updateHours, saving } = useBusinessSettings();
   const [hours, setHours] = useState<Record<string, DayHours>>(DEFAULT_HOURS);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchHours().then((data: HoursConfig[]) => {
+      if (data.length > 0) {
+        const mapped: Record<string, DayHours> = {};
+        data.forEach((h) => {
+          mapped[h.dayOfWeek] = {
+            enabled: !h.isClosed,
+            open: minutesToTimeString(h.openTime),
+            close: minutesToTimeString(h.closeTime),
+          };
+        });
+        // Fill in any missing days
+        DAYS.forEach((day) => {
+          if (!mapped[day]) mapped[day] = DEFAULT_HOURS[day];
+        });
+        setHours(mapped);
+      }
+      setLoading(false);
+    });
+  }, [fetchHours]);
 
   const updateDay = (day: string, patch: Partial<DayHours>) =>
     setHours((prev) => ({ ...prev, [day]: { ...prev[day], ...patch } }));
@@ -48,11 +72,33 @@ export default function OperatingHoursTab({ onBack }: { onBack: () => void }) {
     setHours(updated);
   };
 
+  const handleSave = async () => {
+    const hoursArray = DAYS.map((day) => ({
+      dayOfWeek: day,
+      openTime: timeStringToMinutes(hours[day].open),
+      closeTime: timeStringToMinutes(hours[day].close),
+      isClosed: !hours[day].enabled,
+    }));
+    await updateHours(hoursArray);
+  };
+
+  if (loading) {
+    return (
+      <SettingsPanel title="Operating Hours" subtitle="Set your business hours for each day of the week" onBack={onBack}>
+        <div className="flex items-center justify-center py-12">
+          <Loader2 size={24} className="animate-spin text-teal-600" />
+        </div>
+      </SettingsPanel>
+    );
+  }
+
   return (
     <SettingsPanel
       title="Operating Hours"
       subtitle="Set your business hours for each day of the week"
       onBack={onBack}
+      onSave={handleSave}
+      saving={saving}
     >
       {/* Apply-to-all bar */}
       <div className="flex items-center justify-between border border-gray-200 rounded-xl px-4 py-3 mb-5">
@@ -76,7 +122,6 @@ export default function OperatingHoursTab({ onBack }: { onBack: () => void }) {
               key={day}
               className="flex items-center gap-4 border border-gray-100 rounded-xl px-4 py-3"
             >
-              {/* Checkbox */}
               <button
                 onClick={() => updateDay(day, { enabled: !h.enabled })}
                 className={`w-5 h-5 rounded flex items-center justify-center border-2 transition-colors shrink-0 cursor-pointer ${
@@ -88,12 +133,10 @@ export default function OperatingHoursTab({ onBack }: { onBack: () => void }) {
                 {h.enabled && <Check size={13} className="text-white" />}
               </button>
 
-              {/* Day name */}
               <span className="text-sm font-medium text-gray-700 w-24">
                 {day}
               </span>
 
-              {/* Open time */}
               <div className="flex-1 relative">
                 <select
                   value={h.open}
@@ -102,9 +145,7 @@ export default function OperatingHoursTab({ onBack }: { onBack: () => void }) {
                   className="w-full appearance-none px-3 py-2.5 border border-warm-200 rounded-lg text-sm text-gray-700 outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer disabled:opacity-40 bg-white"
                 >
                   {TIME_OPTIONS.map((t) => (
-                    <option key={t} value={t}>
-                      {t}
-                    </option>
+                    <option key={t} value={t}>{t}</option>
                   ))}
                 </select>
                 <ChevronDown
@@ -115,7 +156,6 @@ export default function OperatingHoursTab({ onBack }: { onBack: () => void }) {
 
               <span className="text-xs text-gray-400">to</span>
 
-              {/* Close time */}
               <div className="flex-1 relative">
                 <select
                   value={h.close}
@@ -124,9 +164,7 @@ export default function OperatingHoursTab({ onBack }: { onBack: () => void }) {
                   className="w-full appearance-none px-3 py-2.5 border border-warm-200 rounded-lg text-sm text-gray-700 outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer disabled:opacity-40 bg-white"
                 >
                   {TIME_OPTIONS.map((t) => (
-                    <option key={t} value={t}>
-                      {t}
-                    </option>
+                    <option key={t} value={t}>{t}</option>
                   ))}
                 </select>
                 <ChevronDown

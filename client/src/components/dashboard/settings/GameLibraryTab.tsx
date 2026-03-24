@@ -1,46 +1,26 @@
-import { useState } from "react";
-import { Upload, Link, Search, X } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Upload, Link, Search, X, Loader2 } from "lucide-react";
 import { SettingsPanel } from "./SettingsPanel";
-
-interface GameItem {
-  id: string;
-  name: string;
-  description: string;
-  imageUrl: string;
-}
-
-const MOCK_GAMES: GameItem[] = [
-  {
-    id: "1",
-    name: "Wingspan",
-    description:
-      "Strategically manage your resources, build habitats, and score points through various objectives as you explore the beauty of avian life.",
-    imageUrl:
-      "https://cf.geekdo-images.com/yLZJCVLlIx4c7eJEWUNJ7w__thumb/img/VNToqgS2-pOGU6MuvIkMPKn_y-s=/fit-in/200x150/filters:strip_icc()/pic4458123.jpg",
-  },
-  {
-    id: "2",
-    name: "Dune: Imperium – Uprising",
-    description:
-      "Effectively allocate your resources, construct outposts, and earn points by completing diverse objectives as you delve into the captivating world of Dune Imperium Rising.",
-    imageUrl:
-      "https://cf.geekdo-images.com/0kFMKjsDW1JMS--LRrIxFw__thumb/img/xG8NxDe-0-2WEaz_GFhHjiO-S4Y=/fit-in/200x150/filters:strip_icc()/pic7477524.jpg",
-  },
-  {
-    id: "3",
-    name: "Scythe Board Game",
-    description:
-      "Strategically manage your resources, build habitats, and score points through various objectives as you explore the beauty of avian life.",
-    imageUrl:
-      "https://cf.geekdo-images.com/7k_nOxpO9OGIjhLq2BUZdA__thumb/img/HIdkMO1sS2nYPDNeDuVT-8MHjsE=/fit-in/200x150/filters:strip_icc()/pic3163924.jpg",
-  },
-];
+import { useBusinessSettings, type GameItem } from "../../../hooks/useBusinessSettings";
 
 export default function GameLibraryTab({ onBack }: { onBack: () => void }) {
-  const [games, setGames] = useState<GameItem[]>(MOCK_GAMES);
+  const { fetchGames, removeGame } = useBusinessSettings();
+  const [games, setGames] = useState<GameItem[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const removeGame = (id: string) =>
-    setGames((prev) => prev.filter((g) => g.id !== id));
+  useEffect(() => {
+    fetchGames().then((data) => {
+      setGames(data);
+      setLoading(false);
+    });
+  }, [fetchGames]);
+
+  const handleRemove = async (restaurantGameId: number) => {
+    const result = await removeGame(restaurantGameId);
+    if (result.success) {
+      setGames((prev) => prev.filter((g) => g.restaurantGameId !== restaurantGameId));
+    }
+  };
 
   const addOptions = [
     {
@@ -63,6 +43,16 @@ export default function GameLibraryTab({ onBack }: { onBack: () => void }) {
     },
   ];
 
+  if (loading) {
+    return (
+      <SettingsPanel title="Game Library" subtitle="Manage your game collection" onBack={onBack}>
+        <div className="flex items-center justify-center py-12">
+          <Loader2 size={24} className="animate-spin text-teal-600" />
+        </div>
+      </SettingsPanel>
+    );
+  }
+
   return (
     <SettingsPanel
       title="Game Library"
@@ -74,26 +64,37 @@ export default function GameLibraryTab({ onBack }: { onBack: () => void }) {
         Current Games in Library ({games.length})
       </h3>
       <div className="flex flex-col gap-3 mb-8">
+        {games.length === 0 && (
+          <p className="text-sm text-gray-400 text-center py-4">
+            No games in your library yet. Add some below!
+          </p>
+        )}
         {games.map((game) => (
           <div
-            key={game.id}
+            key={game.restaurantGameId}
             className="flex items-start gap-4 border border-gray-200 rounded-xl p-4"
           >
             <div className="w-14 h-14 rounded-lg overflow-hidden bg-gray-100 shrink-0">
-              <img
-                src={game.imageUrl}
-                alt={game.name}
-                className="w-full h-full object-cover"
-              />
+              {game.imageUrl ? (
+                <img
+                  src={game.imageUrl}
+                  alt={game.name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-gray-300 text-xs">
+                  No img
+                </div>
+              )}
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-bold text-gray-900">{game.name}</p>
               <p className="text-xs text-gray-400 mt-0.5 leading-snug line-clamp-2">
-                {game.description}
+                {game.description || "No description available"}
               </p>
             </div>
             <button
-              onClick={() => removeGame(game.id)}
+              onClick={() => handleRemove(game.restaurantGameId)}
               className="text-gray-300 hover:text-red-400 transition-colors cursor-pointer shrink-0 mt-1"
             >
               <X size={16} />
