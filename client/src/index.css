@@ -31,6 +31,14 @@ input[type="date"].hide-calendar-indicator::-webkit-calendar-picker-indicator {
   }
 }
 
+@keyframes stepFadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0);   }
+}
+.step-animate {
+  animation: stepFadeIn 0.22s ease-out;
+}
+
 @layer base {
   @apply font-sans;
 

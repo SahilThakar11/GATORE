@@ -1,5 +1,7 @@
 import { useEffect, useRef } from "react";
-import { Button } from "../../ui/Button";
+import { ChevronLeft } from "lucide-react";
+import { PrimaryButton } from "../../ui/PrimaryButton";
+import { SecondaryButton } from "../../ui/SecondaryButton";
 import type { AuthFormData } from "../../../hooks/useAuthModal";
 
 interface Props {
@@ -59,10 +61,10 @@ export function StepOTPVerify({
   return (
     <div className="px-5 pt-5 pb-4 flex flex-col gap-5 flex-1">
       <div>
-        <h2 className="text-2xl font-bold text-gray-900">Check your email</h2>
-        <p className="text-sm text-gray-500 mt-1">
+        <h2 id="auth-step-heading" className="text-xl sm:text-2xl font-bold text-neutral-800">Check your email</h2>
+        <p className="text-xs sm:text-sm text-neutral-600 mt-1">
           We sent a 6-digit code to{" "}
-          <span className="font-medium text-gray-700">{formData.email}</span>
+          <span className="font-medium text-neutral-800">{formData.email}</span>
         </p>
       </div>
 
@@ -78,17 +80,18 @@ export function StepOTPVerify({
             inputMode="numeric"
             maxLength={1}
             value={digit}
+            aria-label={`Digit ${idx + 1} of 6`}
             onChange={(e) => handleChange(idx, e.target.value)}
             onKeyDown={(e) => handleKeyDown(idx, e)}
             onPaste={handlePaste}
             disabled={loading}
-            className="w-11 h-12 text-center text-lg font-semibold border border-gray-200 rounded-lg bg-[#faf8f4] focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all disabled:opacity-50"
+            className="w-11 h-12 text-center text-lg font-semibold border border-warm-300 rounded-lg bg-warm-50 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all disabled:opacity-50"
           />
         ))}
       </div>
 
       <div className="text-center space-y-2">
-        <p className="text-sm text-gray-500">
+        <p className="text-xs sm:text-sm text-neutral-600">
           Didn't receive it?{" "}
           <button
             onClick={onResend}
@@ -102,24 +105,19 @@ export function StepOTPVerify({
         <button
           onClick={onBack}
           disabled={loading}
-          className="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-1 mx-auto disabled:opacity-50"
+          className="text-xs sm:text-sm text-neutral-600 hover:text-neutral-800 flex items-center gap-1 mx-auto disabled:opacity-50"
         >
-          ← Use a different email
+          <span aria-hidden="true">←</span> Use a different email
         </button>
       </div>
 
-      <div className="mt-auto flex gap-3">
-        <Button variant="outline" fullWidth onClick={onBack} disabled={loading}>
-          Back
-        </Button>
-        <Button
-          variant="primary"
-          fullWidth
-          onClick={onContinue}
-          disabled={!isComplete || loading}
-        >
-          {loading ? "Verifying..." : "Continue"}
-        </Button>
+      <div className="mt-auto flex gap-3 bg-warm-50 px-4 py-4 border border-warm-200 -mx-5 -mb-4">
+        <div className="flex-1 [&>button]:w-full">
+          <SecondaryButton label="Back" onClick={onBack} disabled={loading} leftIcon={<ChevronLeft size={16} aria-hidden="true" />} />
+        </div>
+        <div className="flex-1 [&>button]:w-full">
+          <PrimaryButton label="Continue" onClick={onContinue} disabled={!isComplete || loading} isLoading={loading} />
+        </div>
       </div>
     </div>
   );

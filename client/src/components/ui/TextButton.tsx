@@ -1,6 +1,6 @@
 import React, { useState, useRef } from "react";
 
-type ButtonSize = "small" | "medium" | "large";
+type ButtonSize = "xs" | "small" | "medium" | "large";
 
 interface TextButtonProps {
   label: string;
@@ -10,12 +10,14 @@ interface TextButtonProps {
   size?: ButtonSize;
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
+  "aria-label"?: string;
 }
 
 const SIZE_STYLES: Record<
   ButtonSize,
   { padding: string; fontSize: string; spinnerSize: number }
 > = {
+  xs:    { padding: "2px 6px",  fontSize: "12px", spinnerSize: 12 },
   small: { padding: "8px 16px", fontSize: "14px", spinnerSize: 14 },
   medium: { padding: "10px 24px", fontSize: "16px", spinnerSize: 16 },
   large: { padding: "14px 28px", fontSize: "18px", spinnerSize: 18 },
@@ -29,6 +31,7 @@ export function TextButton({
   size = "medium",
   leftIcon,
   rightIcon,
+  "aria-label": ariaLabel,
 }: TextButtonProps) {
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
@@ -52,6 +55,7 @@ export function TextButton({
     <button
       onClick={isInert ? undefined : onClick}
       disabled={isInert}
+      aria-label={ariaLabel}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => {
         setHovered(false);

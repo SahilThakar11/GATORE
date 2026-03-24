@@ -9,7 +9,8 @@ export type AuthStep =
   | "profile"
   | "preferences"
   | "success"
-  | "signin";
+  | "signin"
+  | "edit";
 
 export type AuthMode = "signup" | "signin";
 
@@ -102,6 +103,10 @@ export function useAuthModal() {
     }
     if (step === "preferences") {
       setStep("profile");
+      return;
+    }
+    if (step === "edit") {
+      setStep("success");
       return;
     }
     close();
@@ -312,6 +317,45 @@ export function useAuthModal() {
     }
   }, [formData.email, formData.password, formData.name, formData.isGoogleAuth]);
 
+  const goToEdit = useCallback(() => {
+    setError(null);
+    setStep("edit");
+  }, []);
+
+  const submitEdit = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const token = localStorage.getItem("accessToken");
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      };
+
+      await Promise.all([
+        fetch(`${BASE_URL}/signup/profile`, {
+          method: "POST",
+          headers,
+          body: JSON.stringify({ email: formData.email, name: formData.name }),
+        }),
+        fetch(`${BASE_URL}/preferences`, {
+          method: "POST",
+          headers,
+          body: JSON.stringify({
+            gameTypes: formData.gameTypes,
+            groupSize: formData.groupSize,
+            complexity: formData.complexity,
+          }),
+        }),
+      ]);
+    } catch {
+      // Non-blocking — still return to success
+    } finally {
+      setLoading(false);
+    }
+    setStep("success");
+  }, [formData.email, formData.name, formData.gameTypes, formData.groupSize, formData.complexity]);
+
   const submitPreferences = useCallback(async () => {
     setError(null);
     try {
@@ -404,6 +448,7 @@ export function useAuthModal() {
     preferences: formData.isGoogleAuth ? 3 : 5,
     success: formData.isGoogleAuth ? 3 : 5,
     signin: 1,
+    edit: 1,
   }[step];
 
   const totalSteps = formData.isGoogleAuth ? 3 : 5;
@@ -435,5 +480,7 @@ export function useAuthModal() {
     submitPassword,
     submitProfile,
     submitPreferences,
+    goToEdit,
+    submitEdit,
   };
 }
