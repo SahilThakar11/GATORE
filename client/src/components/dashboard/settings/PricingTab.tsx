@@ -1,11 +1,50 @@
-import { useState } from "react";
-import { Clock, DollarSign, Plus, Check, Info } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Clock, DollarSign, Plus, Check, Info, Loader2 } from "lucide-react";
 import { Input } from "../../ui/Input";
 import { SettingsPanel } from "./SettingsPanel";
+import { useBusinessSettings, type PricingConfig } from "../../../hooks/useBusinessSettings";
+import { validatePositiveNumber } from "../../../utils/validations";
 
 export default function PricingTab({ onBack }: { onBack: () => void }) {
+  const { fetchPricing, updatePricing, saving } = useBusinessSettings();
   const [pricingType, setPricingType] = useState("hourly");
+  const [hourlyRate, setHourlyRate] = useState("8.00");
+  const [minSpend, setMinSpend] = useState("15.00");
   const [enableThreshold, setEnableThreshold] = useState(true);
+  const [loading, setLoading] = useState(true);
+  const [errors, setErrors] = useState<Record<string, string | undefined>>({});
+
+  useEffect(() => {
+    fetchPricing().then((data: PricingConfig | null) => {
+      if (data) {
+        setPricingType(data.pricingType || "hourly");
+        setHourlyRate(data.hourlyRate || "8.00");
+        setMinSpend(data.minSpend || "15.00");
+        setEnableThreshold(data.enableThreshold ?? true);
+      }
+      setLoading(false);
+    });
+  }, [fetchPricing]);
+
+  const handleSave = async (): Promise<boolean> => {
+    const newErrors: Record<string, string | undefined> = {};
+    if (pricingType === "hourly" || pricingType === "hybrid") {
+      newErrors.hourlyRate = validatePositiveNumber(hourlyRate, "Hourly Rate") ?? undefined;
+    }
+    if (enableThreshold) {
+      newErrors.minSpend = validatePositiveNumber(minSpend, "Minimum Spend") ?? undefined;
+    }
+    setErrors(newErrors);
+    if (Object.values(newErrors).some((e) => e !== undefined)) return false;
+
+    const result = await updatePricing({
+      pricingType,
+      hourlyRate,
+      minSpend: enableThreshold ? minSpend : null,
+      enableThreshold,
+    });
+    return result?.success ?? false;
+  };
 
   const pricingOptions = [
     {
@@ -28,11 +67,26 @@ export default function PricingTab({ onBack }: { onBack: () => void }) {
     },
   ];
 
+  if (loading) {
+    return (
+      <SettingsPanel title="Pricing Model" subtitle="Configure pricing" onBack={onBack}>
+        <div className="flex items-center justify-center py-12">
+          <Loader2 size={24} className="animate-spin text-teal-600" />
+        </div>
+      </SettingsPanel>
+    );
+  }
+
+  const rate = parseFloat(hourlyRate) || 0;
+  const spend = parseFloat(minSpend) || 0;
+
   return (
     <SettingsPanel
       title="Pricing Model"
       subtitle="Choose how you want to charge customers for table reservations"
       onBack={onBack}
+      onSave={handleSave}
+      saving={saving}
     >
       {/* Pricing Type */}
       <h3 className="text-sm font-bold text-gray-900 mb-3">Pricing Type</h3>
@@ -43,7 +97,7 @@ export default function PricingTab({ onBack }: { onBack: () => void }) {
           return (
             <button
               key={opt.key}
-              onClick={() => setPricingType(opt.key)}
+              onClick={() => { setPricingType(opt.key); setErrors({}); }}
               className={`flex flex-col items-start gap-2 p-4 rounded-xl border-2 text-left transition-all cursor-pointer ${
                 active
                   ? "border-teal-500 bg-teal-50/60"
@@ -75,41 +129,43 @@ export default function PricingTab({ onBack }: { onBack: () => void }) {
       <div className="grid grid-cols-2 gap-6">
         {/* Customer Preview */}
         <div>
-          <h3 className="text-sm font-bold text-gray-900 mb-3">
-            Customer Preview
-          </h3>
+          <h3 className="text-sm font-bold text-gray-900 mb-3">Customer Preview</h3>
           <div className="border border-gray-200 rounded-xl p-5">
             <p className="text-sm font-bold text-gray-900">Table Pricing</p>
-            <p className="text-xs text-gray-400 mb-3">
-              Per hour of play time
-            </p>
+            <p className="text-xs text-gray-400 mb-3">Per hour of play time</p>
             <p className="text-2xl font-black text-gray-900 mb-3">
-              $8.00
+              ${rate.toFixed(2)}
               <span className="text-sm font-normal text-gray-400">/hour</span>
             </p>
             <div className="flex flex-col gap-1 text-xs text-gray-500">
-              <span>✓ 1 hour: $8.00</span>
-              <span>✓ 2 hours: $16.00</span>
-              <span>✓ 3 hours: $24.00</span>
-              <span className="text-teal-600 font-medium">
-                ✓ Free with $15.00+ purchase
-              </span>
+              <span>✓ 1 hour: ${rate.toFixed(2)}</span>
+              <span>✓ 2 hours: ${(rate * 2).toFixed(2)}</span>
+              <span>✓ 3 hours: ${(rate * 3).toFixed(2)}</span>
+              {enableThreshold && (
+                <span className="text-teal-600 font-medium">
+                  ✓ Free with ${spend.toFixed(2)}+ purchase
+                </span>
+              )}
             </div>
           </div>
           <p className="text-[11px] text-gray-400 mt-2 leading-snug">
-            This is how your pricing will appear to customers when they make a
-            reservation.
+            This is how your pricing will appear to customers when they make a reservation.
           </p>
         </div>
 
         {/* Controls */}
         <div className="flex flex-col gap-4">
-          <Input label="Hourly Rate" placeholder="$ 8.00" />
+          <Input
+            label="Hourly Rate"
+            placeholder="$ 8.00"
+            value={hourlyRate}
+            onChange={(e) => { setHourlyRate(e.target.value); setErrors((p) => ({ ...p, hourlyRate: undefined })); }}
+            error={errors.hourlyRate}
+          />
           <p className="text-[11px] text-gray-400 -mt-2">
             Amount charged per hour of play time
           </p>
 
-          {/* Threshold checkbox */}
           <label className="flex items-center gap-2 cursor-pointer">
             <button
               onClick={() => setEnableThreshold((v) => !v)}
@@ -128,12 +184,18 @@ export default function PricingTab({ onBack }: { onBack: () => void }) {
 
           {enableThreshold && (
             <>
-              <Input label="Minimum Spend Amount" placeholder="$ 15.00" />
+              <Input
+                label="Minimum Spend Amount"
+                placeholder="$ 15.00"
+                value={minSpend}
+                onChange={(e) => { setMinSpend(e.target.value); setErrors((p) => ({ ...p, minSpend: undefined })); }}
+                error={errors.minSpend}
+              />
               <div className="bg-teal-50 border border-teal-200 rounded-lg p-3 flex gap-2">
                 <Info size={14} className="text-teal-600 shrink-0 mt-0.5" />
                 <p className="text-xs text-teal-700 leading-snug">
                   If customers spend{" "}
-                  <span className="font-bold underline">$15.00</span> or more on
+                  <span className="font-bold underline">${spend.toFixed(2)}</span> or more on
                   food/drinks, the table fee will be waived automatically.
                 </p>
               </div>

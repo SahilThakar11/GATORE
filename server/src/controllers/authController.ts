@@ -7,6 +7,7 @@ import {
   generateAccessToken,
   generateRefreshToken,
   getRefreshTokenExpirationDate,
+  verifyRefreshToken,
 } from "../utils/jwt";
 import { sendOTPEmail } from "../services/emailService";
 import { getGoogleUserInfo } from "../utils/google";
@@ -746,5 +747,45 @@ export const logout = async (
       success: false,
       message: "An error occurred during logout.",
     });
+  }
+};
+
+// ─── Refresh Token ────────────────────────────────────────────────────────────
+
+export const refreshAccessToken = async (
+  req: Request,
+  res: Response,
+): Promise<void> => {
+  try {
+    const { refreshToken } = req.body;
+    if (!refreshToken) {
+      res.status(400).json({ success: false, message: "Refresh token required." });
+      return;
+    }
+
+    let payload: { userId: number; email: string; role: string };
+    try {
+      payload = verifyRefreshToken(refreshToken) as { userId: number; email: string; role: string };
+    } catch {
+      res.status(401).json({ success: false, message: "Invalid or expired refresh token." });
+      return;
+    }
+
+    const stored = await prisma.refreshToken.findUnique({ where: { token: refreshToken } });
+    if (!stored || stored.expiresAt < new Date()) {
+      res.status(401).json({ success: false, message: "Refresh token expired or revoked." });
+      return;
+    }
+
+    const accessToken = generateAccessToken({
+      userId: payload.userId,
+      email: payload.email,
+      role: payload.role,
+    });
+
+    res.json({ success: true, data: { accessToken } });
+  } catch (error) {
+    console.error("Refresh token error:", error);
+    res.status(500).json({ success: false, message: "Failed to refresh token." });
   }
 };

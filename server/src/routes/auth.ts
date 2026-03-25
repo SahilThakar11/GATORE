@@ -10,6 +10,7 @@ import {
   guestSignup,
   googleAuth,
   saveProfile,
+  refreshAccessToken,
 } from "../controllers/authController";
 import {
   validateGuestSignup,
@@ -61,6 +62,9 @@ router.post("/signin", validateSignin, handleValidationErrors, signin);
 // Protected routes
 router.get("/me", authenticate, getCurrentUser);
 router.post("/logout", authenticate, logout);
+
+// Refresh access token (public — uses refresh token for auth)
+router.post("/refresh-token", refreshAccessToken);
 
 // Google OAuth route
 router.post("/google", googleAuth);

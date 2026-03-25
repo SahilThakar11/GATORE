@@ -19,11 +19,14 @@ model User {
   authProvider  String         @default("email")
   googleId      String?        @unique
   isGuest       Boolean        @default(false)
-  otpCodes      OtpCode[]
-  refreshTokens RefreshToken[]
-  reservations  Reservation[]
-  staffActions  StaffAction[]
-  preference    UserPreference?
+  restaurantId  Int?           @map("restaurant_id")
+  otpCodes             OtpCode[]
+  refreshTokens        RefreshToken[]
+  reservations         Reservation[]
+  staffActions         StaffAction[]
+  preference           UserPreference?
+  restaurant           Restaurant?             @relation(fields: [restaurantId], references: [id])
+  businessAccessRequests BusinessAccessRequest[]
 
   @@map("users")
 }
@@ -55,10 +58,10 @@ model RefreshToken {
 model Restaurant {
   id              Int                     @id @default(autoincrement())
   name            String
-  tagline         String
-  description     String
-  address         String
-  city            String
+  tagline         String                  @default("")
+  description     String                  @default("")
+  address         String                  @default("")
+  city            String                  @default("")
   province        String                  @default("ON")
   postalCode      String?                 @map("postal_code")
   phone           String?
@@ -68,8 +71,20 @@ model Restaurant {
   createdAt       DateTime                @default(now()) @map("created_at")
   updatedAt       DateTime                @default(now()) @updatedAt @map("updated_at")
   website         String?
+  contactName     String?                 @map("contact_name")
+  contactEmail    String?                 @map("contact_email")
+  businessType    String?                 @map("business_type")
+  timezone        String?                 @default("EST (Eastern)")
+  pricingType     String                  @default("hourly") @map("pricing_type")
+  hourlyRate      Decimal?                @map("hourly_rate") @db.Decimal(10, 2)
+  coverFee        Decimal?                @map("cover_fee") @db.Decimal(10, 2)
+  minSpend        Decimal?                @map("min_spend") @db.Decimal(10, 2)
+  enableThreshold Boolean                 @default(false) @map("enable_threshold")
+  isSetupComplete Boolean                 @default(false) @map("is_setup_complete")
   accessRequests  BusinessAccessRequest[]
+  menuItems       MenuItem[]
   operatingHours  OperatingHours[]
+  owners          User[]
   restaurantGames RestaurantGame[]
   tables          Table[]
 
@@ -95,11 +110,25 @@ model Table {
   minCapacity  Int           @default(1) @map("min_capacity")
   status       String        @default("available")
   description  String?
+  type         String        @default("Round")
   restaurantId Int           @map("restaurant_id")
   reservations Reservation[]
   restaurant   Restaurant    @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
 
   @@map("tables")
+}
+
+model MenuItem {
+  id           Int        @id @default(autoincrement())
+  name         String
+  description  String?
+  price        Decimal    @db.Decimal(10, 2)
+  category     String     @default("Drink")
+  restaurantId Int        @map("restaurant_id")
+  createdAt    DateTime   @default(now()) @map("created_at")
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+
+  @@map("menu_items")
 }
 
 model Game {
@@ -204,6 +233,8 @@ model BusinessAccessRequest {
   createdAt    DateTime    @default(now()) @map("created_at")
   restaurantId Int?        @map("restaurant_id")
   restaurant   Restaurant? @relation(fields: [restaurantId], references: [id])
+  userId       Int?        @map("user_id")
+  user         User?       @relation(fields: [userId], references: [id])
 
   @@map("business_access_requests")
 }

@@ -14,6 +14,7 @@ interface AuthContextType {
   setAuth: (user: AuthUser, accessToken: string, refreshToken: string) => void;
   updateUser: (updates: Partial<AuthUser>) => void;
   logout: () => void;
+  refreshAccessToken: () => Promise<string | null>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -67,6 +68,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setAccessToken(null);
   };
 
+  const refreshAccessToken = async (): Promise<string | null> => {
+    const storedRefreshToken = localStorage.getItem("refreshToken");
+    if (!storedRefreshToken) return null;
+
+    try {
+      const res = await fetch("/api/auth/refresh-token", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ refreshToken: storedRefreshToken }),
+      });
+      const json = await res.json();
+      if (json.success && json.data?.accessToken) {
+        localStorage.setItem("accessToken", json.data.accessToken);
+        setAccessToken(json.data.accessToken);
+        return json.data.accessToken;
+      }
+    } catch {
+      // network error — fall through to logout
+    }
+
+    logout();
+    return null;
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -76,6 +101,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setAuth,
         updateUser,
         logout,
+        refreshAccessToken,
       }}
     >
       {children}

@@ -10,6 +10,7 @@ import gameRoutes from "./routes/games";
 import prisma from "./config/prisma";
 import bggRouter from "./routes/bgg";
 import businessRoutes from "./routes/business";
+import businessSystemRoutes from "./routes/businessSystem";
 
 const app: Application = express();
 const PORT = process.env.PORT;
@@ -37,6 +38,7 @@ app.use("/api/reservations", reservationRoutes);
 app.use("/api/games", gameRoutes);
 app.use("/api/bgg", bggRouter);
 app.use("/api/business", businessRoutes);
+app.use("/api/business-system", businessSystemRoutes);
 
 // Health check
 app.get("/", (req: Request, res: Response) => {

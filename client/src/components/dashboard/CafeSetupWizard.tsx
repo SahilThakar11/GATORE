@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
   X,
   ChevronDown,
@@ -7,21 +7,34 @@ import {
   Check,
   Globe,
   Upload,
-  Link,
-  Search,
   PlusCircle,
   ClipboardList,
+
   Clock,
   Zap,
   CreditCard,
   Calendar,
   Users,
   Settings,
+  Loader2,
+  ImagePlus,
+  Search,
 } from "lucide-react";
 import { StepProgress } from "../auth/StepProgress";
 import { Input } from "../ui/Input";
 import { Button } from "../ui/Button";
+import { timeStringToMinutes } from "../../hooks/useBusinessSettings";
+import { useBGGSearch, type BGGGame } from "../../hooks/useBGG";
+import { useBusinessSettings } from "../../hooks/useBusinessSettings";
 import gatoreLogo from "/logo.png";
+import {
+  validateEmail,
+  validatePhone,
+  validateUrl,
+  validatePostalCode,
+  validateRequired,
+  validatePositiveNumber,
+} from "../../utils/validations";
 
 /* ═══════════════════════════════════════════════════════════════════
    TYPES & CONSTANTS
@@ -119,68 +132,215 @@ function SelectField({
    STEP 1 — BUSINESS INFO
    ═══════════════════════════════════════════════════════════════════ */
 
+const MAX_LOGO_SIZE = 2 * 1024 * 1024; // 2 MB
+const ACCEPTED_IMAGE_TYPES = ["image/png", "image/jpeg", "image/webp", "image/svg+xml"];
+
 function StepBusinessInfo({
   onContinue,
   onBack,
+  profileData,
+  setProfileData,
+  logoBase64,
+  setLogoBase64,
+  businessName,
 }: {
   onContinue: () => void;
   onBack: () => void;
+  profileData: Record<string, string>;
+  setProfileData: React.Dispatch<React.SetStateAction<Record<string, string>>>;
+  logoBase64: string;
+  setLogoBase64: React.Dispatch<React.SetStateAction<string>>;
+  businessName: string;
 }) {
+  const [errors, setErrors] = useState<Record<string, string | null>>({});
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const update = (key: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    setProfileData((prev) => ({ ...prev, [key]: e.target.value }));
+    setErrors((prev) => ({ ...prev, [key]: null }));
+  };
+
+  const handleLogoSelect = (file: File) => {
+    if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
+      setErrors((prev) => ({ ...prev, logo: "Please upload a PNG, JPG, WebP, or SVG image." }));
+      return;
+    }
+    if (file.size > MAX_LOGO_SIZE) {
+      setErrors((prev) => ({ ...prev, logo: "Image must be under 2 MB." }));
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      setLogoBase64(reader.result as string);
+      setErrors((prev) => ({ ...prev, logo: null }));
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (file) handleLogoSelect(file);
+  };
+
+  const handleContinue = () => {
+    const newErrors: Record<string, string | null> = {
+      name: validateRequired(profileData.name),
+      logo: logoBase64 ? null : "A café logo is required.",
+      contactEmail: validateEmail(profileData.contactEmail),
+      contactName: validateRequired(profileData.contactName),
+      website: validateUrl(profileData.website),
+      phone: validatePhone(profileData.phone),
+      address: validateRequired(profileData.address),
+      city: validateRequired(profileData.city),
+      province: validateRequired(profileData.province),
+      postalCode: validatePostalCode(profileData.postalCode),
+    };
+    setErrors(newErrors);
+    const hasError = Object.values(newErrors).some((e) => e !== null);
+    if (!hasError) onContinue();
+  };
+
   return (
     <div className="px-7 py-6 flex flex-col gap-5">
       <div>
         <h2 className="text-xl font-bold text-gray-900">
           Set up your business account for{" "}
-          <span className="text-gray-900">{"{Business Name}"}</span>
+          <span className="text-gray-900">{businessName}</span>
         </h2>
         <p className="text-sm text-gray-400 mt-0.5">
           Let's get your café ready for reservations
         </p>
       </div>
 
+      {/* Logo Upload */}
+      <div>
+        <label className="block text-sm font-medium text-neutral-800 mb-2">
+          Café Logo <span className="text-red-500">*</span>
+        </label>
+        <div
+          onClick={() => fileInputRef.current?.click()}
+          onDrop={handleDrop}
+          onDragOver={(e) => e.preventDefault()}
+          className={`relative flex flex-col items-center justify-center border-2 border-dashed rounded-xl p-6 cursor-pointer transition-all ${
+            errors.logo
+              ? "border-red-300 bg-red-50/30"
+              : logoBase64
+                ? "border-teal-300 bg-teal-50/30"
+                : "border-gray-200 hover:border-teal-300 hover:bg-teal-50/20"
+          }`}
+        >
+          {logoBase64 ? (
+            <div className="flex items-center gap-4">
+              <img
+                src={logoBase64}
+                alt="Café logo preview"
+                className="w-16 h-16 rounded-xl object-cover border border-gray-200"
+              />
+              <div className="text-left">
+                <p className="text-sm font-medium text-gray-900">Logo uploaded</p>
+                <p className="text-xs text-teal-600 mt-0.5">Click or drag to replace</p>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center mb-2">
+                <ImagePlus size={22} className="text-gray-400" />
+              </div>
+              <p className="text-sm font-medium text-gray-700">
+                Click to upload or drag and drop
+              </p>
+              <p className="text-xs text-gray-400 mt-0.5">
+                PNG, JPG, WebP, or SVG (max 2 MB)
+              </p>
+            </>
+          )}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/png,image/jpeg,image/webp,image/svg+xml"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) handleLogoSelect(file);
+              e.target.value = "";
+            }}
+          />
+        </div>
+        {errors.logo && (
+          <p className="text-xs text-red-500 mt-1.5">{errors.logo}</p>
+        )}
+      </div>
+
+      <Input
+        label="Café Name"
+        placeholder="e.g. The Board Room Café"
+        value={profileData.name || ""}
+        onChange={update("name")}
+        error={errors.name ?? undefined}
+      />
       <Input
         label="Email Address"
         type="email"
         placeholder="contact@yourbusiness.com"
+        value={profileData.contactEmail || ""}
+        onChange={update("contactEmail")}
+        error={errors.contactEmail ?? undefined}
       />
-      <Input label="Contact Name" placeholder="contact@yourbusiness.com" />
+      <Input
+        label="Contact Name"
+        placeholder="Your name"
+        value={profileData.contactName || ""}
+        onChange={update("contactName")}
+        error={errors.contactName ?? undefined}
+      />
       <Input
         label="Business Website"
-        placeholder="https://www.yourbusiness.com/contact"
+        placeholder="https://www.yourbusiness.com"
         rightIcon={<Globe size={16} />}
+        value={profileData.website || ""}
+        onChange={update("website")}
+        error={errors.website ?? undefined}
       />
 
       <div className="grid grid-cols-2 gap-4">
         <SelectField
           label="Business Type"
           options={["Board Game Café", "Restaurant", "Bar", "Lounge", "Other"]}
-          value=""
-          onChange={() => {}}
+          value={profileData.businessType || ""}
+          onChange={(v) => setProfileData((prev) => ({ ...prev, businessType: v }))}
         />
         <Input
           label="Phone Number"
           type="tel"
           placeholder="(555) 123-4567"
+          value={profileData.phone || ""}
+          onChange={update("phone")}
+          error={errors.phone ?? undefined}
         />
       </div>
 
-      {/* Business Address */}
       <h3 className="text-base font-bold text-gray-900 mt-2">
         Business Address
       </h3>
-      <Input label="Street Address" placeholder="123 Main Street" />
+      <Input
+        label="Street Address"
+        placeholder="123 Main Street"
+        value={profileData.address || ""}
+        onChange={update("address")}
+        error={errors.address ?? undefined}
+      />
       <div className="grid grid-cols-3 gap-4">
-        <Input label="City" placeholder="City" />
-        <Input label="Province" placeholder="Province" />
-        <Input label="Postal Code" placeholder="Postal Code" />
+        <Input label="City" placeholder="City" value={profileData.city || ""} onChange={update("city")} error={errors.city ?? undefined} />
+        <Input label="Province" placeholder="Province" value={profileData.province || ""} onChange={update("province")} error={errors.province ?? undefined} />
+        <Input label="Postal Code" placeholder="Postal Code" value={profileData.postalCode || ""} onChange={update("postalCode")} error={errors.postalCode ?? undefined} />
       </div>
 
-      {/* Footer buttons */}
       <div className="flex gap-3 mt-2">
         <Button variant="outline" fullWidth onClick={onBack}>
           Back
         </Button>
-        <Button variant="primary" fullWidth onClick={onContinue}>
+        <Button variant="primary" fullWidth onClick={handleContinue}>
           Continue
         </Button>
       </div>
@@ -195,19 +355,25 @@ function StepBusinessInfo({
 function StepTables({
   onContinue,
   onBack,
+  tables,
+  setTables,
 }: {
   onContinue: () => void;
   onBack: () => void;
+  tables: TableEntry[];
+  setTables: React.Dispatch<React.SetStateAction<TableEntry[]>>;
 }) {
-  const [tables, setTables] = useState<TableEntry[]>([
-    { id: "1", name: "Table 1", capacity: "", type: "" },
-    { id: "2", name: "Table 2", capacity: "2", type: "" },
-  ]);
+  const [tableErrors, setTableErrors] = useState<Record<string, Record<string, string | null>>>({});
 
-  const updateTable = (id: string, patch: Partial<TableEntry>) =>
-    setTables((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, ...patch } : t))
-    );
+  const updateTable = (id: string, patch: Partial<TableEntry>) => {
+    setTables((prev) => prev.map((t) => (t.id === id ? { ...t, ...patch } : t)));
+    // Clear errors for the field that changed
+    const key = Object.keys(patch)[0];
+    setTableErrors((prev) => ({
+      ...prev,
+      [id]: { ...(prev[id] || {}), [key]: null },
+    }));
+  };
 
   const removeTable = (id: string) =>
     setTables((prev) => prev.filter((t) => t.id !== id));
@@ -216,13 +382,24 @@ function StepTables({
     const nextNum = tables.length + 1;
     setTables((prev) => [
       ...prev,
-      {
-        id: Date.now().toString(),
-        name: `Table ${nextNum}`,
-        capacity: "",
-        type: "",
-      },
+      { id: Date.now().toString(), name: `Table ${nextNum}`, capacity: "", type: "" },
     ]);
+  };
+
+  const handleContinue = () => {
+    const newErrors: Record<string, Record<string, string | null>> = {};
+    let hasError = false;
+    tables.forEach((t) => {
+      const errs: Record<string, string | null> = {
+        name: validateRequired(t.name),
+        capacity: t.capacity ? null : "Select a capacity.",
+        type: t.type ? null : "Select a table type.",
+      };
+      newErrors[t.id] = errs;
+      if (Object.values(errs).some((e) => e !== null)) hasError = true;
+    });
+    setTableErrors(newErrors);
+    if (!hasError) onContinue();
   };
 
   return (
@@ -236,42 +413,54 @@ function StepTables({
 
       {/* Table cards */}
       <div className="flex flex-col gap-4">
-        {tables.map((t) => (
-          <div
-            key={t.id}
-            className="border border-gray-200 rounded-xl p-5"
-          >
-            <div className="flex items-center justify-between mb-3">
-              <h4 className="text-sm font-bold text-gray-900">{t.name}</h4>
-              <button
-                onClick={() => removeTable(t.id)}
-                className="text-red-400 hover:text-red-600 transition-colors cursor-pointer"
-              >
-                <Trash2 size={16} />
-              </button>
+        {tables.map((t) => {
+          const errs = tableErrors[t.id] || {};
+          return (
+            <div
+              key={t.id}
+              className={`border rounded-xl p-5 ${
+                Object.values(errs).some((e) => e) ? "border-red-300" : "border-gray-200"
+              }`}
+            >
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="text-sm font-bold text-gray-900">{t.name}</h4>
+                <button
+                  onClick={() => removeTable(t.id)}
+                  className="text-red-400 hover:text-red-600 transition-colors cursor-pointer"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                <Input
+                  label="Table Name"
+                  placeholder={t.name}
+                  value={t.name}
+                  onChange={(e) => updateTable(t.id, { name: e.target.value })}
+                  error={errs.name ?? undefined}
+                />
+                <div className="space-y-1">
+                  <SelectField
+                    label="Capacity"
+                    options={["2", "4", "6", "8", "10", "12"]}
+                    value={t.capacity}
+                    onChange={(v) => updateTable(t.id, { capacity: v })}
+                  />
+                  {errs.capacity && <p className="text-xs text-red-500">{errs.capacity}</p>}
+                </div>
+                <div className="space-y-1">
+                  <SelectField
+                    label="Table Type"
+                    options={["Round", "Square", "Booth", "High-Top"]}
+                    value={t.type}
+                    onChange={(v) => updateTable(t.id, { type: v })}
+                  />
+                  {errs.type && <p className="text-xs text-red-500">{errs.type}</p>}
+                </div>
+              </div>
             </div>
-            <div className="grid grid-cols-3 gap-3">
-              <Input
-                label="Table Name"
-                placeholder={t.name}
-                value={t.name}
-                onChange={(e) => updateTable(t.id, { name: e.target.value })}
-              />
-              <SelectField
-                label="Capacity"
-                options={["2", "4", "6", "8", "10", "12"]}
-                value={t.capacity}
-                onChange={(v) => updateTable(t.id, { capacity: v })}
-              />
-              <SelectField
-                label="Table Type"
-                options={["Round", "Square", "Booth", "High-Top"]}
-                value={t.type}
-                onChange={(v) => updateTable(t.id, { type: v })}
-              />
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Add another table */}
@@ -296,7 +485,7 @@ function StepTables({
         <Button variant="outline" fullWidth onClick={onBack}>
           Back
         </Button>
-        <Button variant="primary" fullWidth onClick={onContinue}>
+        <Button variant="primary" fullWidth onClick={handleContinue}>
           Continue
         </Button>
       </div>
@@ -311,20 +500,14 @@ function StepTables({
 function StepHours({
   onContinue,
   onBack,
+  hours,
+  setHours,
 }: {
   onContinue: () => void;
   onBack: () => void;
+  hours: Record<string, DayHours>;
+  setHours: React.Dispatch<React.SetStateAction<Record<string, DayHours>>>;
 }) {
-  const [hours, setHours] = useState<Record<string, DayHours>>({
-    Monday: { enabled: true, open: "10:00 AM", close: "10:00 PM" },
-    Tuesday: { enabled: true, open: "10:00 AM", close: "10:00 PM" },
-    Wednesday: { enabled: true, open: "9:00 AM", close: "9:00 PM" },
-    Thursday: { enabled: true, open: "11:00 AM", close: "11:00 PM" },
-    Friday: { enabled: true, open: "10:00 AM", close: "10:00 PM" },
-    Saturday: { enabled: true, open: "9:00 AM", close: "9:00 PM" },
-    Sunday: { enabled: true, open: "11:00 AM", close: "11:00 PM" },
-  });
-
   const updateDay = (day: string, patch: Partial<DayHours>) =>
     setHours((prev) => ({ ...prev, [day]: { ...prev[day], ...patch } }));
 
@@ -437,83 +620,161 @@ function StepHours({
   );
 }
 
+
 /* ═══════════════════════════════════════════════════════════════════
    STEP 4 — GAME LIBRARY
    ═══════════════════════════════════════════════════════════════════ */
 
+function complexityDots(weightDots: number) {
+  const count = Math.min(weightDots, 3);
+  return (
+    <div className="flex items-center gap-1">
+      {[0, 1, 2].map((i) => (
+        <span key={i} className={`w-2 h-2 rounded-full ${i < count ? "bg-amber-500" : "bg-gray-200"}`} />
+      ))}
+      <span className="text-[10px] text-gray-500 ml-0.5">
+        {["Easy", "Medium", "Hard"][Math.min(count - 1, 2)] ?? "Easy"}
+      </span>
+    </div>
+  );
+}
+
+function parsePlayers(players: string): [number, number] {
+  const parts = players.replace("–", "-").split("-").map(Number);
+  if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) return [parts[0], parts[1]];
+  const n = parseInt(players);
+  return [isNaN(n) ? 1 : n, isNaN(n) ? 1 : n];
+}
+
+function parseDuration(duration: string): number {
+  const m = duration.match(/(\d+)/);
+  return m ? parseInt(m[1]) : 60;
+}
+
 function StepGames({
   onContinue,
   onBack,
+  selectedGames,
+  setSelectedGames,
 }: {
   onContinue: () => void;
   onBack: () => void;
+  selectedGames: BGGGame[];
+  setSelectedGames: React.Dispatch<React.SetStateAction<BGGGame[]>>;
 }) {
-  const options = [
-    {
-      icon: Upload,
-      iconBg: "bg-teal-50 text-teal-600",
-      title: "Upload CSV File",
-      desc: "Import your entire game library at once using a CSV file. Download the template to get started.",
-    },
-    {
-      icon: Link,
-      iconBg: "bg-amber-50 text-amber-600",
-      title: "Import from Board Game Geek",
-      desc: "Connect your BoardGameGeek account to automatically import your collection.",
-    },
-    {
-      icon: Search,
-      iconBg: "bg-purple-50 text-purple-600",
-      title: "Search & Add Manually",
-      desc: "Search BoardGameGeek and add games one at a time to build your library.",
-    },
-  ];
+  const { games, loading, loadingMore, hasMore, search, loadMore, clear } = useBGGSearch();
+  const [query, setQuery] = useState("");
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const selectedBggIds = new Set(selectedGames.map((g) => String(g.id)));
+
+  const handleQueryChange = useCallback((val: string) => {
+    setQuery(val);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (!val.trim()) { clear(); return; }
+    debounceRef.current = setTimeout(() => search(val.trim()), 500);
+  }, [search, clear]);
+
+  const toggleGame = (game: BGGGame) => {
+    const id = String(game.id);
+    setSelectedGames((prev) =>
+      prev.some((g) => String(g.id) === id)
+        ? prev.filter((g) => String(g.id) !== id)
+        : [...prev, game]
+    );
+  };
 
   return (
     <div className="px-7 py-6 flex flex-col gap-5">
       <div>
         <h2 className="text-xl font-bold text-gray-900">Game Library</h2>
         <p className="text-sm text-gray-400 mt-0.5">
-          Add your board game collection so customers know what games are
-          available to play.
+          Search BoardGameGeek and add the games your café offers (optional)
         </p>
       </div>
 
-      <h3 className="text-base font-bold text-gray-900">
-        How would you like to add your games?
-      </h3>
-
-      <div className="flex flex-col gap-2">
-        {options.map((opt) => {
-          const Icon = opt.icon;
-          return (
-            <button
-              key={opt.title}
-              className="flex items-center gap-4 border border-gray-200 rounded-xl px-4 py-4 text-left hover:bg-gray-50/50 hover:border-gray-300 transition-all cursor-pointer"
-            >
-              <div
-                className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${opt.iconBg}`}
-              >
-                <Icon size={18} />
-              </div>
-              <div>
-                <p className="text-sm font-bold text-gray-900">{opt.title}</p>
-                <p className="text-xs text-gray-400 mt-0.5 leading-snug">
-                  {opt.desc}
-                </p>
-              </div>
-            </button>
-          );
-        })}
+      {/* Search bar */}
+      <div className="relative">
+        <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => handleQueryChange(e.target.value)}
+          placeholder="Search for a game… (e.g. Catan, Ticket to Ride)"
+          className="w-full pl-9 pr-4 py-2.5 text-sm border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-teal-400 focus:border-transparent transition-all"
+        />
       </div>
 
+      {/* Selected games chips */}
+      {selectedGames.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {selectedGames.map((g) => (
+            <span key={g.id} className="flex items-center gap-1.5 bg-teal-50 border border-teal-200 text-teal-700 text-xs font-semibold px-2.5 py-1.5 rounded-full">
+              {g.name}
+              <button onClick={() => toggleGame(g)} className="hover:text-red-500 cursor-pointer"><X size={11} /></button>
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* Results */}
+      {loading && (
+        <div className="space-y-3">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="h-20 bg-gray-100 rounded-xl animate-pulse" style={{ animationDelay: `${i * 60}ms` }} />
+          ))}
+        </div>
+      )}
+
+      {!loading && games.length > 0 && (
+        <div className="flex flex-col gap-2.5 max-h-64 overflow-y-auto pr-1">
+          {games.map((game) => {
+            const selected = selectedBggIds.has(String(game.id));
+            const [min, max] = parsePlayers(game.players);
+            const dur = parseDuration(game.duration);
+            return (
+              <button
+                key={game.id}
+                onClick={() => toggleGame(game)}
+                className={`w-full flex items-start gap-3 p-3 rounded-xl border transition-all text-left cursor-pointer ${
+                  selected
+                    ? "border-teal-400 bg-teal-50/60"
+                    : "border-gray-200 hover:border-teal-200 bg-white"
+                }`}
+              >
+                <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-100 shrink-0">
+                  {game.image ? <img src={game.image} alt={game.name} className="w-full h-full object-cover" /> : null}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-gray-900 truncate">{game.name}</p>
+                  {complexityDots(game.weightDots)}
+                  <div className="flex items-center gap-3 text-xs text-gray-500 mt-0.5">
+                    <span className="flex items-center gap-1"><Users size={10} />{min === max ? min : `${min}–${max}`}</span>
+                    <span className="flex items-center gap-1"><Clock size={10} />{dur} min</span>
+                  </div>
+                </div>
+                <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 mt-1 ${selected ? "bg-teal-600" : "border-2 border-gray-300"}`}>
+                  {selected && <Check size={12} className="text-white" />}
+                </div>
+              </button>
+            );
+          })}
+          {hasMore && (
+            <button onClick={loadMore} disabled={loadingMore} className="w-full py-2 text-xs font-medium text-teal-600 border border-teal-200 rounded-lg hover:bg-teal-50 cursor-pointer disabled:opacity-50">
+              {loadingMore ? "Loading…" : "Load more"}
+            </button>
+          )}
+        </div>
+      )}
+
+      {!loading && !query && games.length === 0 && (
+        <p className="text-xs text-gray-400 text-center py-2">Start typing to search the BoardGameGeek database</p>
+      )}
+
       {/* Footer */}
-      <div className="flex gap-3 mt-2">
-        <Button variant="outline" fullWidth onClick={onBack}>
-          Back
-        </Button>
-        <Button variant="outline" fullWidth onClick={onContinue}>
-          Skip for Now
+      <div className="flex gap-3 mt-1">
+        <Button variant="outline" fullWidth onClick={onBack}>Back</Button>
+        <Button variant="primary" fullWidth onClick={onContinue}>
+          {selectedGames.length > 0 ? `Continue with ${selectedGames.length} game${selectedGames.length !== 1 ? "s" : ""}` : "Skip for Now"}
         </Button>
       </div>
     </div>
@@ -610,12 +871,36 @@ function StepMenu({
 function StepPricing({
   onContinue,
   onBack,
+  pricingData,
+  setPricingData,
 }: {
   onContinue: () => void;
   onBack: () => void;
+  pricingData: { pricingType: string; hourlyRate: string; enableThreshold: boolean; minSpend: string };
+  setPricingData: React.Dispatch<React.SetStateAction<{ pricingType: string; hourlyRate: string; enableThreshold: boolean; minSpend: string }>>;
 }) {
-  const [pricingType, setPricingType] = useState("hourly");
-  const [enableThreshold, setEnableThreshold] = useState(true);
+  const [errors, setErrors] = useState<Record<string, string | null>>({});
+
+  const pricingType = pricingData.pricingType;
+  const setPricingType = (v: string) => {
+    setPricingData((p) => ({ ...p, pricingType: v }));
+    setErrors({});
+  };
+  const enableThreshold = pricingData.enableThreshold;
+  const setEnableThreshold = (v: boolean | ((prev: boolean) => boolean)) =>
+    setPricingData((p) => ({ ...p, enableThreshold: typeof v === "function" ? v(p.enableThreshold) : v }));
+
+  const handleContinue = () => {
+    const newErrors: Record<string, string | null> = {};
+    if (pricingType === "hourly" || pricingType === "hybrid") {
+      newErrors.hourlyRate = validatePositiveNumber(pricingData.hourlyRate, "Hourly Rate");
+    }
+    if (enableThreshold) {
+      newErrors.minSpend = validatePositiveNumber(pricingData.minSpend, "Minimum Spend");
+    }
+    setErrors(newErrors);
+    if (Object.values(newErrors).every((e) => e === null)) onContinue();
+  };
 
   const pricingOptions = [
     {
@@ -687,7 +972,16 @@ function StepPricing({
           </div>
 
           <div className="flex flex-col gap-4">
-            <Input label="Hourly Rate" placeholder="$ 8.00" />
+            <Input
+              label="Hourly Rate"
+              placeholder="$ 8.00"
+              value={pricingData.hourlyRate}
+              onChange={(e) => {
+                setPricingData((p) => ({ ...p, hourlyRate: e.target.value }));
+                setErrors((prev) => ({ ...prev, hourlyRate: null }));
+              }}
+              error={errors.hourlyRate ?? undefined}
+            />
             <p className="text-[11px] text-gray-400 -mt-2">
               Amount charged per hour of play time
             </p>
@@ -711,12 +1005,21 @@ function StepPricing({
 
             {enableThreshold && (
               <>
-                <Input label="Minimum Spend Amount" placeholder="$ 15.00" />
+                <Input
+                  label="Minimum Spend Amount"
+                  placeholder="$ 15.00"
+                  value={pricingData.minSpend}
+                  onChange={(e) => {
+                    setPricingData((p) => ({ ...p, minSpend: e.target.value }));
+                    setErrors((prev) => ({ ...prev, minSpend: null }));
+                  }}
+                  error={errors.minSpend ?? undefined}
+                />
                 <div className="bg-[#eef2ff] border border-blue-200 rounded-lg p-3 flex gap-2">
                   <span className="text-blue-500 shrink-0 font-bold border border-blue-500 rounded-full w-4 h-4 flex items-center justify-center text-[10px] mt-0.5">i</span>
                   <p className="text-xs text-blue-800 leading-snug">
                     If customers spend{" "}
-                    <span className="font-bold">$15.00</span> or more on
+                    <span className="font-bold">${parseFloat(pricingData.minSpend) || 0}</span> or more on
                     food/drinks, the table fee will be waived automatically.
                   </p>
                 </div>
@@ -737,15 +1040,17 @@ function StepPricing({
             </p>
             <hr className="mb-4 border-gray-100" />
             <p className="text-2xl font-black text-gray-900 mb-4">
-              $8.00<span className="text-sm font-normal text-gray-500">/hour</span>
+              ${parseFloat(pricingData.hourlyRate) || 0}<span className="text-sm font-normal text-gray-500">/hour</span>
             </p>
             <div className="flex flex-col gap-2 text-sm text-gray-600">
-              <span>✓ 1 hour: $8.00</span>
-              <span>✓ 2 hours: $16.00</span>
-              <span>✓ 3 hours: $24.00</span>
-              <span className="text-teal-600 font-medium">
-                ✓ Free with $15.00+ purchase
-              </span>
+              <span>✓ 1 hour: ${(parseFloat(pricingData.hourlyRate) || 0).toFixed(2)}</span>
+              <span>✓ 2 hours: ${((parseFloat(pricingData.hourlyRate) || 0) * 2).toFixed(2)}</span>
+              <span>✓ 3 hours: ${((parseFloat(pricingData.hourlyRate) || 0) * 3).toFixed(2)}</span>
+              {enableThreshold && (
+                <span className="text-teal-600 font-medium">
+                  ✓ Free with ${parseFloat(pricingData.minSpend) || 0}+ purchase
+                </span>
+              )}
             </div>
           </div>
           <p className="text-[11px] text-gray-500 mt-4 leading-snug p-3 bg-warm-50 border border-warm-100 rounded-lg">
@@ -759,7 +1064,7 @@ function StepPricing({
         <Button variant="outline" fullWidth onClick={onBack}>
           Back
         </Button>
-        <Button variant="primary" fullWidth onClick={onContinue}>
+        <Button variant="primary" fullWidth onClick={handleContinue}>
           Continue
         </Button>
       </div>
@@ -767,8 +1072,10 @@ function StepPricing({
   );
 }
 
+
 /* ═══════════════════════════════════════════════════════════════════
    STEP 7 — SUCCESS
+
    ═══════════════════════════════════════════════════════════════════ */
 
 function StepSuccess({
@@ -861,13 +1168,84 @@ function StepSuccess({
 interface CafeSetupWizardProps {
   isOpen: boolean;
   onClose: () => void;
+  onComplete?: (data: {
+    profile?: Record<string, string>;
+    tables?: { name: string; capacity: number; type: string }[];
+    hours?: { dayOfWeek: string; openTime: number; closeTime: number; isClosed: boolean }[];
+    pricing?: Record<string, any>;
+    logoUrl?: string;
+  }) => Promise<{ success: boolean }>;
+  businessName?: string;
+  initialProfile?: {
+    contactEmail?: string | null;
+    contactName?: string | null;
+    phone?: string | null;
+    city?: string;
+    address?: string;
+    province?: string;
+    postalCode?: string | null;
+    website?: string | null;
+    businessType?: string | null;
+    logoUrl?: string | null;
+  } | null;
 }
 
 export default function CafeSetupWizard({
   isOpen,
   onClose,
+  onComplete,
+  businessName = "Your Café",
+  initialProfile,
 }: CafeSetupWizardProps) {
   const [step, setStep] = useState<WizardStep>("business-info");
+  const [saving, setSaving] = useState(false);
+
+  // Collected wizard data — auto-fill from existing profile (business request data)
+  const [profileData, setProfileData] = useState<Record<string, string>>({ name: businessName || "" });
+  const [logoBase64, setLogoBase64] = useState<string>("");
+
+  // Auto-fill profile data from the existing restaurant record (populated from business request)
+  useEffect(() => {
+    if (!initialProfile) return;
+    setProfileData((prev) => {
+      // Only fill empty fields so user edits aren't overwritten
+      const fill: Record<string, string> = {};
+      if (!prev.name && (initialProfile as any).name) fill.name = (initialProfile as any).name;
+      if (!prev.contactEmail && initialProfile.contactEmail) fill.contactEmail = initialProfile.contactEmail;
+      if (!prev.contactName && initialProfile.contactName) fill.contactName = initialProfile.contactName;
+      if (!prev.phone && initialProfile.phone) fill.phone = initialProfile.phone;
+      if (!prev.city && initialProfile.city) fill.city = initialProfile.city;
+      if (!prev.address && initialProfile.address) fill.address = initialProfile.address;
+      if (!prev.province && initialProfile.province) fill.province = initialProfile.province;
+      if (!prev.postalCode && initialProfile.postalCode) fill.postalCode = initialProfile.postalCode;
+      if (!prev.website && initialProfile.website) fill.website = initialProfile.website;
+      if (!prev.businessType && initialProfile.businessType) fill.businessType = initialProfile.businessType;
+      return { ...prev, ...fill };
+    });
+    if (initialProfile.logoUrl && !logoBase64) {
+      setLogoBase64(initialProfile.logoUrl);
+    }
+  }, [initialProfile]);
+  const [tablesData, setTablesData] = useState<TableEntry[]>([
+    { id: "1", name: "Table 1", capacity: "", type: "" },
+    { id: "2", name: "Table 2", capacity: "2", type: "" },
+  ]);
+  const [hoursData, setHoursData] = useState<Record<string, DayHours>>({
+    Monday: { enabled: true, open: "10:00 AM", close: "10:00 PM" },
+    Tuesday: { enabled: true, open: "10:00 AM", close: "10:00 PM" },
+    Wednesday: { enabled: true, open: "9:00 AM", close: "9:00 PM" },
+    Thursday: { enabled: true, open: "11:00 AM", close: "11:00 PM" },
+    Friday: { enabled: true, open: "10:00 AM", close: "10:00 PM" },
+    Saturday: { enabled: true, open: "9:00 AM", close: "9:00 PM" },
+    Sunday: { enabled: true, open: "11:00 AM", close: "11:00 PM" },
+  });
+  const [pricingData, setPricingData] = useState({
+    pricingType: "hourly",
+    hourlyRate: "8.00",
+    enableThreshold: true,
+    minSpend: "15.00",
+  });
+  const [selectedGames, setSelectedGames] = useState<BGGGame[]>([]);
 
   // Lock body scroll
   useEffect(() => {
@@ -894,13 +1272,66 @@ export default function CafeSetupWizard({
   const goNext = () => {
     const idx = FLOW.indexOf(step);
     if (idx < FLOW.length - 1) setStep(FLOW[idx + 1]);
-    else onClose(); // finished
+    else onClose();
   };
 
   const goBack = () => {
     const idx = FLOW.indexOf(step);
     if (idx > 0) setStep(FLOW[idx - 1]);
     else onClose();
+  };
+
+  // When pricing step continues, submit all data
+  const { addGame } = useBusinessSettings();
+
+  const handlePricingContinue = async () => {
+    if (onComplete) {
+      setSaving(true);
+      const result = await onComplete({
+        profile: profileData,
+        tables: tablesData
+          .filter((t) => t.name)
+          .map((t) => ({
+            name: t.name,
+            capacity: parseInt(t.capacity) || 4,
+            type: t.type || "Round",
+          })),
+        hours: DAYS.map((day) => ({
+          dayOfWeek: day,
+          openTime: timeStringToMinutes(hoursData[day]?.open || "10:00 AM"),
+          closeTime: timeStringToMinutes(hoursData[day]?.close || "10:00 PM"),
+          isClosed: !hoursData[day]?.enabled,
+        })),
+        pricing: pricingData,
+        logoUrl: logoBase64 || undefined,
+      });
+      // After setup completes, add games one by one
+      if (result.success && selectedGames.length > 0) {
+        for (const game of selectedGames) {
+          const [min, max] = (() => {
+            const parts = game.players.replace("–", "-").split("-").map(Number);
+            if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) return [parts[0], parts[1]];
+            const n = parseInt(game.players);
+            return [isNaN(n) ? 1 : n, isNaN(n) ? 1 : n];
+          })();
+          const dur = (() => { const m = game.duration.match(/(\d+)/); return m ? parseInt(m[1]) : 60; })();
+          await addGame({
+            bggId: String(game.id),
+            name: game.name,
+            imageUrl: game.image || null,
+            minPlayers: min,
+            maxPlayers: max,
+            estimatedPlayTime: dur,
+            category: game.categories?.[0] ?? null,
+            difficulty: game.difficulty ?? null,
+          }).catch(() => {/* best-effort */});
+        }
+      }
+      setSaving(false);
+      if (result.success) goNext();
+    } else {
+      goNext();
+    }
   };
 
   return (
@@ -919,7 +1350,7 @@ export default function CafeSetupWizard({
           <X size={14} />
         </button>
 
-        {/* Header — same style as AuthModal but with custom subtitle */}
+        {/* Header */}
         <div className="flex items-center gap-3 px-7 py-8 pt-6 justify-center bg-white rounded-t-2xl">
           <div className="flex items-center gap-3 border-b border-teal-500 w-full px-0 py-4 -mx-7 -mb-4">
             <img
@@ -941,25 +1372,53 @@ export default function CafeSetupWizard({
         {/* Step progress */}
         {step !== "success" && <StepProgress current={stepNum} total={total} />}
 
+        {/* Saving overlay */}
+        {saving && (
+          <div className="absolute inset-0 z-20 bg-white/80 flex items-center justify-center rounded-2xl">
+            <div className="flex flex-col items-center gap-3">
+              <Loader2 size={32} className="animate-spin text-teal-600" />
+              <p className="text-sm text-gray-600 font-medium">Setting up your café...</p>
+            </div>
+          </div>
+        )}
+
         {/* Step content — scrollable */}
         <div className="flex-1 overflow-y-auto">
           {step === "business-info" && (
-            <StepBusinessInfo onContinue={goNext} onBack={goBack} />
+            <StepBusinessInfo
+              onContinue={goNext}
+              onBack={goBack}
+              profileData={profileData}
+              setProfileData={setProfileData}
+              logoBase64={logoBase64}
+              setLogoBase64={setLogoBase64}
+              businessName={businessName}
+            />
           )}
           {step === "tables" && (
-            <StepTables onContinue={goNext} onBack={goBack} />
+            <StepTables onContinue={goNext} onBack={goBack} tables={tablesData} setTables={setTablesData} />
           )}
           {step === "hours" && (
-            <StepHours onContinue={goNext} onBack={goBack} />
+            <StepHours onContinue={goNext} onBack={goBack} hours={hoursData} setHours={setHoursData} />
           )}
           {step === "games" && (
-            <StepGames onContinue={goNext} onBack={goBack} />
+            <StepGames
+              onContinue={goNext}
+              onBack={goBack}
+              selectedGames={selectedGames}
+              setSelectedGames={setSelectedGames}
+            />
           )}
           {step === "menu" && (
             <StepMenu onFinish={goNext} onBack={goBack} />
           )}
           {step === "pricing" && (
-            <StepPricing onContinue={goNext} onBack={goBack} />
+            <StepPricing
+              onContinue={handlePricingContinue}
+              onBack={goBack}
+              pricingData={pricingData}
+              setPricingData={setPricingData}
+            />
           )}
           {step === "success" && (
             <StepSuccess onFinish={onClose} />
