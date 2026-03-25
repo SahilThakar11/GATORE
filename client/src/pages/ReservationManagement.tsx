@@ -248,7 +248,7 @@ function FloorPlanView() {
                 : "text-teal-600 border-teal-300 hover:bg-teal-50"
             }`}
           >
-            ✏️ Edit Layout
+           Edit Layout
           </button>
           <button className="text-sm text-teal-600 hover:bg-teal-50 px-4 py-2 border border-teal-300 rounded-lg font-medium transition-colors cursor-pointer">
             Export
