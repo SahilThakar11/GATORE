@@ -673,16 +673,40 @@ export const addGame = async (req: AuthRequest, res: Response): Promise<void> =>
     const restaurantId = await getBusinessRestaurant(req, res);
     if (!restaurantId) return;
 
-    const { gameId } = req.body;
+    const { bggId, name, imageUrl, minPlayers, maxPlayers, estimatedPlayTime, category, difficulty } = req.body;
 
-    if (!gameId) {
-      res.status(400).json({ success: false, message: "gameId is required." });
+    if (!bggId || !name) {
+      res.status(400).json({ success: false, message: "bggId and name are required." });
       return;
     }
 
-    // Check if already linked
+    // Upsert the game into our games table by bggId
+    const game = await prisma.game.upsert({
+      where: { bggId: String(bggId) },
+      update: {
+        name,
+        ...(imageUrl !== undefined && { imageUrl }),
+        ...(minPlayers !== undefined && { minPlayers: parseInt(minPlayers) || 1 }),
+        ...(maxPlayers !== undefined && { maxPlayers: parseInt(maxPlayers) || 1 }),
+        ...(estimatedPlayTime !== undefined && { estimatedPlayTime: parseInt(estimatedPlayTime) || 60 }),
+        ...(category !== undefined && { category }),
+        ...(difficulty !== undefined && { difficulty }),
+      },
+      create: {
+        bggId: String(bggId),
+        name,
+        imageUrl: imageUrl || null,
+        minPlayers: parseInt(minPlayers) || 1,
+        maxPlayers: parseInt(maxPlayers) || 1,
+        estimatedPlayTime: parseInt(estimatedPlayTime) || 60,
+        category: category || null,
+        difficulty: difficulty || null,
+      },
+    });
+
+    // Check if already linked to this restaurant
     const existing = await prisma.restaurantGame.findFirst({
-      where: { restaurantId, gameId: parseInt(gameId) },
+      where: { restaurantId, gameId: game.id },
     });
 
     if (existing) {
@@ -691,7 +715,7 @@ export const addGame = async (req: AuthRequest, res: Response): Promise<void> =>
     }
 
     const rg = await prisma.restaurantGame.create({
-      data: { restaurantId, gameId: parseInt(gameId), status: "available" },
+      data: { restaurantId, gameId: game.id, status: "available" },
       include: { game: true },
     });
 
@@ -705,6 +729,7 @@ export const addGame = async (req: AuthRequest, res: Response): Promise<void> =>
     res.status(500).json({ success: false, message: "Failed to add game." });
   }
 };
+
 
 // DELETE /api/business-system/games/:id
 export const removeGame = async (req: AuthRequest, res: Response): Promise<void> => {

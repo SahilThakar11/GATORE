@@ -36,7 +36,7 @@ export default function BusinessSidebar() {
     >
       {/* ─── Logo / Business Name ───────────────────────────── */}
       <div className="flex items-center gap-3 px-4 pt-6 pb-5">
-        <div className="w-9 h-9 rounded-lg shrink-0 overflow-hidden border border-teal-700/50 shadow-inner">
+        <div className="w-12 h-12 rounded-xl shrink-0 overflow-hidden border border-teal-700/50 shadow-inner">
           {logoUrl ? (
             <img
               src={logoUrl}
@@ -45,16 +45,16 @@ export default function BusinessSidebar() {
             />
           ) : (
             <div className="w-full h-full bg-teal-800 flex items-center justify-center">
-              <Building2 size={16} className="text-teal-200" />
+              <Building2 size={20} className="text-teal-200" />
             </div>
           )}
         </div>
         {!collapsed && (
           <div className="overflow-hidden">
-            <p className="text-white text-sm font-bold leading-tight truncate">
+            <p className="text-white text-base font-extrabold leading-tight truncate">
               {businessName}
             </p>
-            <p className="text-teal-200/70 text-[11px] leading-tight">
+            <p className="text-teal-200/70 text-xs leading-tight">
               Business Portal
             </p>
           </div>

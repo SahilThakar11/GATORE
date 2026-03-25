@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Globe, Building2, ImagePlus } from "lucide-react";
+import { Globe, ImagePlus } from "lucide-react";
 import { Input } from "../../ui/Input";
 import { SettingsPanel } from "./SettingsPanel";
 import { SelectField } from "./SelectField";
@@ -25,6 +25,7 @@ export default function BusinessInfoTab({ onBack }: { onBack: () => void }) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [form, setForm] = useState({
+    name: "",
     contactEmail: "",
     contactName: "",
     website: "",
@@ -40,6 +41,7 @@ export default function BusinessInfoTab({ onBack }: { onBack: () => void }) {
   useEffect(() => {
     if (profile) {
       setForm({
+        name: profile.name || "",
         contactEmail: profile.contactEmail || "",
         contactName: profile.contactName || "",
         website: profile.website || "",
@@ -82,6 +84,7 @@ export default function BusinessInfoTab({ onBack }: { onBack: () => void }) {
 
   const handleSave = async (): Promise<boolean> => {
     const newErrors: Record<string, string | undefined> = {
+      name: validateRequired(form.name) ?? undefined,
       contactEmail: validateEmail(form.contactEmail) ?? undefined,
       contactName: validateRequired(form.contactName) ?? undefined,
       website: validateUrl(form.website) ?? undefined,
@@ -182,6 +185,13 @@ export default function BusinessInfoTab({ onBack }: { onBack: () => void }) {
       </div>
 
       <div className="flex flex-col gap-5">
+        <Input
+          label="Café Name"
+          placeholder="e.g. The Board Room Café"
+          value={form.name}
+          onChange={update("name")}
+          error={errors.name}
+        />
         <Input
           label="Email Address"
           type="email"

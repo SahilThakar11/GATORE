@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
   X,
   ChevronDown,
@@ -6,9 +6,6 @@ import {
   Trash2,
   Check,
   Globe,
-  Upload,
-  Link,
-  Search,
   PlusCircle,
   ClipboardList,
   Clock,
@@ -19,11 +16,14 @@ import {
   Settings,
   Loader2,
   ImagePlus,
+  Search,
 } from "lucide-react";
 import { StepProgress } from "../auth/StepProgress";
 import { Input } from "../ui/Input";
 import { Button } from "../ui/Button";
 import { timeStringToMinutes } from "../../hooks/useBusinessSettings";
+import { useBGGSearch, type BGGGame } from "../../hooks/useBGG";
+import { useBusinessSettings } from "../../hooks/useBusinessSettings";
 import gatoreLogo from "/logo.png";
 import {
   validateEmail,
@@ -610,83 +610,161 @@ function StepHours({
   );
 }
 
+
 /* ═══════════════════════════════════════════════════════════════════
    STEP 4 — GAME LIBRARY
    ═══════════════════════════════════════════════════════════════════ */
 
+function complexityDots(weightDots: number) {
+  const count = Math.min(weightDots, 3);
+  return (
+    <div className="flex items-center gap-1">
+      {[0, 1, 2].map((i) => (
+        <span key={i} className={`w-2 h-2 rounded-full ${i < count ? "bg-amber-500" : "bg-gray-200"}`} />
+      ))}
+      <span className="text-[10px] text-gray-500 ml-0.5">
+        {["Easy", "Medium", "Hard"][Math.min(count - 1, 2)] ?? "Easy"}
+      </span>
+    </div>
+  );
+}
+
+function parsePlayers(players: string): [number, number] {
+  const parts = players.replace("–", "-").split("-").map(Number);
+  if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) return [parts[0], parts[1]];
+  const n = parseInt(players);
+  return [isNaN(n) ? 1 : n, isNaN(n) ? 1 : n];
+}
+
+function parseDuration(duration: string): number {
+  const m = duration.match(/(\d+)/);
+  return m ? parseInt(m[1]) : 60;
+}
+
 function StepGames({
   onContinue,
   onBack,
+  selectedGames,
+  setSelectedGames,
 }: {
   onContinue: () => void;
   onBack: () => void;
+  selectedGames: BGGGame[];
+  setSelectedGames: React.Dispatch<React.SetStateAction<BGGGame[]>>;
 }) {
-  const options = [
-    {
-      icon: Upload,
-      iconBg: "bg-teal-50 text-teal-600",
-      title: "Upload CSV File",
-      desc: "Import your entire game library at once using a CSV file. Download the template to get started.",
-    },
-    {
-      icon: Link,
-      iconBg: "bg-amber-50 text-amber-600",
-      title: "Import from Board Game Geek",
-      desc: "Connect your BoardGameGeek account to automatically import your collection.",
-    },
-    {
-      icon: Search,
-      iconBg: "bg-purple-50 text-purple-600",
-      title: "Search & Add Manually",
-      desc: "Search BoardGameGeek and add games one at a time to build your library.",
-    },
-  ];
+  const { games, loading, loadingMore, hasMore, search, loadMore, clear } = useBGGSearch();
+  const [query, setQuery] = useState("");
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const selectedBggIds = new Set(selectedGames.map((g) => String(g.id)));
+
+  const handleQueryChange = useCallback((val: string) => {
+    setQuery(val);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (!val.trim()) { clear(); return; }
+    debounceRef.current = setTimeout(() => search(val.trim()), 500);
+  }, [search, clear]);
+
+  const toggleGame = (game: BGGGame) => {
+    const id = String(game.id);
+    setSelectedGames((prev) =>
+      prev.some((g) => String(g.id) === id)
+        ? prev.filter((g) => String(g.id) !== id)
+        : [...prev, game]
+    );
+  };
 
   return (
     <div className="px-7 py-6 flex flex-col gap-5">
       <div>
         <h2 className="text-xl font-bold text-gray-900">Game Library</h2>
         <p className="text-sm text-gray-400 mt-0.5">
-          Add your board game collection so customers know what games are
-          available to play.
+          Search BoardGameGeek and add the games your café offers (optional)
         </p>
       </div>
 
-      <h3 className="text-base font-bold text-gray-900">
-        How would you like to add your games?
-      </h3>
-
-      <div className="flex flex-col gap-2">
-        {options.map((opt) => {
-          const Icon = opt.icon;
-          return (
-            <button
-              key={opt.title}
-              className="flex items-center gap-4 border border-gray-200 rounded-xl px-4 py-4 text-left hover:bg-gray-50/50 hover:border-gray-300 transition-all cursor-pointer"
-            >
-              <div
-                className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${opt.iconBg}`}
-              >
-                <Icon size={18} />
-              </div>
-              <div>
-                <p className="text-sm font-bold text-gray-900">{opt.title}</p>
-                <p className="text-xs text-gray-400 mt-0.5 leading-snug">
-                  {opt.desc}
-                </p>
-              </div>
-            </button>
-          );
-        })}
+      {/* Search bar */}
+      <div className="relative">
+        <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => handleQueryChange(e.target.value)}
+          placeholder="Search for a game… (e.g. Catan, Ticket to Ride)"
+          className="w-full pl-9 pr-4 py-2.5 text-sm border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-teal-400 focus:border-transparent transition-all"
+        />
       </div>
 
+      {/* Selected games chips */}
+      {selectedGames.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {selectedGames.map((g) => (
+            <span key={g.id} className="flex items-center gap-1.5 bg-teal-50 border border-teal-200 text-teal-700 text-xs font-semibold px-2.5 py-1.5 rounded-full">
+              {g.name}
+              <button onClick={() => toggleGame(g)} className="hover:text-red-500 cursor-pointer"><X size={11} /></button>
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* Results */}
+      {loading && (
+        <div className="space-y-3">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="h-20 bg-gray-100 rounded-xl animate-pulse" style={{ animationDelay: `${i * 60}ms` }} />
+          ))}
+        </div>
+      )}
+
+      {!loading && games.length > 0 && (
+        <div className="flex flex-col gap-2.5 max-h-64 overflow-y-auto pr-1">
+          {games.map((game) => {
+            const selected = selectedBggIds.has(String(game.id));
+            const [min, max] = parsePlayers(game.players);
+            const dur = parseDuration(game.duration);
+            return (
+              <button
+                key={game.id}
+                onClick={() => toggleGame(game)}
+                className={`w-full flex items-start gap-3 p-3 rounded-xl border transition-all text-left cursor-pointer ${
+                  selected
+                    ? "border-teal-400 bg-teal-50/60"
+                    : "border-gray-200 hover:border-teal-200 bg-white"
+                }`}
+              >
+                <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-100 shrink-0">
+                  {game.image ? <img src={game.image} alt={game.name} className="w-full h-full object-cover" /> : null}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-gray-900 truncate">{game.name}</p>
+                  {complexityDots(game.weightDots)}
+                  <div className="flex items-center gap-3 text-xs text-gray-500 mt-0.5">
+                    <span className="flex items-center gap-1"><Users size={10} />{min === max ? min : `${min}–${max}`}</span>
+                    <span className="flex items-center gap-1"><Clock size={10} />{dur} min</span>
+                  </div>
+                </div>
+                <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 mt-1 ${selected ? "bg-teal-600" : "border-2 border-gray-300"}`}>
+                  {selected && <Check size={12} className="text-white" />}
+                </div>
+              </button>
+            );
+          })}
+          {hasMore && (
+            <button onClick={loadMore} disabled={loadingMore} className="w-full py-2 text-xs font-medium text-teal-600 border border-teal-200 rounded-lg hover:bg-teal-50 cursor-pointer disabled:opacity-50">
+              {loadingMore ? "Loading…" : "Load more"}
+            </button>
+          )}
+        </div>
+      )}
+
+      {!loading && !query && games.length === 0 && (
+        <p className="text-xs text-gray-400 text-center py-2">Start typing to search the BoardGameGeek database</p>
+      )}
+
       {/* Footer */}
-      <div className="flex gap-3 mt-2">
-        <Button variant="outline" fullWidth onClick={onBack}>
-          Back
-        </Button>
-        <Button variant="outline" fullWidth onClick={onContinue}>
-          Skip for Now
+      <div className="flex gap-3 mt-1">
+        <Button variant="outline" fullWidth onClick={onBack}>Back</Button>
+        <Button variant="primary" fullWidth onClick={onContinue}>
+          {selectedGames.length > 0 ? `Continue with ${selectedGames.length} game${selectedGames.length !== 1 ? "s" : ""}` : "Skip for Now"}
         </Button>
       </div>
     </div>
@@ -1156,6 +1234,7 @@ export default function CafeSetupWizard({
     enableThreshold: true,
     minSpend: "15.00",
   });
+  const [selectedGames, setSelectedGames] = useState<BGGGame[]>([]);
 
   // Lock body scroll
   useEffect(() => {
@@ -1192,6 +1271,8 @@ export default function CafeSetupWizard({
   };
 
   // When pricing step continues, submit all data
+  const { addGame } = useBusinessSettings();
+
   const handlePricingContinue = async () => {
     if (onComplete) {
       setSaving(true);
@@ -1213,8 +1294,30 @@ export default function CafeSetupWizard({
         pricing: pricingData,
         logoUrl: logoBase64 || undefined,
       });
+      // After setup completes, add games one by one
+      if (result.success && selectedGames.length > 0) {
+        for (const game of selectedGames) {
+          const [min, max] = (() => {
+            const parts = game.players.replace("–", "-").split("-").map(Number);
+            if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) return [parts[0], parts[1]];
+            const n = parseInt(game.players);
+            return [isNaN(n) ? 1 : n, isNaN(n) ? 1 : n];
+          })();
+          const dur = (() => { const m = game.duration.match(/(\d+)/); return m ? parseInt(m[1]) : 60; })();
+          await addGame({
+            bggId: String(game.id),
+            name: game.name,
+            imageUrl: game.image || null,
+            minPlayers: min,
+            maxPlayers: max,
+            estimatedPlayTime: dur,
+            category: game.categories?.[0] ?? null,
+            difficulty: game.difficulty ?? null,
+          }).catch(() => {/* best-effort */});
+        }
+      }
       setSaving(false);
-      if (result.success) goNext(); // go to success step
+      if (result.success) goNext();
     } else {
       goNext();
     }
@@ -1288,7 +1391,12 @@ export default function CafeSetupWizard({
             <StepHours onContinue={goNext} onBack={goBack} hours={hoursData} setHours={setHoursData} />
           )}
           {step === "games" && (
-            <StepGames onContinue={goNext} onBack={goBack} />
+            <StepGames
+              onContinue={goNext}
+              onBack={goBack}
+              selectedGames={selectedGames}
+              setSelectedGames={setSelectedGames}
+            />
           )}
           {step === "menu" && (
             <StepMenu onFinish={goNext} onBack={goBack} />

@@ -180,16 +180,26 @@ export function useBusinessSettings() {
   }, [headers]);
 
   const addGame = useCallback(
-    async (gameId: number) => {
+    async (data: {
+      bggId: string;
+      name: string;
+      imageUrl?: string | null;
+      minPlayers?: number;
+      maxPlayers?: number;
+      estimatedPlayTime?: number;
+      category?: string | null;
+      difficulty?: string | null;
+    }) => {
       const res = await fetch(`${BASE_URL}/games`, {
         method: "POST",
         headers: headers(),
-        body: JSON.stringify({ gameId }),
+        body: JSON.stringify(data),
       });
       return res.json();
     },
     [headers],
   );
+
 
   const removeGame = useCallback(
     async (restaurantGameId: number) => {
