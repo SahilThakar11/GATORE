@@ -318,63 +318,6 @@ describe('removeGame', () => {
   });
 });
 
-// ─── fetchMenu ────────────────────────────────────────────────────────────────
-
-describe('fetchMenu', () => {
-  it('returns the data array on success', async () => {
-    const menu = [{ id: 1, name: 'Coffee', description: null, price: '3.50', category: 'drinks' }];
-    mockFetch({ success: true, data: menu });
-
-    const { result } = renderHook(() => useBusinessSettings());
-
-    let data: unknown;
-    await act(async () => {
-      data = await result.current.fetchMenu();
-    });
-
-    expect(data).toEqual(menu);
-  });
-});
-
-// ─── addMenuItem ──────────────────────────────────────────────────────────────
-
-describe('addMenuItem', () => {
-  it('returns the json response on success', async () => {
-    const responseJson = { success: true, data: { id: 3 } };
-    mockFetch(responseJson);
-
-    const { result } = renderHook(() => useBusinessSettings());
-
-    let json: unknown;
-    await act(async () => {
-      json = await result.current.addMenuItem({ name: 'Tea', price: '2.50' });
-    });
-
-    expect(json).toEqual(responseJson);
-  });
-});
-
-// ─── removeMenuItem ───────────────────────────────────────────────────────────
-
-describe('removeMenuItem', () => {
-  it('returns the json response and calls the correct URL', async () => {
-    const responseJson = { success: true };
-    mockFetch(responseJson);
-
-    const { result } = renderHook(() => useBusinessSettings());
-
-    let json: unknown;
-    await act(async () => {
-      json = await result.current.removeMenuItem(3);
-    });
-
-    expect(json).toEqual(responseJson);
-    expect((fetch as ReturnType<typeof vi.fn>).mock.calls[0][0]).toBe(
-      '/api/business-system/menu/3',
-    );
-  });
-});
-
 // ─── fetchPricing ─────────────────────────────────────────────────────────────
 
 describe('fetchPricing', () => {

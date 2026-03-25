@@ -31,14 +31,6 @@ export interface GameItem {
   status: string;
 }
 
-export interface MenuItem {
-  id: number;
-  name: string;
-  description: string | null;
-  price: string;
-  category: string;
-}
-
 export interface PricingConfig {
   pricingType: string;
   hourlyRate: string | null;
@@ -212,37 +204,6 @@ export function useBusinessSettings() {
     [headers],
   );
 
-  // ── Menu ───────────────────────────────────────────────────────────────────
-
-  const fetchMenu = useCallback(async (): Promise<MenuItem[]> => {
-    const res = await fetch(`${BASE_URL}/menu`, { headers: headers() });
-    const json = await res.json();
-    return json.success ? json.data : [];
-  }, [headers]);
-
-  const addMenuItem = useCallback(
-    async (data: { name: string; description?: string; price: string; category?: string }) => {
-      const res = await fetch(`${BASE_URL}/menu`, {
-        method: "POST",
-        headers: headers(),
-        body: JSON.stringify(data),
-      });
-      return res.json();
-    },
-    [headers],
-  );
-
-  const removeMenuItem = useCallback(
-    async (id: number) => {
-      const res = await fetch(`${BASE_URL}/menu/${id}`, {
-        method: "DELETE",
-        headers: headers(),
-      });
-      return res.json();
-    },
-    [headers],
-  );
-
   // ── Pricing ────────────────────────────────────────────────────────────────
 
   const fetchPricing = useCallback(async (): Promise<PricingConfig | null> => {
@@ -309,10 +270,6 @@ export function useBusinessSettings() {
     fetchGames,
     addGame,
     removeGame,
-    // Menu
-    fetchMenu,
-    addMenuItem,
-    removeMenuItem,
     // Pricing
     fetchPricing,
     updatePricing,
