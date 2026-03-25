@@ -21,6 +21,7 @@ import {
 import BusinessLayout from "../components/dashboard/BusinessLayout";
 import FloorPlan from "../components/business/FloorPlan";
 import { useBusinessDashboard, type DashboardReservation } from "../hooks/useBusinessDashboard";
+import { useBusinessSettings, type TableConfig, type HoursConfig } from "../hooks/useBusinessSettings";
 
 /* ═══════════════════════════════════════════════════════════════════
    TYPES
@@ -112,19 +113,56 @@ function LegendItem({ color, label }: { color: string; label: string }) {
    TIMELINE VIEW
    ═══════════════════════════════════════════════════════════════════ */
 
-function TimelineView({ reservations }: { reservations: DashboardReservation[] }) {
-  const startHour = 17;
-  const endHour = 23;
-  const hourSlots = Array.from({ length: endHour - startHour }, (_, i) => startHour + i);
+const TIMELINE_STATUS_STYLE: Record<string, { bg: string; border: string; text: string }> = {
+  confirmed: { bg: "bg-blue-50", border: "border-l-blue-500", text: "text-gray-700" },
+  pending: { bg: "bg-amber-50", border: "border-l-amber-500", text: "text-gray-700" },
+  completed: { bg: "bg-emerald-50", border: "border-l-emerald-500", text: "text-gray-700" },
+  cancelled: { bg: "bg-red-50", border: "border-l-red-400", text: "text-gray-400" },
+};
 
-  // Group by table
-  const tableMap = new Map<string, DashboardReservation[]>();
+const TIMELINE_DOT: Record<string, string> = {
+  confirmed: "bg-blue-500",
+  pending: "bg-amber-500",
+  completed: "bg-emerald-500",
+  cancelled: "bg-red-400",
+};
+
+function TimelineView({
+  reservations,
+  tables,
+  todayHours,
+}: {
+  reservations: DashboardReservation[];
+  tables: TableConfig[];
+  todayHours: HoursConfig | null;
+}) {
+  // openTime/closeTime are stored in minutes (e.g. 720 = 12:00 PM), convert to hours
+  const startHour = todayHours ? Math.floor(todayHours.openTime / 60) : 9;
+  const endHour = todayHours ? Math.ceil(todayHours.closeTime / 60) : 22;
+  const totalHours = endHour - startHour;
+  const hourSlots = Array.from({ length: totalHours }, (_, i) => startHour + i);
+
+  const PX_PER_HOUR = 150;
+
+  // Group reservations by table id
+  const reservationsByTable = new Map<number, DashboardReservation[]>();
   reservations.forEach((r) => {
-    const key = r.table.name;
-    if (!tableMap.has(key)) tableMap.set(key, []);
-    tableMap.get(key)!.push(r);
+    const key = r.table.id;
+    if (!reservationsByTable.has(key)) reservationsByTable.set(key, []);
+    reservationsByTable.get(key)!.push(r);
   });
-  const tables = Array.from(tableMap.keys()).sort();
+
+  // Show all tables, sorted by name
+  const sortedTables = [...tables].sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
+
+  if (todayHours?.isClosed) {
+    return (
+      <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-6 mb-6">
+        <h3 className="text-lg font-bold text-gray-900 mb-2">Timeline View</h3>
+        <p className="text-sm text-gray-400 text-center py-8">The cafe is closed today.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-6 mb-6 overflow-x-auto">
@@ -132,25 +170,36 @@ function TimelineView({ reservations }: { reservations: DashboardReservation[] }
         <div>
           <h3 className="text-lg font-bold text-gray-900">Timeline View</h3>
           <p className="text-xs text-gray-400 mt-0.5">
-            Visualize reservation timing and table overlaps
+            {todayHours
+              ? `Today's hours: ${formatHour(startHour)} – ${formatHour(endHour)}`
+              : "Visualize reservation timing and table overlaps"}
           </p>
         </div>
         <div className="flex items-center gap-4">
-          <LegendItem color="bg-blue-500" label="Confirmed" />
-          <LegendItem color="bg-amber-500" label="Pending" />
-          <LegendItem color="bg-purple-500" label="Completed" />
-          <LegendItem color="bg-red-500" label="Cancelled" />
+          {[
+            { color: "bg-blue-500", label: "Confirmed" },
+            { color: "bg-emerald-500", label: "Checked In" },
+            { color: "bg-emerald-400", label: "Completed" },
+            { color: "bg-red-400", label: "Cancelled" },
+          ].map((item) => (
+            <div key={item.label} className="flex items-center gap-1.5">
+              <span className={`w-2.5 h-2.5 rounded-full ${item.color}`} />
+              <span className="text-xs text-gray-500">{item.label}</span>
+            </div>
+          ))}
         </div>
       </div>
 
       <div className="min-w-max">
+        {/* Hour header */}
         <div className="flex">
-          <div className="w-24 flex-shrink-0" />
+          <div className="w-28 flex-shrink-0" />
           <div className="flex">
             {hourSlots.map((hour) => (
               <div
                 key={hour}
-                className="w-32 border-l border-gray-200 px-2 py-2 text-center text-xs font-medium text-gray-500"
+                className="border-l border-gray-200 py-2 text-center text-xs font-medium text-gray-500"
+                style={{ width: PX_PER_HOUR }}
               >
                 {`${hour % 12 || 12}:00 ${hour >= 12 ? "PM" : "AM"}`}
               </div>
@@ -158,39 +207,66 @@ function TimelineView({ reservations }: { reservations: DashboardReservation[] }
           </div>
         </div>
 
+        {/* Table rows */}
         <div className="divide-y divide-gray-100">
-          {tables.map((tableName) => {
-            const tableRes = tableMap.get(tableName) || [];
+          {sortedTables.map((table) => {
+            const tableRes = reservationsByTable.get(table.id) || [];
             return (
-              <div key={tableName} className="flex bg-gray-50/50 hover:bg-gray-50 transition-colors">
-                <div className="w-24 flex-shrink-0 py-4 px-4 font-medium text-gray-600 text-xs bg-white border-r border-gray-100">
-                  {tableName}
+              <div key={table.id} className="flex">
+                {/* Table label */}
+                <div className="w-28 flex-shrink-0 flex items-center px-4 font-semibold text-gray-700 text-sm bg-white border-r border-gray-100">
+                  {table.name}
                 </div>
-                <div className="flex relative">
+                {/* Time grid + reservation blocks */}
+                <div className="flex relative" style={{ height: 64 }}>
                   {hourSlots.map((hour) => (
-                    <div key={hour} className="w-32 border-l border-gray-100 h-12" />
+                    <div
+                      key={hour}
+                      className="border-l border-gray-100 bg-gray-50/40 hover:bg-gray-50"
+                      style={{ width: PX_PER_HOUR, height: 64 }}
+                    />
                   ))}
                   {tableRes.map((res) => {
                     const resStart = getHourFloat(res.startTime);
                     const duration = getDurationHours(res.startTime, res.endTime);
-                    const leftPx = (resStart - startHour) * 128;
-                    const widthPx = duration * 128;
+                    const leftPx = (resStart - startHour) * PX_PER_HOUR;
+                    const widthPx = duration * PX_PER_HOUR;
 
                     if (leftPx < 0 || resStart >= endHour) return null;
+
+                    const style = TIMELINE_STATUS_STYLE[res.status] || TIMELINE_STATUS_STYLE.pending;
+                    const isWalkIn = res.notes?.toLowerCase().includes("walk-in") ||
+                      res.specialRequests?.toLowerCase().includes("walk-in");
 
                     return (
                       <div
                         key={res.id}
-                        className="absolute top-1 bottom-1 rounded-lg cursor-pointer hover:shadow-lg transition-all"
-                        style={{ left: `${leftPx}px`, width: `${Math.max(widthPx, 40)}px` }}
+                        className={`absolute top-2 bottom-2 rounded-lg border-l-4 ${style.border} ${style.bg} cursor-pointer hover:shadow-md transition-all overflow-hidden`}
+                        style={{
+                          left: `${leftPx}px`,
+                          width: `${Math.max(widthPx, 60)}px`,
+                        }}
                       >
-                        <div
-                          className={`${STATUS_BG[res.status] || "bg-gray-400"} text-white rounded-lg px-3 py-1.5 h-full flex flex-col justify-between overflow-hidden`}
-                        >
-                          <p className="font-semibold text-xs truncate">{res.user.name}</p>
-                          <div className="flex gap-3 text-[10px] text-white/80">
-                            <span>👥 {res.partySize}</span>
-                            <span>{formatTime12(res.startTime)}</span>
+                        <div className="px-3 py-1.5 h-full flex flex-col justify-between">
+                          <div className="flex items-center gap-2">
+                            <p className={`font-semibold text-sm truncate ${style.text}`}>
+                              {res.user.name}
+                            </p>
+                            {isWalkIn && (
+                              <span className="bg-teal-100 text-teal-700 text-[9px] font-bold px-1.5 py-0.5 rounded uppercase flex-shrink-0">
+                                Walk-in
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-3 text-xs text-gray-500">
+                            <span className="flex items-center gap-1">
+                              <Users size={11} />
+                              {res.partySize}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <Clock size={11} />
+                              {formatTime12(res.startTime)}
+                            </span>
                           </div>
                         </div>
                       </div>
@@ -200,8 +276,8 @@ function TimelineView({ reservations }: { reservations: DashboardReservation[] }
               </div>
             );
           })}
-          {tables.length === 0 && (
-            <p className="text-sm text-gray-400 text-center py-6">No reservations to display</p>
+          {sortedTables.length === 0 && (
+            <p className="text-sm text-gray-400 text-center py-6">No tables configured yet.</p>
           )}
         </div>
       </div>
@@ -213,8 +289,23 @@ function TimelineView({ reservations }: { reservations: DashboardReservation[] }
    FLOOR PLAN VIEW
    ═══════════════════════════════════════════════════════════════════ */
 
-function FloorPlanView() {
+function FloorPlanView({ tables, reservations }: { tables: TableConfig[]; reservations: DashboardReservation[] }) {
   const [isEditable, setIsEditable] = useState(false);
+
+  // Derive table status from reservations
+  const reservedTableIds = new Set(
+    reservations
+      .filter((r) => r.status === "confirmed" || r.status === "pending")
+      .map((r) => r.table.id),
+  );
+
+  const floorTables = tables.map((t) => ({
+    id: t.id,
+    name: t.name,
+    size: t.capacity,
+    status: (reservedTableIds.has(t.id) ? "Reserved" : "Available") as
+      "Available" | "Reserved" | "Occupied" | "Out of Service",
+  }));
 
   return (
     <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-6 mb-6">
@@ -250,15 +341,9 @@ function FloorPlanView() {
           >
            Edit Layout
           </button>
-          <button className="text-sm text-teal-600 hover:bg-teal-50 px-4 py-2 border border-teal-300 rounded-lg font-medium transition-colors cursor-pointer">
-            Export
-          </button>
-          <button className="text-sm text-teal-600 hover:bg-teal-50 px-4 py-2 border border-teal-300 rounded-lg font-medium transition-colors cursor-pointer">
-            Import
-          </button>
         </div>
       </div>
-      <FloorPlan isEditable={isEditable} />
+      <FloorPlan isEditable={isEditable} tables={floorTables} />
     </div>
   );
 }
@@ -439,17 +524,30 @@ function ReservationCard({
 
 const ReservationManagement = () => {
   const { fetchReservations, updateReservationStatus, loading } = useBusinessDashboard();
+  const { fetchTables, fetchHours } = useBusinessSettings();
   const [reservations, setReservations] = useState<DashboardReservation[]>([]);
+  const [tables, setTables] = useState<TableConfig[]>([]);
+  const [todayHours, setTodayHours] = useState<HoursConfig | null>(null);
   const [pageLoading, setPageLoading] = useState(true);
 
   const todayStr = new Date().toISOString().split("T")[0];
+  const todayDayName = new Date().toLocaleDateString("en-US", { weekday: "long" });
 
   useEffect(() => {
-    fetchReservations(todayStr).then((data) => {
-      setReservations(data);
+    Promise.all([
+      fetchReservations(todayStr),
+      fetchTables(),
+      fetchHours(),
+    ]).then(([resData, tableData, hoursData]) => {
+      setReservations(resData);
+      setTables(tableData);
+      const match = hoursData.find(
+        (h) => h.dayOfWeek.toLowerCase() === todayDayName.toLowerCase(),
+      );
+      setTodayHours(match ?? null);
       setPageLoading(false);
     });
-  }, [fetchReservations, todayStr]);
+  }, [fetchReservations, fetchTables, fetchHours, todayStr, todayDayName]);
 
   const handleStatusChange = async (id: number, status: string) => {
     const result = await updateReservationStatus(id, status);
@@ -481,8 +579,8 @@ const ReservationManagement = () => {
           </div>
         ) : (
           <>
-            <TimelineView reservations={reservations} />
-            <FloorPlanView />
+            <TimelineView reservations={reservations} tables={tables} todayHours={todayHours} />
+            <FloorPlanView tables={tables} reservations={reservations} />
 
             <div className="mt-2">
               <div className="flex flex-col gap-3">
