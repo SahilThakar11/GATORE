@@ -1159,6 +1159,8 @@ export default function CafeSetupWizard({
   });
   const [selectedGames, setSelectedGames] = useState<BGGGame[]>([]);
 
+  const { addGame } = useBusinessSettings();
+
   // Lock body scroll
   useEffect(() => {
     document.body.style.overflow = isOpen ? "hidden" : "";
@@ -1193,7 +1195,6 @@ export default function CafeSetupWizard({
   };
 
   // When pricing step continues, submit all data
-  const { addGame } = useBusinessSettings();
 
   const handlePricingContinue = async () => {
     if (onComplete) {
