@@ -1,4 +1,4 @@
-import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
+import { Link, NavLink, useLocation } from "react-router-dom";
 import {
   ChevronDown,
   LogOut,
@@ -6,7 +6,6 @@ import {
   CalendarDays,
   Menu,
   X,
-  UserPlus,
   Building2,
   Search,
   Dices,
@@ -18,12 +17,13 @@ import { AuthModal } from "./auth/AuthModal";
 import { useAuthModal } from "../hooks/useAuthModal";
 import { useAuth } from "../context/AuthContext";
 import { PrimaryButton } from "./ui/PrimaryButton";
-import { SecondaryButton } from "./ui/SecondaryButton";
+import { BusinessPortalModal } from "./businessPortal/BusinessPortalModal";
 
 export default function Header() {
   const auth = useAuthModal();
   const { user, isAuthenticated } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [bpOpen, setBpOpen] = useState(false);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
 
   const closeMobile = () => setMobileOpen(false);
@@ -118,7 +118,10 @@ export default function Header() {
                   >
                     Sign in
                   </button>
-                  <GetStartedDropdown onPersonal={() => auth.open("signup")} />
+                  <GetStartedDropdown
+                    onPersonal={() => auth.open("signup")}
+                    onBusiness={() => setBpOpen(true)}
+                  />
                 </>
               )}
             </div>
@@ -243,6 +246,10 @@ export default function Header() {
                       closeMobile();
                       auth.open("signup");
                     }}
+                    onBusiness={() => {
+                      closeMobile();
+                      setBpOpen(true);
+                    }}
                   />
                 </>
               )}
@@ -252,6 +259,7 @@ export default function Header() {
       </header>
 
       <AuthModal isOpen={auth.isOpen} onClose={auth.close} auth={auth} />
+      <BusinessPortalModal isOpen={bpOpen} onClose={() => setBpOpen(false)} defaultStep="signin" />
     </>
   );
 }
@@ -260,29 +268,24 @@ export default function Header() {
 
 function GetStartedDropdown({
   onPersonal,
+  onBusiness,
   align = "right",
 }: {
   onPersonal: () => void;
+  onBusiness: () => void;
   align?: "left" | "right";
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const timeout = useRef<ReturnType<typeof setTimeout>>(undefined);
-  const navigate = useNavigate();
 
-  const show = () => {
-    clearTimeout(timeout.current);
-    setOpen(true);
-  };
-  const hide = () => {
-    timeout.current = setTimeout(() => setOpen(false), 150);
-  };
+  const show = () => { clearTimeout(timeout.current); setOpen(true); };
+  const hide = () => { timeout.current = setTimeout(() => setOpen(false), 150); };
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node))
-        setOpen(false);
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
@@ -296,13 +299,9 @@ function GetStartedDropdown({
       if (!focusable?.length) return;
       const els = Array.from(focusable);
       const idx = els.indexOf(document.activeElement as HTMLElement);
-      if (e.key === "ArrowDown") {
-        e.preventDefault();
-        els[(idx + 1) % els.length].focus();
-      } else if (e.key === "ArrowUp") {
-        e.preventDefault();
-        els[(idx - 1 + els.length) % els.length].focus();
-      } else if (e.key === "Escape") setOpen(false);
+      if (e.key === "ArrowDown") { e.preventDefault(); els[(idx + 1) % els.length].focus(); }
+      else if (e.key === "ArrowUp") { e.preventDefault(); els[(idx - 1 + els.length) % els.length].focus(); }
+      else if (e.key === "Escape") setOpen(false);
     };
     document.addEventListener("keydown", handleKey);
     return () => document.removeEventListener("keydown", handleKey);
@@ -310,22 +309,16 @@ function GetStartedDropdown({
 
   const items = [
     {
-      icon: <UserPlus size={16} aria-hidden="true" />,
+      icon: <UserCircle size={16} aria-hidden="true" />,
       label: "Personal account",
-      sublabel: "Find cafés and book tables",
-      onClick: () => {
-        setOpen(false);
-        onPersonal();
-      },
+      sublabel: "Create your GATORE account",
+      onClick: () => { setOpen(false); onPersonal(); },
     },
     {
       icon: <Building2 size={16} aria-hidden="true" />,
-      label: "Business account",
-      sublabel: "List your café on Gatore",
-      onClick: () => {
-        setOpen(false);
-        navigate("/for-cafe-owners");
-      },
+      label: "Business portal",
+      sublabel: "Request or access your dashboard",
+      onClick: () => { setOpen(false); onBusiness(); },
     },
   ];
 
@@ -336,17 +329,14 @@ function GetStartedDropdown({
       onMouseEnter={show}
       onMouseLeave={hide}
     >
-      <SecondaryButton
+      <PrimaryButton
         label="Get started"
-        size="small"
+        size="sm"
         rightIcon={
           <ChevronDown
             size={14}
             aria-hidden="true"
-            style={{
-              transition: "transform 200ms",
-              transform: open ? "rotate(180deg)" : "rotate(0deg)",
-            }}
+            style={{ transition: "transform 200ms", transform: open ? "rotate(180deg)" : "rotate(0deg)" }}
           />
         }
         onClick={() => setOpen((v) => !v)}
@@ -358,6 +348,7 @@ function GetStartedDropdown({
         <div
           ref={menuRef}
           role="menu"
+          aria-label="Get started options"
           style={{
             position: "absolute",
             top: "calc(100% + 6px)",
@@ -366,7 +357,7 @@ function GetStartedDropdown({
             borderRadius: 8,
             border: "1px solid #E8D4C4",
             boxShadow: "0 4px 12px 0 rgba(0,0,0,0.10)",
-            minWidth: 220,
+            minWidth: 240,
             padding: "4px 0",
             zIndex: 50,
           }}
@@ -390,33 +381,10 @@ function GetStartedDropdown({
               }}
               className="bg-transparent hover:bg-[#FEF7F0] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500"
             >
-              <span
-                style={{ color: "#57534E", flexShrink: 0, display: "flex" }}
-              >
-                {item.icon}
-              </span>
+              <span style={{ color: "#57534E", flexShrink: 0, display: "flex" }}>{item.icon}</span>
               <span>
-                <span
-                  style={{
-                    display: "block",
-                    fontFamily: "'DM Sans', sans-serif",
-                    fontSize: 14,
-                    fontWeight: 400,
-                  }}
-                >
-                  {item.label}
-                </span>
-                <span
-                  style={{
-                    display: "block",
-                    fontFamily: "'DM Sans', sans-serif",
-                    fontSize: 12,
-                    fontWeight: 400,
-                    color: "#78716C",
-                  }}
-                >
-                  {item.sublabel}
-                </span>
+                <span style={{ display: "block", fontFamily: "'DM Sans', sans-serif", fontSize: 14, fontWeight: 400 }}>{item.label}</span>
+                <span style={{ display: "block", fontFamily: "'DM Sans', sans-serif", fontSize: 12, fontWeight: 400, color: "#78716C" }}>{item.sublabel}</span>
               </span>
             </button>
           ))}
@@ -498,6 +466,7 @@ function FindCafeDropdown() {
         <div
           ref={menuRef}
           role="menu"
+          aria-label="Find a café options"
           className="absolute left-0 mt-2 w-40 bg-white rounded-lg shadow-lg py-1 z-50"
           style={{ border: "1px solid #E8D4C4" }}
         >
@@ -618,6 +587,7 @@ function UserDropdown({
         <div
           ref={menuRef}
           role="menu"
+          aria-label="User menu"
           className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-xl shadow-lg py-1.5 z-50"
         >
           <Link

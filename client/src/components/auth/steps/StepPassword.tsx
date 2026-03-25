@@ -2,6 +2,7 @@ import { useState } from "react";
 import { EyeOff, Eye } from "lucide-react";
 import { Input } from "../../ui/Input";
 import { PrimaryButton } from "../../ui/PrimaryButton";
+import { AlertBanner } from "../../ui/AlertBanner";
 import type { AuthFormData } from "../../../hooks/useAuthModal";
 
 interface Props {
@@ -51,12 +52,10 @@ export function StepPassword({
       </div>
 
       {/* No back button on this step — email is already verified */}
-      <div className="flex items-center gap-2 bg-teal-50 border border-teal-100 rounded-lg px-3.5 py-2.5">
-        <span className="text-teal-500 text-sm" aria-hidden="true">✓</span>
-        <p className="text-xs sm:text-sm text-teal-700">
-          Email verified — <span className="font-medium">{formData.email}</span>
-        </p>
-      </div>
+      <AlertBanner
+        variant="success"
+        title={<>Email verified — <span className="font-medium">{formData.email}</span></>}
+      />
 
       <Input
         label="Password"

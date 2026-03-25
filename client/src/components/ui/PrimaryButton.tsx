@@ -11,6 +11,8 @@ interface PrimaryButtonProps {
   rightIcon?: React.ReactNode;
   /** Use gray-300/gray-500 for the disabled state instead of the default white */
   grayDisabled?: boolean;
+  "aria-expanded"?: boolean;
+  "aria-haspopup"?: boolean | "menu" | "listbox" | "tree" | "grid" | "dialog";
 }
 
 const SHADOW_DEFAULT = "0px 4px 14px 0px rgba(15,118,110,0.25)";
@@ -32,6 +34,8 @@ export function PrimaryButton({
   size = "md",
   rightIcon,
   grayDisabled = false,
+  "aria-expanded": ariaExpanded,
+  "aria-haspopup": ariaHaspopup,
 }: PrimaryButtonProps) {
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
@@ -78,6 +82,8 @@ export function PrimaryButton({
     <button
       onClick={isInert ? undefined : onClick}
       disabled={isInert}
+      aria-expanded={ariaExpanded}
+      aria-haspopup={ariaHaspopup}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => {
         setHovered(false);

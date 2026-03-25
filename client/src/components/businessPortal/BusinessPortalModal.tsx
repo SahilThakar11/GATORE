@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { X } from "lucide-react";
 import { BPChoose } from "./BPChoose";
 import { BPSignIn } from "./BPSignIn";
@@ -23,6 +23,7 @@ export function BusinessPortalModal({
   defaultStep = "choose",
 }: Props) {
   const bp = useBusinessPortal(defaultStep);
+  const modalRef = useRef<HTMLDivElement>(null);
 
   // Lock body scroll
   useEffect(() => {
@@ -42,6 +43,28 @@ export function BusinessPortalModal({
     return () => window.removeEventListener("keydown", handler);
   }, [isOpen, bp.step]);
 
+  // Focus trap
+  useEffect(() => {
+    if (!isOpen) return;
+    const modal = modalRef.current;
+    if (!modal) return;
+    const focusable = modal.querySelectorAll<HTMLElement>(
+      'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    );
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    const trap = (e: KeyboardEvent) => {
+      if (e.key !== "Tab") return;
+      if (e.shiftKey) {
+        if (document.activeElement === first) { e.preventDefault(); last.focus(); }
+      } else {
+        if (document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
+    };
+    modal.addEventListener("keydown", trap);
+    return () => modal.removeEventListener("keydown", trap);
+  }, [isOpen]);
+
   const handleClose = () => {
     onClose();
     setTimeout(bp.reset, 200);
@@ -57,13 +80,20 @@ export function BusinessPortalModal({
           handleClose();
       }}
     >
-      <div className="relative w-full max-w-[700px] bg-white rounded-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden">
+      <div
+        ref={modalRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="auth-step-heading"
+        className="relative w-full max-w-[700px] bg-white rounded-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden"
+      >
         {/* ── Close button ─────────────────────────────────────────── */}
         <button
           onClick={handleClose}
-          className="absolute top-3 right-3 z-10 w-7 h-7 flex items-center justify-center rounded-full bg-black/20 hover:bg-black/30 text-white transition-colors"
+          aria-label="Close"
+          className="absolute top-3 right-3 z-10 w-7 h-7 flex items-center justify-center rounded-full bg-white border border-teal-700 text-teal-700 hover:bg-teal-50 transition-colors focus-visible:outline-2 focus-visible:outline-teal-700 cursor-pointer"
         >
-          <X size={14} />
+          <X size={14} aria-hidden="true" />
         </button>
 
         {/* ── Header ───────────────────────────────────────────────── */}
