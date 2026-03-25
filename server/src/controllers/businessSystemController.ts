@@ -204,15 +204,22 @@ export const completeSetup = async (req: AuthRequest, res: Response): Promise<vo
     let restaurantId = user?.restaurantId ?? null;
 
     if (!restaurantId) {
-      // First-time setup: create the restaurant record now
+      // First-time setup: derive the name from the access request so it's never "My Café"
+      const accessReq = await prisma.businessAccessRequest.findFirst({
+        where: { userId, status: "approved" },
+        orderBy: { createdAt: "desc" },
+        select: { cafeName: true },
+      });
+      const initialName = accessReq?.cafeName?.trim() || "My Café";
       const newRestaurant = await prisma.restaurant.create({
-        data: { name: "My Café" },
+        data: { name: initialName },
       });
       await prisma.user.update({
         where: { id: userId },
         data: { restaurantId: newRestaurant.id },
       });
       restaurantId = newRestaurant.id;
+
     }
 
     const { profile, tables, hours, pricing, logoUrl } = req.body;

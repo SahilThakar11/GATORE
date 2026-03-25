@@ -6,8 +6,10 @@ import {
   Trash2,
   Check,
   Globe,
+  Upload,
   PlusCircle,
   ClipboardList,
+
   Clock,
   Zap,
   CreditCard,
@@ -183,6 +185,7 @@ function StepBusinessInfo({
 
   const handleContinue = () => {
     const newErrors: Record<string, string | null> = {
+      name: validateRequired(profileData.name),
       logo: logoBase64 ? null : "A café logo is required.",
       contactEmail: validateEmail(profileData.contactEmail),
       contactName: validateRequired(profileData.contactName),
@@ -269,6 +272,13 @@ function StepBusinessInfo({
         )}
       </div>
 
+      <Input
+        label="Café Name"
+        placeholder="e.g. The Board Room Café"
+        value={profileData.name || ""}
+        onChange={update("name")}
+        error={errors.name ?? undefined}
+      />
       <Input
         label="Email Address"
         type="email"
@@ -1191,7 +1201,7 @@ export default function CafeSetupWizard({
   const [saving, setSaving] = useState(false);
 
   // Collected wizard data — auto-fill from existing profile (business request data)
-  const [profileData, setProfileData] = useState<Record<string, string>>({});
+  const [profileData, setProfileData] = useState<Record<string, string>>({ name: businessName || "" });
   const [logoBase64, setLogoBase64] = useState<string>("");
 
   // Auto-fill profile data from the existing restaurant record (populated from business request)
@@ -1200,6 +1210,7 @@ export default function CafeSetupWizard({
     setProfileData((prev) => {
       // Only fill empty fields so user edits aren't overwritten
       const fill: Record<string, string> = {};
+      if (!prev.name && (initialProfile as any).name) fill.name = (initialProfile as any).name;
       if (!prev.contactEmail && initialProfile.contactEmail) fill.contactEmail = initialProfile.contactEmail;
       if (!prev.contactName && initialProfile.contactName) fill.contactName = initialProfile.contactName;
       if (!prev.phone && initialProfile.phone) fill.phone = initialProfile.phone;
