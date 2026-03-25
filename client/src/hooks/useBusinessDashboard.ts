@@ -60,10 +60,9 @@ export interface BusinessProfile {
   enableThreshold: boolean;
   isSetupComplete: boolean;
   tables: any[];
-  menuItems: any[];
   operatingHours: any[];
   restaurantGames: any[];
-  _count: { tables: number; restaurantGames: number; menuItems: number };
+  _count: { tables: number; restaurantGames: number };
 }
 
 export function useBusinessDashboard() {

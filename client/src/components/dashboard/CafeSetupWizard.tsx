@@ -7,9 +7,6 @@ import {
   Check,
   Globe,
   Upload,
-  PlusCircle,
-  ClipboardList,
-
   Clock,
   Zap,
   CreditCard,
@@ -45,7 +42,6 @@ type WizardStep =
   | "tables"
   | "hours"
   | "games"
-  | "menu"
   | "pricing"
   | "success";
 
@@ -54,7 +50,6 @@ const STEP_MAP: Record<WizardStep, { stepNum: number; total: number }> = {
   tables: { stepNum: 2, total: 3 },
   hours: { stepNum: 2, total: 3 },
   games: { stepNum: 2, total: 3 },
-  menu: { stepNum: 2, total: 3 },
   pricing: { stepNum: 2, total: 3 },
   success: { stepNum: 3, total: 3 },
 };
@@ -782,89 +777,6 @@ function StepGames({
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   STEP 5 — MENU SETUP
-   ═══════════════════════════════════════════════════════════════════ */
-
-function StepMenu({
-  onFinish,
-  onBack,
-}: {
-  onFinish: () => void;
-  onBack: () => void;
-}) {
-  const menuOptions = [
-    {
-      icon: Upload,
-      iconBg: "bg-teal-50 text-teal-600",
-      title: "Upload PDF",
-      desc: "Upload an existing menu PDF",
-    },
-    {
-      icon: PlusCircle,
-      iconBg: "bg-amber-50 text-amber-600",
-      title: "Add Items Manually",
-      desc: "Create your menu item by item",
-    },
-    {
-      icon: ClipboardList,
-      iconBg: "bg-purple-50 text-purple-600",
-      title: "Start with Template",
-      desc: "Choose from pre-built menu templates",
-    },
-  ];
-
-  return (
-    <div className="px-7 py-6 flex flex-col gap-5">
-      <div>
-        <h2 className="text-xl font-bold text-gray-900">Menu Setup</h2>
-        <p className="text-sm text-gray-400 mt-0.5">
-          Add your menu so customers can browse while making reservations
-          (Optional)
-        </p>
-      </div>
-
-      <h3 className="text-base font-bold text-gray-900">
-        How would you like to add your games?
-      </h3>
-
-      <div className="flex flex-col gap-2">
-        {menuOptions.map((opt) => {
-          const Icon = opt.icon;
-          return (
-            <button
-              key={opt.title}
-              className="flex items-center gap-4 border border-gray-200 rounded-xl px-4 py-4 text-left hover:bg-gray-50/50 hover:border-gray-300 transition-all cursor-pointer"
-            >
-              <div
-                className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${opt.iconBg}`}
-              >
-                <Icon size={18} />
-              </div>
-              <div>
-                <p className="text-sm font-bold text-gray-900">{opt.title}</p>
-                <p className="text-xs text-gray-400 mt-0.5 leading-snug">
-                  {opt.desc}
-                </p>
-              </div>
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Footer */}
-      <div className="flex gap-3 mt-2">
-        <Button variant="outline" fullWidth onClick={onBack}>
-          Back
-        </Button>
-        <Button variant="outline" fullWidth onClick={onFinish}>
-          Skip for Now
-        </Button>
-      </div>
-    </div>
-  );
-}
-
-/* ═══════════════════════════════════════════════════════════════════
    STEP 6 — PRICING
    ═══════════════════════════════════════════════════════════════════ */
 
@@ -1264,7 +1176,6 @@ export default function CafeSetupWizard({
     "tables",
     "hours",
     "games",
-    "menu",
     "pricing",
     "success",
   ];
@@ -1408,9 +1319,6 @@ export default function CafeSetupWizard({
               selectedGames={selectedGames}
               setSelectedGames={setSelectedGames}
             />
-          )}
-          {step === "menu" && (
-            <StepMenu onFinish={goNext} onBack={goBack} />
           )}
           {step === "pricing" && (
             <StepPricing
