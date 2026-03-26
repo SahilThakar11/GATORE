@@ -1,6 +1,6 @@
 import React, { useState, useRef } from "react";
 
-type ButtonSize = "small" | "medium" | "large";
+type ButtonSize = "xs" | "small" | "medium" | "large";
 
 interface SecondaryButtonProps {
   label: string;
@@ -18,6 +18,7 @@ const SIZE_STYLES: Record<
   ButtonSize,
   { sizeClass: string; spinnerSize: number }
 > = {
+  xs:     { sizeClass: "py-2 px-3 text-xs",                              spinnerSize: 12 },
   small:  { sizeClass: "py-3 px-4 text-sm",                              spinnerSize: 14 },
   medium: { sizeClass: "py-3 px-4 text-sm sm:px-6 sm:text-base",         spinnerSize: 16 },
   large:  { sizeClass: "py-3 px-4 text-sm sm:py-3.5 sm:px-7 sm:text-lg", spinnerSize: 18 },

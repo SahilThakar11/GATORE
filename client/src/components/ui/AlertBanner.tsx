@@ -1,11 +1,13 @@
 import React, { useState } from "react";
-import { X } from "lucide-react";
+import { X, type LucideIcon } from "lucide-react";
 import { variantTokens, type AlertVariant } from "./alertVariants";
 
 export interface AlertBannerProps {
   variant: AlertVariant;
   title: React.ReactNode;
   description?: React.ReactNode;
+  /** Overrides the variant's default icon. */
+  icon?: LucideIcon;
   /** Renders an × button that hides the banner when clicked. */
   dismissible?: boolean;
   /** Called when the × button is clicked. If omitted the banner self-manages visibility. */
@@ -44,6 +46,7 @@ export const AlertBanner: React.FC<AlertBannerProps> = ({
   variant,
   title,
   description,
+  icon,
   dismissible = false,
   onDismiss,
   className = "",
@@ -60,8 +63,9 @@ export const AlertBanner: React.FC<AlertBannerProps> = ({
 
   if (!visible) return null;
 
-  const { bg, leftBorder, thinBorder, iconClass, titleClass, descriptionClass, dismissClass, Icon } =
+  const { bg, leftBorder, thinBorder, iconClass, titleClass, descriptionClass, dismissClass, Icon: VariantIcon } =
     variantTokens[variant];
+  const Icon = icon ?? VariantIcon;
 
   return (
     <div

@@ -31,7 +31,7 @@ export function BPChoose({ onSignIn, onRequest }: Props) {
             Already a partner? Sign in with your email.
           </p>
         </div>
-        <ChevronRight size={18} aria-hidden="true" className="text-neutral-400 group-hover:text-teal-500 transition-colors shrink-0" />
+        <ChevronRight size={18} aria-hidden="true" className="text-neutral-500 group-hover:text-teal-600 transition-colors shrink-0" />
       </button>
 
       {/* Divider */}
@@ -57,7 +57,7 @@ export function BPChoose({ onSignIn, onRequest }: Props) {
             New to Gatore? We'll review and activate your account.
           </p>
         </div>
-        <ChevronRight size={18} aria-hidden="true" className="text-neutral-400 group-hover:text-teal-500 transition-colors shrink-0" />
+        <ChevronRight size={18} aria-hidden="true" className="text-neutral-500 group-hover:text-teal-600 transition-colors shrink-0" />
       </button>
 
       {/* Trust row */}

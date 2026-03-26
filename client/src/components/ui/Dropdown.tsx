@@ -18,6 +18,7 @@ interface DropdownProps {
   fullWidth?: boolean;
   isPlaceholder?: boolean;
   triggerClassName?: string;
+  dropUp?: boolean;
 }
 
 export function Dropdown({
@@ -29,6 +30,7 @@ export function Dropdown({
   fullWidth = false,
   isPlaceholder = false,
   triggerClassName = "",
+  dropUp = false,
 }: DropdownProps) {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -67,11 +69,12 @@ export function Dropdown({
     borderRadius: "8px",
     border: "1px solid #E8D4C4",
     boxShadow: "0 4px 12px 0 rgba(0,0,0,0.10)",
-    minWidth: "180px",
-    ...(fullWidth ? { width: "100%" } : {}),
+    ...(fullWidth ? { width: "100%" } : { minWidth: "180px" }),
     padding: "4px 0",
     position: "absolute",
-    top: "calc(100% + 6px)",
+    ...(dropUp
+      ? { bottom: "calc(100% + 6px)" }
+      : { top: "calc(100% + 6px)" }),
     zIndex: 50,
     ...(align === "right" ? { right: 0 } : { left: 0 }),
   };
@@ -131,9 +134,12 @@ export function Dropdown({
               fontFamily: "'DM Sans', sans-serif",
               fontSize: 16,
               fontWeight: 400,
-              color: isPlaceholder ? "#9CA3AF" : "#292524",
+              color: isPlaceholder ? "#78716C" : "#292524",
               flex: 1,
               textAlign: "left",
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
             }}
           >
             {triggerLabel}

@@ -259,7 +259,7 @@ export default function Header() {
       </header>
 
       <AuthModal isOpen={auth.isOpen} onClose={auth.close} auth={auth} />
-      <BusinessPortalModal isOpen={bpOpen} onClose={() => setBpOpen(false)} defaultStep="signin" />
+      <BusinessPortalModal isOpen={bpOpen} onClose={() => setBpOpen(false)} defaultStep="choose" />
     </>
   );
 }
