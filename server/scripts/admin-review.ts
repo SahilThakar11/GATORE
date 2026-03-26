@@ -411,8 +411,10 @@ async function main() {
       where: { email: req.email },
     });
 
+    let approvedUser: { id: number };
+
     if (existingUser) {
-      await prisma.user.update({
+      approvedUser = await prisma.user.update({
         where: { email: req.email },
         data: {
           role: "business",
@@ -425,7 +427,7 @@ async function main() {
         `  ↑  Existing user (${req.email}) upgraded to business role.`
       );
     } else {
-      await prisma.user.create({
+      approvedUser = await prisma.user.create({
         data: {
           email: req.email,
           name: req.ownerName,
@@ -439,9 +441,11 @@ async function main() {
       console.log(`  ✨  Business user created for ${req.email}.`);
     }
 
+    // Link the access request to the approved user so their application data
+    // (café name, city, phone, contact) can pre-fill the setup wizard.
     await prisma.businessAccessRequest.update({
       where: { id: req.id },
-      data: { status: "approved", reviewedAt: new Date() },
+      data: { status: "approved", reviewedAt: new Date(), userId: approvedUser.id },
     });
     console.log("  ✅  Approved.");
 

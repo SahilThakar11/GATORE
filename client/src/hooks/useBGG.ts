@@ -124,14 +124,13 @@ export function useBGGSearch() {
   );
 
   const loadMore = useCallback(async () => {
-    const nextPage = page + 1;
-    const start = nextPage * SEARCH_PAGE_SIZE;
+    const start = page * SEARCH_PAGE_SIZE;
     const end = start + SEARCH_PAGE_SIZE;
     const nextIds = allIds.slice(start, end);
 
     if (nextIds.length === 0) return;
 
-    setPage(nextPage);
+    setPage(page + 1);
     await fetchDetails(nextIds, true);
   }, [page, allIds, fetchDetails]);
 

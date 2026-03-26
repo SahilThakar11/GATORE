@@ -1,90 +1,126 @@
 import { useState } from "react";
-import { Eye, EyeOff, Trash2 } from "lucide-react";
-import { Input } from "../../ui/Input";
-import { SettingsPanel } from "./SettingsPanel";
+import { Trash2, AlertTriangle, Loader2 } from "lucide-react";
+import { useAuth } from "../../../context/AuthContext";
+import { useBusinessDashboard } from "../../../hooks/useBusinessDashboard";
+import { useBusinessSettings } from "../../../hooks/useBusinessSettings";
 
 export default function AccountTab({ onBack }: { onBack: () => void }) {
-  const [showCurrent, setShowCurrent] = useState(false);
-  const [showNew, setShowNew] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
+  const { logout } = useAuth();
+  const { profile } = useBusinessDashboard();
+  const { deleteAccount, saving } = useBusinessSettings();
+
+  const [confirmText, setConfirmText] = useState("");
+  const [error, setError] = useState<string | null>(null);
+
+  const canDelete = confirmText === "DELETE";
+
+  const handleDelete = async () => {
+    if (!canDelete) return;
+    setError(null);
+    const result = await deleteAccount();
+    if (result?.success) {
+      logout();
+    } else {
+      setError(result?.message || "Failed to delete account. Please try again.");
+    }
+  };
 
   return (
-    <SettingsPanel
-      title="Account"
-      subtitle="Update your password and security settings"
-      onBack={onBack}
-    >
-      <div className="flex flex-col gap-5">
-        <Input
-          label="Current password"
-          type={showCurrent ? "text" : "password"}
-          placeholder="Enter your current password"
-          rightIcon={
-            <button
-              onClick={() => setShowCurrent((v) => !v)}
-              className="cursor-pointer text-gray-400 hover:text-gray-600"
-            >
-              {showCurrent ? <EyeOff size={16} /> : <Eye size={16} />}
-            </button>
-          }
-        />
-
+    <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-7 max-w-xl">
+      {/* Header */}
+      <div className="flex items-start justify-between mb-6">
         <div>
-          <Input
-            label="New password"
-            type={showNew ? "text" : "password"}
-            placeholder="Create a new password"
-            rightIcon={
-              <button
-                onClick={() => setShowNew((v) => !v)}
-                className="cursor-pointer text-gray-400 hover:text-gray-600"
-              >
-                {showNew ? <EyeOff size={16} /> : <Eye size={16} />}
-              </button>
-            }
-          />
-          <p className="text-[11px] text-gray-400 mt-1.5">
-            Create a strong password: At least 8 characters with uppercase,
-            lowercase and a number
-          </p>
+          <h2 className="text-xl font-bold text-gray-900">Account</h2>
+          <p className="text-sm text-gray-400 mt-0.5">Manage your business account</p>
         </div>
-
-        <Input
-          label="Confirm new password"
-          type={showConfirm ? "text" : "password"}
-          placeholder="Re-enter your new password"
-          rightIcon={
-            <button
-              onClick={() => setShowConfirm((v) => !v)}
-              className="cursor-pointer text-gray-400 hover:text-gray-600"
-            >
-              {showConfirm ? <EyeOff size={16} /> : <Eye size={16} />}
-            </button>
-          }
-        />
-      </div>
-
-      {/* Links */}
-      <div className="flex items-center gap-6 mt-6">
-        <button className="text-sm font-medium text-teal-600 hover:text-teal-800 transition-colors cursor-pointer">
-          See Terms and Conditions
-        </button>
-        <button className="text-sm font-medium text-teal-600 hover:text-teal-800 transition-colors cursor-pointer">
-          See Privacy and Terms
+        <button
+          onClick={onBack}
+          className="text-sm font-medium text-teal-600 hover:text-teal-800 transition-colors cursor-pointer"
+        >
+          ← Back
         </button>
       </div>
 
       {/* Danger Zone */}
-      <div className="mt-8 border-l-4 border-red-400 bg-red-50 rounded-r-xl p-5">
-        <h4 className="text-sm font-bold text-red-600">Danger Zone</h4>
-        <p className="text-xs text-red-400 mt-0.5">
-          Deleting your account is permanent and cannot be undone.
-        </p>
-        <button className="mt-3 flex items-center gap-2 bg-white border-2 border-red-300 text-red-500 text-sm font-semibold px-4 py-2 rounded-xl hover:bg-red-50 hover:border-red-400 transition-colors cursor-pointer">
-          <Trash2 size={15} />
-          Delete Account
-        </button>
+      <div className="border-2 border-red-200 rounded-2xl overflow-hidden">
+        {/* Red header band */}
+        <div className="bg-red-50 px-6 py-4 flex items-center gap-3 border-b border-red-200">
+          <AlertTriangle size={18} className="text-red-500 shrink-0" />
+          <h3 className="text-sm font-bold text-red-700">Danger Zone</h3>
+        </div>
+
+        <div className="px-6 py-5 flex flex-col gap-5">
+          {/* What gets deleted */}
+          <div>
+            <p className="text-sm font-semibold text-gray-900 mb-1">
+              Delete Business Account
+            </p>
+            <p className="text-xs text-gray-500 leading-relaxed">
+              This will permanently delete{" "}
+              <span className="font-semibold text-gray-700">
+                {profile?.name || "your café"}
+              </span>{" "}
+              and all associated data including tables, operating hours, menu items,
+              game library, and all reservations. This action{" "}
+              <span className="font-bold text-red-600">cannot be undone</span>.
+            </p>
+
+            <ul className="mt-3 flex flex-col gap-1">
+              {[
+                "Café profile & settings",
+                "All tables and reservations",
+                "Operating hours, menu & game library",
+                "Your business access & permissions",
+              ].map((item) => (
+                <li key={item} className="flex items-center gap-2 text-xs text-gray-500">
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-400 shrink-0" />
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Type-to-confirm */}
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1.5">
+              Type{" "}
+              <code className="bg-gray-100 px-1.5 py-0.5 rounded text-red-600 font-mono">
+                DELETE
+              </code>{" "}
+              to confirm
+            </label>
+            <input
+              type="text"
+              value={confirmText}
+              onChange={(e) => setConfirmText(e.target.value)}
+              placeholder="Type DELETE here"
+              className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-red-400 focus:border-transparent transition-all"
+            />
+          </div>
+
+          {/* Error */}
+          {error && (
+            <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+              {error}
+            </p>
+          )}
+
+          {/* Delete button */}
+          <button
+            onClick={handleDelete}
+            disabled={!canDelete || saving}
+            className="flex items-center justify-center gap-2 w-full py-3 rounded-xl text-sm font-bold transition-all border-2 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed
+              border-red-400 text-red-600 hover:bg-red-600 hover:text-white hover:border-red-600"
+          >
+            {saving ? (
+              <Loader2 size={15} className="animate-spin" />
+            ) : (
+              <Trash2 size={15} />
+            )}
+            {saving ? "Deleting..." : "Delete My Business Account"}
+          </button>
+        </div>
       </div>
-    </SettingsPanel>
+    </div>
   );
 }

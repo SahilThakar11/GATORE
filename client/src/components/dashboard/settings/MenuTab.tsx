@@ -1,48 +1,54 @@
-import { useState } from "react";
-import { X, Plus } from "lucide-react";
+import { useState, useEffect } from "react";
+import { X, Plus, Loader2 } from "lucide-react";
 import { Input } from "../../ui/Input";
 import { SettingsPanel } from "./SettingsPanel";
-
-interface MenuItem {
-  id: string;
-  name: string;
-  desc: string;
-  price: string;
-  category: string;
-}
-
-const MOCK_MENU: MenuItem[] = [
-  { id: "1", name: "Capucino", desc: "Desciption for delicious drink", price: "3.50", category: "Drink" },
-  { id: "2", name: "Espresso", desc: "Strong and rich coffee shot", price: "2.00", category: "Drink" },
-  { id: "3", name: "Latte", desc: "Creamy coffee with steamed milk", price: "4.00", category: "Drink" },
-  { id: "4", name: "Mocha", desc: "Chocolatey coffee treat", price: "4.50", category: "Drink" },
-];
+import { useBusinessSettings, type MenuItem } from "../../../hooks/useBusinessSettings";
 
 export default function MenuTab({ onBack }: { onBack: () => void }) {
-  const [items, setItems] = useState<MenuItem[]>(MOCK_MENU);
+  const { fetchMenu, addMenuItem, removeMenuItem } = useBusinessSettings();
+  const [items, setItems] = useState<MenuItem[]>([]);
   const [newName, setNewName] = useState("");
   const [newDesc, setNewDesc] = useState("");
   const [newPrice, setNewPrice] = useState("");
+  const [loading, setLoading] = useState(true);
 
-  const removeItem = (id: string) =>
-    setItems((prev) => prev.filter((i) => i.id !== id));
+  useEffect(() => {
+    fetchMenu().then((data) => {
+      setItems(data);
+      setLoading(false);
+    });
+  }, [fetchMenu]);
 
-  const addItem = () => {
-    if (!newName.trim()) return;
-    setItems((prev) => [
-      ...prev,
-      {
-        id: Date.now().toString(),
-        name: newName,
-        desc: newDesc,
-        price: newPrice || "0.00",
-        category: "Drink",
-      },
-    ]);
-    setNewName("");
-    setNewDesc("");
-    setNewPrice("");
+  const handleRemove = async (id: number) => {
+    const result = await removeMenuItem(id);
+    if (result.success) setItems((prev) => prev.filter((i) => i.id !== id));
   };
+
+  const handleAdd = async () => {
+    if (!newName.trim()) return;
+    const result = await addMenuItem({
+      name: newName,
+      description: newDesc || undefined,
+      price: newPrice || "0.00",
+      category: "Drink",
+    });
+    if (result.success) {
+      setItems((prev) => [...prev, result.data]);
+      setNewName("");
+      setNewDesc("");
+      setNewPrice("");
+    }
+  };
+
+  if (loading) {
+    return (
+      <SettingsPanel title="Menu" subtitle="Manage your menu items" onBack={onBack}>
+        <div className="flex items-center justify-center py-12">
+          <Loader2 size={24} className="animate-spin text-teal-600" />
+        </div>
+      </SettingsPanel>
+    );
+  }
 
   return (
     <SettingsPanel
@@ -55,6 +61,11 @@ export default function MenuTab({ onBack }: { onBack: () => void }) {
         Menu Items ({items.length})
       </h3>
       <div className="flex flex-col gap-3 mb-6">
+        {items.length === 0 && (
+          <p className="text-sm text-gray-400 text-center py-4">
+            No menu items yet. Add some below!
+          </p>
+        )}
         {items.map((item) => (
           <div
             key={item.id}
@@ -67,13 +78,13 @@ export default function MenuTab({ onBack }: { onBack: () => void }) {
                   {item.category}
                 </span>
               </div>
-              <p className="text-xs text-gray-400 mt-0.5">{item.desc}</p>
+              <p className="text-xs text-gray-400 mt-0.5">{item.description || ""}</p>
               <p className="text-sm font-bold text-teal-600 mt-1">
-                ${item.price}
+                ${parseFloat(item.price).toFixed(2)}
               </p>
             </div>
             <button
-              onClick={() => removeItem(item.id)}
+              onClick={() => handleRemove(item.id)}
               className="text-gray-300 hover:text-red-400 transition-colors cursor-pointer"
             >
               <X size={16} />
@@ -112,7 +123,7 @@ export default function MenuTab({ onBack }: { onBack: () => void }) {
           />
         </div>
         <button
-          onClick={addItem}
+          onClick={handleAdd}
           className="flex items-center justify-center gap-2 w-full py-2.5 border-2 border-dashed border-gray-200 rounded-xl text-sm font-medium text-teal-600 hover:border-teal-300 hover:bg-teal-50/50 transition-all cursor-pointer"
         >
           <Plus size={15} />
