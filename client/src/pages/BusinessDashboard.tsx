@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import {
   Search,
   SlidersHorizontal,
+  FilterX,
   Plus,
   ChevronDown,
   ChevronUp,
@@ -11,7 +12,6 @@ import {
   Flag,
   MessageSquare,
   Users,
-  X,
   Clock,
   CalendarDays,
   TrendingUp,
@@ -97,9 +97,9 @@ function StatCard({
           className="w-8 h-8 rounded-lg flex items-center justify-center"
           style={{ backgroundColor: accent + "15" }}
         >
-          <Icon size={16} style={{ color: accent }} />
+          <Icon size={16} style={{ color: accent }} aria-hidden="true" />
         </div>
-        <span className="text-xs font-medium text-neutral-500">{label}</span>
+        <span className="text-xs font-medium text-neutral-600">{label}</span>
       </div>
 
       <p className="text-3xl font-extrabold text-neutral-800 leading-none">{value}</p>
@@ -110,17 +110,25 @@ function StatCard({
             <span>Tables occupied</span>
             <span className="font-semibold">{value}</span>
           </div>
-          <div className="w-full h-2 bg-warm-100 rounded-full overflow-hidden">
+          <div
+            role="progressbar"
+            aria-valuenow={Math.round(progress * 100)}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-label={label}
+            className="w-full h-2 bg-warm-100 rounded-full overflow-hidden"
+          >
             <div
               className="h-full rounded-full transition-all duration-500"
               style={{ width: `${progress * 100}%`, backgroundColor: accent }}
+              aria-hidden="true"
             />
           </div>
         </div>
       )}
 
       {progress === undefined && (
-        <div className="h-6 flex items-end gap-[2px]">
+        <div className="h-6 flex items-end gap-[2px]" aria-hidden="true">
           {[40, 60, 35, 70, 50, 80, 65, 90, 55, 75].map((h, i) => (
             <div
               key={i}
@@ -149,12 +157,13 @@ function FilterSelect({
 }) {
   return (
     <div className="flex flex-col gap-1 flex-1 min-w-[110px]">
-      <span className="text-xs font-semibold text-neutral-600">
+      <span className="text-xs font-semibold text-neutral-600" aria-hidden="true">
         {label}
       </span>
       <Dropdown
         trigger="label"
         triggerLabel={value}
+        triggerAriaLabel={`${label}: ${value}`}
         fullWidth
         items={options.map((opt) => ({ label: opt, onClick: () => onChange(opt) }))}
         triggerClassName="bg-white !text-sm"
@@ -193,10 +202,10 @@ function ReservationRow({ r, onSaveNotes, onUpdateStatus, onModify, onDelete }: 
   const duration = (new Date(r.endTime).getTime() - new Date(r.startTime).getTime()) / (1000 * 60 * 60);
 
   return (
-    <div className="rounded-xl overflow-hidden transition-shadow duration-150 hover:shadow-sm" style={{ border: `1.5px solid ${statusStyle.border}` }}>
+    <div role="listitem" className="rounded-xl overflow-hidden transition-shadow duration-150 hover:shadow-sm" style={{ border: `1.5px solid ${statusStyle.border}` }}>
       {/* ── Header row ── */}
       <div
-        className="flex items-center gap-4 px-5 py-4 cursor-pointer select-none focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-neutral-800"
+        className="flex items-center gap-4 px-5 py-4 cursor-pointer select-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-800"
         style={{ backgroundColor: statusStyle.bg }}
         onClick={() => setIsOpen((v) => !v)}
         role="button"
@@ -364,6 +373,7 @@ function ReservationRow({ r, onSaveNotes, onUpdateStatus, onModify, onDelete }: 
                   onChange={(e) => setNotesText(e.target.value)}
                   rows={3}
                   autoFocus
+                  aria-label="Reservation notes"
                   className="w-full px-3 py-2 border border-warm-200 rounded-lg text-sm text-neutral-700 placeholder:text-neutral-500 bg-warm-50 outline-none focus:ring-2 focus:ring-teal-500 resize-none"
                   placeholder="Add notes about this reservation..."
                 />
@@ -504,16 +514,16 @@ export default function BusinessDashboard() {
               <div>
                 <h1 className="text-2xl font-black text-neutral-800">{dateStr}</h1>
                 <div className="flex items-center gap-5 mt-2 flex-wrap">
-                  <span className="flex items-center gap-1.5 text-xs text-neutral-500">
-                    <Clock size={13} className="text-teal-600" />
+                  <span className="flex items-center gap-1.5 text-xs text-neutral-600">
+                    <Clock size={13} className="text-teal-600" aria-hidden="true" />
                     Peak hours: 6–9 PM
                   </span>
-                  <span className="flex items-center gap-1.5 text-xs text-neutral-500">
-                    <Activity size={13} className="text-amber-500" />
+                  <span className="flex items-center gap-1.5 text-xs text-neutral-600">
+                    <Activity size={13} className="text-amber-500" aria-hidden="true" />
                     {todayRes.pending} reservations pending confirmation
                   </span>
-                  <span className="flex items-center gap-1.5 text-xs text-neutral-500">
-                    <TrendingUp size={13} className="text-neutral-400" />
+                  <span className="flex items-center gap-1.5 text-xs text-neutral-600">
+                    <TrendingUp size={13} className="text-neutral-500" aria-hidden="true" />
                     {occupancy.total - occupancy.occupied} tables available
                   </span>
                 </div>
@@ -555,25 +565,27 @@ export default function BusinessDashboard() {
             </div>
 
             {/* ── Upcoming Reservations ─────────────────────────────── */}
-            <div className="bg-white border border-warm-200 rounded-2xl shadow-sm mt-8 p-6">
+            <section aria-labelledby="reservations-heading" className="bg-white border border-warm-200 rounded-2xl shadow-sm mt-8 p-6">
               <div className="flex items-center justify-between mb-1">
                 <div>
-                  <h2 className="text-lg font-bold text-neutral-800">Upcoming Reservations</h2>
+                  <h2 id="reservations-heading" className="text-lg font-bold text-neutral-800">Upcoming Reservations</h2>
                   <p className="text-xs text-neutral-600 mt-0.5">Next reservations for today</p>
                 </div>
                 <div className="flex items-center gap-3">
                   <TextButton
                     label="Search"
                     size="small"
-                    leftIcon={<Search size={15} />}
+                    leftIcon={<Search size={15} aria-hidden="true" />}
                   />
                   <TextButton
                     label="Filter"
                     size="small"
-                    leftIcon={<SlidersHorizontal size={15} />}
+                    aria-expanded={showFilter}
+                    leftIcon={<SlidersHorizontal size={15} aria-hidden="true" />}
                     rightIcon={
                       <ChevronDown
                         size={13}
+                        aria-hidden="true"
                         style={{
                           transition: "transform 200ms",
                           transform: showFilter ? "rotate(180deg)" : "rotate(0deg)",
@@ -593,14 +605,21 @@ export default function BusinessDashboard() {
                       Filter Reservations
                     </span>
                     <button
-                      onClick={() => setShowFilter(false)}
-                      aria-label="Close filters"
-                      className="text-neutral-500 hover:text-neutral-700 cursor-pointer"
+                      onClick={() => {
+                        setFilterStatus("All");
+                        setFilterTable("All");
+                        setFilterGuests("Any");
+                        setFilterSource("All");
+                        setFilterTime("All Day");
+                      }}
+                      aria-label="Clear filters"
+                      className="inline-flex items-center gap-1.5 text-xs font-semibold text-red-700 hover:text-red-900 cursor-pointer transition-colors"
                     >
-                      <X size={16} aria-hidden="true" />
+                      <FilterX size={14} aria-hidden="true" />
+                      Clear filters
                     </button>
                   </div>
-                  <div className="flex items-end gap-3">
+                  <div className="flex flex-wrap items-end gap-3">
                     <FilterSelect label="Status" value={filterStatus} onChange={setFilterStatus} options={["All", "Confirmed", "Pending", "Seated", "Completed", "Cancelled"]} />
                     <FilterSelect label="Table" value={filterTable} onChange={setFilterTable} options={["All", ...Array.from(new Set(reservations.map((r) => r.table.name)))]} />
                     <FilterSelect label="Guests" value={filterGuests} onChange={setFilterGuests} options={["Any", "1–2", "3–4", "5+"]} />
@@ -610,7 +629,7 @@ export default function BusinessDashboard() {
                 </div>
               )}
 
-              <div className="flex flex-col gap-3 mt-2">
+              <div role="list" className="flex flex-col gap-3 mt-2">
                 {filteredReservations.length === 0 && (
                   <p className="text-sm text-neutral-500 text-center py-8">
                     {filtersActive
@@ -655,7 +674,7 @@ export default function BusinessDashboard() {
                   </div>
                 </div>
               )}
-            </div>
+            </section>
           </>
         )}
       </div>

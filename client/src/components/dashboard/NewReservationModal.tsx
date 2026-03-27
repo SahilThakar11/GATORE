@@ -47,12 +47,14 @@ function SelectField({
   options,
   value,
   onChange,
+  disabled,
 }: {
   label: string;
   placeholder: string;
   options: { label: string; value: string }[];
   value: string;
   onChange: (v: string) => void;
+  disabled?: boolean;
 }) {
   const id = useId();
   const selected = options.find((o) => o.value === value);
@@ -66,8 +68,9 @@ function SelectField({
         triggerLabel={selected?.label ?? placeholder}
         isPlaceholder={!selected}
         fullWidth
+        disabled={disabled}
         items={options.map((opt) => ({ label: opt.label, onClick: () => onChange(opt.value) }))}
-        triggerClassName="bg-warm-50"
+        triggerClassName={disabled ? "bg-warm-50 opacity-50 cursor-not-allowed" : "bg-warm-50"}
       />
     </div>
   );
@@ -281,15 +284,14 @@ export default function NewReservationModal({
               />
             </div>
 
-            {gameOptions.length > 0 && (
-              <SelectField
-                label="Game"
-                placeholder="No game (optional)"
-                options={gameOptions}
-                value={game}
-                onChange={setGame}
-              />
-            )}
+            <SelectField
+              label="Game (optional)"
+              placeholder={gameOptions.length === 0 ? "No games in library" : "No game selected"}
+              options={gameOptions}
+              value={game}
+              onChange={setGame}
+              disabled={gameOptions.length === 0}
+            />
 
             <SelectField
               label="Reservation Source"

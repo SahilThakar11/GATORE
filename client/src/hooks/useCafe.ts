@@ -88,7 +88,10 @@ export function useCafes(city?: string) {
 
   useEffect(() => {
     let cancelled = false;
-    const fetchCafes = async () => {
+    // CHLOE: Local workaround — retries once after a short delay if the first fetch
+    // fails. This handles the case where a mid-render auth state change (logout)
+    // disrupts an in-flight fetch and causes a spurious "failed to load café" error.
+    const fetchCafes = async (attempt = 0) => {
       setLoading(true);
       setError(null);
       try {
@@ -98,6 +101,11 @@ export function useCafes(city?: string) {
         const result = await res.json();
         if (!cancelled) setCafes(result.data);
       } catch (e: any) {
+        if (!cancelled && attempt === 0) {
+          // First failure — retry once after a short delay, keep loading spinner up
+          setTimeout(() => { if (!cancelled) fetchCafes(1); }, 1500);
+          return;
+        }
         if (!cancelled) setError(e?.message ?? "Failed to load cafés");
       } finally {
         if (!cancelled) setLoading(false);

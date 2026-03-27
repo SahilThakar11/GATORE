@@ -1,15 +1,19 @@
-import { ChevronDown } from "lucide-react";
+import { Dropdown } from "../../ui/Dropdown";
 
 export function SelectField({
   label,
   options,
   value,
   onChange,
+  dropUp = false,
+  triggerClassName,
 }: {
   label?: string;
   options: string[];
   value: string;
   onChange: (v: string) => void;
+  dropUp?: boolean;
+  triggerClassName?: string;
 }) {
   return (
     <div className="space-y-2">
@@ -18,24 +22,15 @@ export function SelectField({
           {label}
         </label>
       )}
-      <div className="relative">
-        <select
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          className="w-full appearance-none px-4 py-3 border border-warm-200 rounded-lg text-sm text-gray-600 outline-none transition-colors focus:ring-2 focus:ring-teal-500 cursor-pointer bg-white"
-        >
-          <option value="">Default Option</option>
-          {options.map((opt) => (
-            <option key={opt} value={opt}>
-              {opt}
-            </option>
-          ))}
-        </select>
-        <ChevronDown
-          size={16}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
-        />
-      </div>
+      <Dropdown
+        trigger="label"
+        triggerLabel={value || "Select..."}
+        isPlaceholder={!value}
+        fullWidth
+        dropUp={dropUp}
+        triggerClassName={triggerClassName}
+        items={options.map((opt) => ({ label: opt, onClick: () => onChange(opt) }))}
+      />
     </div>
   );
 }

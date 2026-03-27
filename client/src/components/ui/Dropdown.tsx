@@ -20,6 +20,7 @@ interface DropdownProps {
   isPlaceholder?: boolean;
   triggerClassName?: string;
   dropUp?: boolean;
+  triggerAriaLabel?: string;
 }
 
 export function Dropdown({
@@ -32,6 +33,7 @@ export function Dropdown({
   isPlaceholder = false,
   triggerClassName = "",
   dropUp = false,
+  triggerAriaLabel,
 }: DropdownProps) {
   const [open, setOpen] = useState(false);
   const [menuPos, setMenuPos] = useState<{ top?: number; bottom?: number; left?: number; right?: number; width?: number }>({});
@@ -130,6 +132,7 @@ export function Dropdown({
           onClick={() => setOpen((v) => !v)}
           aria-haspopup="menu"
           aria-expanded={open}
+          aria-label={triggerAriaLabel}
           style={{
             width: fullWidth ? "100%" : undefined,
             border: "1px solid #E8D4C4",
@@ -141,7 +144,7 @@ export function Dropdown({
             cursor: "pointer",
             transition: "background 150ms",
           }}
-          className={`hover:bg-[#FEF7F0] ${triggerClassName || "bg-white"}`}
+          className={`hover:bg-[#FEF7F0] ${triggerClassName || "bg-[#FFFBF7]"}`}
         >
           {triggerIcon && (
             <span style={{ display: "flex", alignItems: "center", color: "#57534E", flexShrink: 0 }}>
@@ -166,6 +169,7 @@ export function Dropdown({
           <ChevronDown
             size={15}
             color="#57534E"
+            aria-hidden="true"
             style={{
               transition: "transform 200ms",
               transform: open ? "rotate(180deg)" : "rotate(0deg)",

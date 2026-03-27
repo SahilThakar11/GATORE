@@ -80,12 +80,22 @@ const DAYS = [
   "Friday", "Saturday", "Sunday",
 ];
 
-const TIME_OPTIONS = [
-  "6:00 AM", "7:00 AM", "8:00 AM", "9:00 AM", "10:00 AM",
-  "11:00 AM", "12:00 PM", "1:00 PM", "2:00 PM", "3:00 PM",
-  "4:00 PM", "5:00 PM", "6:00 PM", "7:00 PM", "8:00 PM",
-  "9:00 PM", "10:00 PM", "11:00 PM", "12:00 AM",
-];
+// "10:00 AM" → "10:00" (HH:MM 24h for <input type="time">)
+function toInputTime(ampm: string): string {
+  const [time, period] = ampm.split(" ");
+  let [h, m] = time.split(":").map(Number);
+  if (period === "AM" && h === 12) h = 0;
+  if (period === "PM" && h !== 12) h += 12;
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+}
+
+// "13:00" → "1:00 PM"
+function fromInputTime(hhmm: string): string {
+  const [h, m] = hhmm.split(":").map(Number);
+  const period = h < 12 ? "AM" : "PM";
+  const hour = h % 12 || 12;
+  return `${hour}:${String(m).padStart(2, "0")} ${period}`;
+}
 
 interface DayHours {
   enabled: boolean;
@@ -601,9 +611,8 @@ function StepHours({
 
       {/* Day rows */}
       <div className="flex flex-col gap-2.5">
-        {DAYS.map((day, dayIdx) => {
+        {DAYS.map((day) => {
           const h = hours[day];
-          const up = dayIdx >= 4; // Thursday onward opens upward
           return (
             <div
               key={day}
@@ -626,33 +635,23 @@ function StepHours({
                 </span>
               </div>
 
-              {/* Time dropdowns */}
+              {/* Time inputs */}
               <div className={`flex items-center gap-2 flex-1 ${!h.enabled ? "opacity-40 pointer-events-none" : ""}`}>
-                <div className="flex-1">
-                  <Dropdown
-                    trigger="label"
-                    triggerLabel={h.open}
-                    fullWidth
-                    dropUp={up}
-                    items={TIME_OPTIONS.map((t) => ({
-                      label: t,
-                      onClick: () => updateDay(day, { open: t }),
-                    }))}
-                  />
-                </div>
+                <input
+                  type="time"
+                  value={toInputTime(h.open)}
+                  onChange={(e) => e.target.value && updateDay(day, { open: fromInputTime(e.target.value) })}
+                  disabled={!h.enabled}
+                  className="flex-1 px-3 py-3 border border-warm-300 rounded-lg text-sm text-neutral-700 outline-none focus:ring-2 focus:ring-teal-500 disabled:opacity-40 bg-white cursor-pointer"
+                />
                 <span className="text-xs text-neutral-600 shrink-0">to</span>
-                <div className="flex-1">
-                  <Dropdown
-                    trigger="label"
-                    triggerLabel={h.close}
-                    fullWidth
-                    dropUp={up}
-                    items={TIME_OPTIONS.map((t) => ({
-                      label: t,
-                      onClick: () => updateDay(day, { close: t }),
-                    }))}
-                  />
-                </div>
+                <input
+                  type="time"
+                  value={toInputTime(h.close)}
+                  onChange={(e) => e.target.value && updateDay(day, { close: fromInputTime(e.target.value) })}
+                  disabled={!h.enabled}
+                  className="flex-1 px-3 py-3 border border-warm-300 rounded-lg text-sm text-neutral-700 outline-none focus:ring-2 focus:ring-teal-500 disabled:opacity-40 bg-white cursor-pointer"
+                />
               </div>
             </div>
           );

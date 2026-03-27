@@ -13,6 +13,7 @@ interface TextButtonProps {
   /** Use white text instead of teal — for use on dark backgrounds */
   white?: boolean;
   "aria-label"?: string;
+  "aria-expanded"?: boolean;
 }
 
 const SIZE_STYLES: Record<
@@ -41,6 +42,7 @@ export function TextButton({
   rightIcon,
   white = false,
   "aria-label": ariaLabel,
+  "aria-expanded": ariaExpanded,
 }: TextButtonProps) {
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
@@ -70,6 +72,7 @@ export function TextButton({
       onClick={isInert ? undefined : onClick}
       disabled={isInert}
       aria-label={ariaLabel}
+      aria-expanded={ariaExpanded}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => {
         setHovered(false);
