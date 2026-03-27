@@ -42,12 +42,12 @@ export function TertiaryButton({
 
   const bg = (() => {
     if (isInert || noHoverBg) return "transparent";
-    if (active)  return "#CCFBF1";
-    if (hovered) return "#F0FDFA";
+    if (active)  return "var(--color-teal-100)";
+    if (hovered) return "var(--color-teal-50)";
     return "transparent";
   })();
 
-  const textColor = isInert && !isLoading ? "#D6D3D1" : "#0F766E";
+  const textColor = isInert && !isLoading ? "var(--color-neutral-300)" : "var(--color-teal-700)";
 
   const { sizeClass, spinnerSize } = SIZE_STYLES[size];
 
@@ -82,7 +82,7 @@ export function TertiaryButton({
     >
       {isLoading ? (
         <svg
-          style={{ width: spinnerSize, height: spinnerSize, flexShrink: 0, color: "#0F766E" }}
+          style={{ width: spinnerSize, height: spinnerSize, flexShrink: 0, color: "var(--color-teal-700)" }}
           className="animate-spin"
           viewBox="0 0 24 24"
           fill="none"

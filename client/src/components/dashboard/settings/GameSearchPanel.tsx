@@ -55,7 +55,7 @@ export default function GameSearchPanel({
       <div className="relative">
         <Search
           size={15}
-          className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none"
+          className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500 pointer-events-none"
           aria-hidden="true"
         />
         <input
@@ -72,7 +72,7 @@ export default function GameSearchPanel({
               clear();
             }}
             aria-label="Clear search"
-            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 cursor-pointer"
+            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-neutral-700 cursor-pointer"
           >
             <X size={14} aria-hidden="true" />
           </button>
@@ -111,7 +111,7 @@ export default function GameSearchPanel({
                   onClick={() => onRemove(g.restaurantGameId)}
                   disabled={removing.has(g.restaurantGameId)}
                   aria-label={`Remove ${g.name} from library`}
-                  className="text-gray-500 hover:text-red-500 transition-colors cursor-pointer disabled:opacity-40 shrink-0"
+                  className="text-neutral-500 hover:text-red-500 transition-colors cursor-pointer disabled:opacity-40 shrink-0"
                 >
                   {removing.has(g.restaurantGameId) ? (
                     <Loader2 size={14} className="animate-spin" aria-hidden="true" />

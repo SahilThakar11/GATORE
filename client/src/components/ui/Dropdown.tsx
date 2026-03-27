@@ -45,8 +45,11 @@ export function Dropdown({
   useEffect(() => {
     if (!open || !triggerRef.current) return;
     const rect = triggerRef.current.getBoundingClientRect();
+    const estimatedMenuHeight = items.length * 44 + 8;
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const shouldFlipUp = !dropUp && spaceBelow < estimatedMenuHeight + 8;
     setMenuPos({
-      ...(dropUp
+      ...(dropUp || shouldFlipUp
         ? { bottom: window.innerHeight - rect.top + 6 }
         : { top: rect.bottom + 6 }),
       ...(align === "right"
@@ -54,7 +57,7 @@ export function Dropdown({
         : { left: rect.left }),
       ...(fullWidth ? { width: rect.width } : {}),
     });
-  }, [open, dropUp, align, fullWidth]);
+  }, [open, dropUp, align, fullWidth, items.length]);
 
   // Close on outside click (check both container and portal menu)
   useEffect(() => {
@@ -119,10 +122,10 @@ export function Dropdown({
             justifyContent: "center",
             cursor: "pointer",
             border: "none",
-            color: "#57534E",
+            color: "var(--color-neutral-600)",
             transition: "background 150ms",
           }}
-          className="bg-transparent hover:bg-[#FEF7F0]"
+          className="bg-transparent hover:bg-warm-100"
         >
           <MoreVertical size={16} />
         </button>
@@ -144,10 +147,10 @@ export function Dropdown({
             cursor: "pointer",
             transition: "background 150ms",
           }}
-          className={`hover:bg-[#FEF7F0] ${triggerClassName || "bg-[#FFFBF7]"}`}
+          className={`hover:bg-warm-100 ${triggerClassName || "bg-warm-50"}`}
         >
           {triggerIcon && (
-            <span style={{ display: "flex", alignItems: "center", color: "#57534E", flexShrink: 0 }}>
+            <span style={{ display: "flex", alignItems: "center", color: "var(--color-neutral-600)", flexShrink: 0 }}>
               {triggerIcon}
             </span>
           )}
@@ -156,7 +159,7 @@ export function Dropdown({
               fontFamily: "'DM Sans', sans-serif",
               fontSize: 16,
               fontWeight: 400,
-              color: isPlaceholder ? "#57534E" : "#292524",
+              color: isPlaceholder ? "var(--color-neutral-600)" : "var(--color-neutral-800)",
               flex: 1,
               textAlign: "left",
               whiteSpace: "nowrap",
@@ -168,7 +171,7 @@ export function Dropdown({
           </span>
           <ChevronDown
             size={15}
-            color="#57534E"
+            color="var(--color-neutral-600)"
             aria-hidden="true"
             style={{
               transition: "transform 200ms",
@@ -200,12 +203,12 @@ export function Dropdown({
                   border: "none",
                   textAlign: "left",
                   transition: "background 150ms",
-                  color: item.danger ? "#EF4444" : "#292524",
+                  color: item.danger ? "var(--color-error)" : "var(--color-neutral-800)",
                 }}
-                className={item.danger ? "bg-transparent hover:bg-[#FEF2F2]" : "bg-transparent hover:bg-[#FEF7F0]"}
+                className={item.danger ? "bg-transparent hover:bg-error-light" : "bg-transparent hover:bg-warm-100"}
               >
                 {item.icon && (
-                  <span style={{ display: "flex", alignItems: "center", color: item.danger ? "#EF4444" : "#57534E", flexShrink: 0 }}>
+                  <span style={{ display: "flex", alignItems: "center", color: item.danger ? "var(--color-error)" : "var(--color-neutral-600)", flexShrink: 0 }}>
                     {item.icon}
                   </span>
                 )}

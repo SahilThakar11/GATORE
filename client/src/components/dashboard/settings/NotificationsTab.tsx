@@ -79,7 +79,7 @@ export default function NotificationsTab({ onBack }: { onBack: () => void }) {
               className={`w-5 h-5 rounded flex items-center justify-center border-2 shrink-0 transition-colors ${
                 n.enabled
                   ? "bg-teal-600 border-teal-600"
-                  : "border-gray-400"
+                  : "border-neutral-400"
               }`}
               aria-hidden="true"
             >
@@ -110,7 +110,7 @@ export default function NotificationsTab({ onBack }: { onBack: () => void }) {
               className={`w-5 h-5 rounded flex items-center justify-center border-2 shrink-0 transition-colors ${
                 n.enabled
                   ? "bg-teal-600 border-teal-600"
-                  : "border-gray-400"
+                  : "border-neutral-400"
               }`}
               aria-hidden="true"
             >

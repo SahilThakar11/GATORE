@@ -45,13 +45,13 @@ export function SecondaryButton({
 
   const bg = (() => {
     if (isInert) return "#FFFFFF";
-    if (active) return "#F0FDFA";
-    if (hovered) return "#F0FDFA";
+    if (active) return "var(--color-teal-50)";
+    if (hovered) return "var(--color-teal-50)";
     return "#FFFFFF";
   })();
 
-  const borderColor = isInert && !isLoading ? "#D6D3D1" : "#0F766E";
-  const textColor = isInert && !isLoading ? "#78716C" : "#0F766E";
+  const borderColor = isInert && !isLoading ? "var(--color-neutral-300)" : "var(--color-teal-700)";
+  const textColor = isInert && !isLoading ? "var(--color-neutral-500)" : "var(--color-teal-700)";
 
   const { sizeClass, spinnerSize } = SIZE_STYLES[size];
 
@@ -95,7 +95,7 @@ export function SecondaryButton({
             width: spinnerSize,
             height: spinnerSize,
             flexShrink: 0,
-            color: "#0F766E",
+            color: "var(--color-teal-700)",
           }}
           className="animate-spin"
           viewBox="0 0 24 24"

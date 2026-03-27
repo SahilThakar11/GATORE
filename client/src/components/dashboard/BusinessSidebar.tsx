@@ -61,7 +61,7 @@ export default function BusinessSidebar() {
       <div
         className="flex flex-col h-full transition-all duration-300 ease-in-out overflow-hidden"
         style={{
-          width: collapsed ? 72 : 220,
+          width: collapsed ? 72 : 200,
           background: "#115E59",
         }}
       >
@@ -82,7 +82,7 @@ export default function BusinessSidebar() {
           </div>
           {!collapsed && (
             <div className="overflow-hidden">
-              <p className="text-white text-base font-extrabold leading-tight truncate">
+              <p className="text-white text-base font-bold leading-tight truncate">
                 {businessName}
               </p>
               <p className="text-white/80 text-xs leading-tight">
@@ -118,14 +118,14 @@ export default function BusinessSidebar() {
         </nav>
 
         {/* ─── Bottom: Logout ───────────────────────────────── */}
-        <div className="mt-auto px-3 pb-5 flex flex-col items-center gap-3">
+        <div className="mt-auto px-3 pb-5">
           <button
             onClick={logout}
-            className={`flex items-center gap-2.5 text-white/70 hover:text-white transition-colors w-full rounded-xl cursor-pointer ${
-              collapsed ? "justify-center py-2.5" : "px-3 py-2.5"
+            className={`flex items-center gap-3 text-white/70 hover:text-white transition-colors w-full rounded-lg cursor-pointer ${
+              collapsed ? "justify-center px-0 py-3" : "px-3 py-2.5"
             }`}
           >
-            <LogOut size={18} className="shrink-0" />
+            <LogOut size={20} className="shrink-0" aria-hidden="true" />
             {!collapsed && <span className="text-sm font-medium">Log Out</span>}
           </button>
         </div>

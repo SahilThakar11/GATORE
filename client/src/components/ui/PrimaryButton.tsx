@@ -52,28 +52,28 @@ export function PrimaryButton({
 
   const bg = (() => {
     if (isLoading) return "#FFFFFF";
-    if (disabled)  return grayDisabled ? "#D1D5DB" : "#FFFFFF";
-    if (active)    return "#CCFBF1";
-    if (hovered)   return "#115E59";
+    if (disabled)  return grayDisabled ? "var(--color-neutral-300)" : "#FFFFFF";
+    if (active)    return "var(--color-teal-100)";
+    if (hovered)   return "var(--color-teal-800)";
     if (focused)   return "#FFFFFF";
-    return "#0F766E";
+    return "var(--color-teal-700)";
   })();
 
   const borderColor = (() => {
-    if (isLoading) return "#0F766E";
-    if (disabled)  return grayDisabled ? "#D1D5DB" : "#D6D3D1";
+    if (isLoading) return "var(--color-teal-700)";
+    if (disabled)  return grayDisabled ? "var(--color-neutral-300)" : "var(--color-neutral-300)";
     if (active)    return "#134E4A";
-    if (hovered)   return "#115E59";
-    if (focused)   return "#0F766E";
+    if (hovered)   return "var(--color-teal-800)";
+    if (focused)   return "var(--color-teal-700)";
     return "transparent";
   })();
 
   const textColor = (() => {
-    if (isLoading) return "#0F766E";
-    if (disabled)  return grayDisabled ? "#6B7280" : "#78716C";
+    if (isLoading) return "var(--color-teal-700)";
+    if (disabled)  return grayDisabled ? "#6B7280" : "var(--color-neutral-500)";
     if (active)    return "#134E4A";
     if (hovered)   return "#FFFFFF";
-    if (focused)   return "#0F766E";
+    if (focused)   return "var(--color-teal-700)";
     return "#FFFFFF";
   })();
 
@@ -116,7 +116,7 @@ export function PrimaryButton({
     >
       {isLoading && (
         <svg
-          style={{ width: spinnerSize, height: spinnerSize, flexShrink: 0, color: "#0F766E" }}
+          style={{ width: spinnerSize, height: spinnerSize, flexShrink: 0, color: "var(--color-teal-700)" }}
           className="animate-spin"
           viewBox="0 0 24 24"
           fill="none"

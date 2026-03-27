@@ -5,25 +5,25 @@ interface Table {
   id: number;
   name: string;
   size: number;
-  status: 'Available' | 'Reserved' | 'Occupied' | 'Out of Service';
+  status: 'Available' | 'Confirmed' | 'Seated' | 'Out of Service';
 }
 
 const tables: Table[] = [
   { id: 1, name: '1', size: 6, status: 'Available' },
-  { id: 2, name: '2', size: 6, status: 'Reserved' },
-  { id: 3, name: '3', size: 4, status: 'Occupied' },
+  { id: 2, name: '2', size: 6, status: 'Confirmed' },
+  { id: 3, name: '3', size: 4, status: 'Seated' },
   { id: 4, name: '4', size: 2, status: 'Out of Service' },
   { id: 5, name: '5', size: 8, status: 'Available' },
   { id: 6, name: '6', size: 4, status: 'Available' },
-  { id: 7, name: '7', size: 6, status: 'Reserved' },
-  { id: 8, name: '8', size: 4, status: 'Occupied' },
+  { id: 7, name: '7', size: 6, status: 'Confirmed' },
+  { id: 8, name: '8', size: 4, status: 'Seated' },
 ];
 
 const STATUS_COLORS: Record<string, string> = {
-  Available: 'bg-teal-400',
-  Reserved: 'bg-blue-400',
-  Occupied: 'bg-purple-400',
-  'Out of Service': 'bg-red-400',
+  Available:        'bg-teal-400',
+  Confirmed:        'bg-blue-400',
+  Seated:           'bg-teal-600',
+  'Out of Service': 'bg-neutral-400',
 };
 
 const getStatusColor = (status: string): string => STATUS_COLORS[status] ?? 'bg-gray-400';

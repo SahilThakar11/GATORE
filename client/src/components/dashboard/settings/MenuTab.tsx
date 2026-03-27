@@ -116,7 +116,7 @@ export default function MenuTab({ onBack }: { onBack: () => void }) {
             <button
               onClick={() => handleRemove(item.id)}
               aria-label={`Remove ${item.name}`}
-              className="text-gray-500 hover:text-red-400 transition-colors cursor-pointer"
+              className="text-neutral-500 hover:text-red-400 transition-colors cursor-pointer"
             >
               <X size={16} aria-hidden="true" />
             </button>

@@ -1,15 +1,63 @@
 @import "tailwindcss";
 
 @theme {
-  --color-warm-700: #6b4d33;
-  --color-warm-500: #c19a6b;
+  /* Warm Beige */
+  --color-warm-50:  #fffbf7;
+  --color-warm-100: #fef7f0;
+  --color-warm-200: #f5e6d8;
   --color-warm-300: #e8d4c4;
   --color-warm-400: #d4b896;
-  --color-warm-200: #f5e6d8;
-  --color-warm-100: #fef7f0;
-  --color-warm-50: #fffbf7;
+  --color-warm-500: #c19a6b;
+  --color-warm-600: #96744f;
+  --color-warm-700: #6b4d33;
+  --color-warm-800: #4a3728;
+
+  /* Teal */
+  --color-teal-50:  #f0fdfa;
+  --color-teal-100: #ccfbf1;
+  --color-teal-200: #99f6e4;
+  --color-teal-500: #14b8a6;
+  --color-teal-600: #0d9488;
+  --color-teal-700: #0a736b;
+  --color-teal-800: #115e59;
+
+  /* Amber */
+  --color-amber-100: #fef3c7;
+  --color-amber-500: #f59e0b;
+  --color-amber-700: #b45309;
+  --color-amber-800: #92400e;
+
+  /* Neutral */
+  --color-neutral-50:  #fafaf9;
+  --color-neutral-100: #f5f5f4;
+  --color-neutral-200: #e7e5e4;
+  --color-neutral-300: #d6d3d1;
+  --color-neutral-400: #a8a29e;
+  --color-neutral-500: #78716c;
   --color-neutral-600: #57534e;
+  --color-neutral-700: #44403c;
   --color-neutral-800: #292524;
+  --color-neutral-900: #1c1917;
+
+  /* Semantic — Success */
+  --color-success-light: #d1fae5;
+  --color-success:       #10b981;
+  --color-success-dark:  #059669;
+
+  /* Semantic — Error */
+  --color-error-light: #fee2e2;
+  --color-error:       #dc2626;
+  --color-error-dark:  #b91c1c;
+
+  /* Semantic — Warning */
+  --color-warning-light: #fef3c7;
+  --color-warning:       #f59e0b;
+  --color-warning-dark:  #d97706;
+
+  /* Semantic — Info */
+  --color-info-light: #dbeafe;
+  --color-info:       #3b82f6;
+  --color-info-dark:  #2563eb;
 }
 /* Hide native calendar icon so we can use our own */
 input[type="date"].hide-calendar-indicator::-webkit-calendar-picker-indicator {
