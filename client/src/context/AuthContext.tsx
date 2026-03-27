@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useState, useEffect, useCallback, useMemo } from "react";
 
 interface AuthUser {
   id: string;
@@ -39,7 +39,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const setAuth = (
+  const setAuth = useCallback((
     newUser: AuthUser,
     newAccessToken: string,
     refreshToken: string,
@@ -49,26 +49,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem("authUser", JSON.stringify(newUser));
     setUser(newUser);
     setAccessToken(newAccessToken);
-  };
+  }, []);
 
-  const updateUser = (updates: Partial<AuthUser>) => {
+  const updateUser = useCallback((updates: Partial<AuthUser>) => {
     setUser((prev) => {
       if (!prev) return prev;
       const updated = { ...prev, ...updates };
       localStorage.setItem("authUser", JSON.stringify(updated));
       return updated;
     });
-  };
+  }, []);
 
-  const logout = () => {
+  const logout = useCallback(() => {
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
     localStorage.removeItem("authUser");
     setUser(null);
     setAccessToken(null);
-  };
+  }, []);
 
-  const refreshAccessToken = async (): Promise<string | null> => {
+  const refreshAccessToken = useCallback(async (): Promise<string | null> => {
     const storedRefreshToken = localStorage.getItem("refreshToken");
     if (!storedRefreshToken) return null;
 
@@ -90,20 +90,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     logout();
     return null;
-  };
+  }, [logout]);
+
+  const contextValue = useMemo(() => ({
+    user,
+    accessToken,
+    isAuthenticated: !!user,
+    setAuth,
+    updateUser,
+    logout,
+    refreshAccessToken,
+  }), [user, accessToken, logout, refreshAccessToken, setAuth, updateUser]);
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        accessToken,
-        isAuthenticated: !!user,
-        setAuth,
-        updateUser,
-        logout,
-        refreshAccessToken,
-      }}
-    >
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );

@@ -1,10 +1,14 @@
-import { useState } from "react";
+import { useState, useId } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Search,
   SlidersHorizontal,
   Plus,
   ChevronDown,
+  ChevronUp,
   CheckCircle2,
+  LogIn,
+  Flag,
   MessageSquare,
   Users,
   X,
@@ -13,15 +17,35 @@ import {
   TrendingUp,
   Activity,
   Loader2,
+  Calendar,
+  Mail,
+  Hash,
+  XCircle,
+  Trash2,
+  Dice5,
+  Edit3,
+  Send,
+  Pencil,
 } from "lucide-react";
 import BusinessLayout from "../components/dashboard/BusinessLayout";
 import NewReservationModal from "../components/dashboard/NewReservationModal";
-import { Button } from "../components/ui/Button";
+import EditReservationModal from "../components/dashboard/EditReservationModal";
+import { PrimaryButton } from "../components/ui/PrimaryButton";
+import { SecondaryButton } from "../components/ui/SecondaryButton";
+import { Dropdown } from "../components/ui/Dropdown";
+import { TextButton } from "../components/ui/TextButton";
 import { useBusinessDashboard, type DashboardReservation } from "../hooks/useBusinessDashboard";
 
 /* ═══════════════════════════════════════════════════════════════════
    HELPERS
    ═══════════════════════════════════════════════════════════════════ */
+
+function parseBookingNotes(notes: string | null) {
+  if (!notes) return { source: null, phone: null };
+  const source = notes.match(/Source:\s*([^,]+)/)?.[1]?.trim() ?? null;
+  const phone = notes.match(/Phone:\s*(.+)/)?.[1]?.trim() ?? null;
+  return { source, phone };
+}
 
 function formatTime(iso: string) {
   return new Date(iso).toLocaleTimeString("en-US", {
@@ -67,7 +91,7 @@ function StatCard({
   progress?: number;
 }) {
   return (
-    <div className="bg-white border border-gray-100 rounded-2xl p-5 flex flex-col gap-3 min-w-0 flex-1 shadow-sm hover:shadow-md transition-shadow duration-200">
+    <div className="bg-white border border-warm-200 rounded-2xl p-5 flex flex-col gap-3 min-w-0 flex-1 shadow-sm hover:shadow-md transition-shadow duration-200">
       <div className="flex items-center gap-2">
         <div
           className="w-8 h-8 rounded-lg flex items-center justify-center"
@@ -75,18 +99,18 @@ function StatCard({
         >
           <Icon size={16} style={{ color: accent }} />
         </div>
-        <span className="text-xs font-medium text-gray-500">{label}</span>
+        <span className="text-xs font-medium text-neutral-500">{label}</span>
       </div>
 
-      <p className="text-3xl font-black text-gray-900 leading-none">{value}</p>
+      <p className="text-3xl font-extrabold text-neutral-800 leading-none">{value}</p>
 
       {progress !== undefined && (
         <div className="flex flex-col gap-1.5">
-          <div className="flex items-center justify-between text-[11px] text-gray-400">
+          <div className="flex items-center justify-between text-xs text-neutral-600">
             <span>Tables occupied</span>
-            <span className="font-semibold text-gray-600">{value}</span>
+            <span className="font-semibold">{value}</span>
           </div>
-          <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+          <div className="w-full h-2 bg-warm-100 rounded-full overflow-hidden">
             <div
               className="h-full rounded-full transition-all duration-500"
               style={{ width: `${progress * 100}%`, backgroundColor: accent }}
@@ -107,78 +131,305 @@ function StatCard({
         </div>
       )}
 
-      <p className="text-[11px] text-gray-400 leading-tight">{extra}</p>
+      <p className="text-xs text-neutral-600 leading-tight">{extra}</p>
     </div>
   );
 }
 
-function FilterDropdown({ label, value }: { label: string; value: string }) {
+function FilterSelect({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  options: string[];
+  onChange: (v: string) => void;
+}) {
   return (
     <div className="flex flex-col gap-1 flex-1 min-w-[110px]">
-      <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
+      <span className="text-xs font-semibold text-neutral-600">
         {label}
       </span>
-      <button className="flex items-center justify-between bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-700 hover:border-teal-300 transition-colors cursor-pointer">
-        <span>{value}</span>
-        <ChevronDown size={14} className="text-gray-400" />
-      </button>
+      <Dropdown
+        trigger="label"
+        triggerLabel={value}
+        fullWidth
+        items={options.map((opt) => ({ label: opt, onClick: () => onChange(opt) }))}
+        triggerClassName="bg-white !text-sm"
+      />
     </div>
   );
 }
 
-function ReservationRow({ r }: { r: DashboardReservation }) {
+function getStatusStyle(status: string) {
+  switch (status) {
+    case "completed":
+      return { bg: "#D1FAE5", border: "#059669", dot: "#059669", badgeClass: "bg-emerald-50 text-emerald-700 border-emerald-200" };
+    case "seated":
+      return { bg: "#99F6E4", border: "#0D9488", dot: "#0D9488", badgeClass: "bg-teal-50 text-teal-700 border-teal-200" };
+    default:
+      return { bg: "#DBEAFE", border: "#3B82F6", dot: "#3B82F6", badgeClass: "bg-blue-50 text-blue-700 border-blue-200" };
+  }
+}
+
+function ReservationRow({ r, onSaveNotes, onUpdateStatus, onModify, onDelete }: {
+  r: DashboardReservation;
+  onSaveNotes: (id: number, status: string, notes: string) => Promise<void>;
+  onUpdateStatus: (id: number, status: string) => Promise<void>;
+  onModify: (r: DashboardReservation) => void;
+  onDelete: (id: number) => Promise<void>;
+}) {
+  const expandedId = useId();
+  const [isOpen, setIsOpen] = useState(false);
+  const [editingNotes, setEditingNotes] = useState(false);
+  const [notesText, setNotesText] = useState(r.specialRequests ?? "");
+  const [savingNotes, setSavingNotes] = useState(false);
+  const [updatingStatus, setUpdatingStatus] = useState(false);
   const gameName = r.gameReservations?.[0]?.game?.name;
-  const isPending = r.status === "pending";
-  const dotColor = isPending ? "#f97316" : "#3b82f6";
-  const bgColor = isPending ? "#fff7ed" : "#fef9ee";
+  const statusStyle = getStatusStyle(r.status);
+  const { source, phone } = parseBookingNotes(r.notes);
+  const duration = (new Date(r.endTime).getTime() - new Date(r.startTime).getTime()) / (1000 * 60 * 60);
 
   return (
-    <div
-      className="flex items-center gap-4 px-5 py-4 rounded-xl border border-gray-100 hover:shadow-sm transition-shadow duration-150"
-      style={{ backgroundColor: bgColor }}
-    >
-      <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: dotColor }} />
-
-      <div className="w-20 shrink-0">
-        <p className="text-sm font-bold text-gray-900">{formatTime(r.startTime)}</p>
-        <p className="text-[11px] text-gray-400">{r.table.name}</p>
-      </div>
-
+    <div className="rounded-xl overflow-hidden transition-shadow duration-150 hover:shadow-sm" style={{ border: `1.5px solid ${statusStyle.border}` }}>
+      {/* ── Header row ── */}
       <div
-        className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 text-white text-xs font-bold"
-        style={{ backgroundColor: getAvatarColor(r.user.name) }}
+        className="flex items-center gap-4 px-5 py-4 cursor-pointer select-none focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-neutral-800"
+        style={{ backgroundColor: statusStyle.bg }}
+        onClick={() => setIsOpen((v) => !v)}
+        role="button"
+        aria-expanded={isOpen}
+        aria-controls={expandedId}
+        aria-label={`${r.user.name} reservation — ${isOpen ? "collapse" : "expand"} details`}
+        tabIndex={0}
+        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setIsOpen((v) => !v); } }}
       >
-        {getInitials(r.user.name)}
-      </div>
+        <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: statusStyle.dot }} aria-hidden="true" />
 
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-1.5">
-          <p className="text-sm font-semibold text-gray-900 truncate">{r.user.name}</p>
+        <div className="w-20 shrink-0">
+          <p className="text-sm font-bold text-neutral-800">{formatTime(r.startTime)}</p>
+          <p className="text-xs text-neutral-600">{r.table.name}</p>
         </div>
-        <p className="text-[11px] text-gray-400">
-          {gameName || `Customer ID: ${r.user.id}`}
-        </p>
-      </div>
 
-      <div className="flex items-center gap-3 shrink-0">
-        {r.status === "confirmed" && <CheckCircle2 size={16} className="text-teal-500" />}
-        {r.specialRequests && <MessageSquare size={14} className="text-gray-400" />}
-        <div className="flex items-center gap-1 text-gray-500">
-          <Users size={14} />
-          <span className="text-sm font-medium">{r.partySize}</span>
-        </div>
-        <span
-          className={`text-xs font-semibold px-2.5 py-1 rounded-full border ${
-            r.status === "confirmed"
-              ? "bg-teal-50 text-teal-700 border-teal-200"
-              : r.status === "pending"
-                ? "bg-amber-50 text-amber-700 border-amber-200"
-                : "bg-gray-50 text-gray-600 border-gray-200"
-          }`}
+        <div
+          className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 text-white text-xs font-bold"
+          style={{ backgroundColor: getAvatarColor(r.user.name) }}
+          aria-hidden="true"
         >
-          {r.status.charAt(0).toUpperCase() + r.status.slice(1)}
+          {getInitials(r.user.name)}
+        </div>
+
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-neutral-800 truncate">{r.user.name}</p>
+          <p className="text-xs text-neutral-600">
+            {gameName ?? <span className="italic">No game selected</span>}
+          </p>
+        </div>
+
+        <div className="flex items-center gap-3 shrink-0" onClick={(e) => e.stopPropagation()}>
+          {r.status === "confirmed" && <CheckCircle2 size={16} className="text-teal-500" aria-hidden="true" />}
+          {r.specialRequests && (
+            <>
+              <MessageSquare size={14} className="text-neutral-600" aria-hidden="true" />
+              <span className="sr-only">Has special requests</span>
+            </>
+          )}
+          <div className="flex items-center gap-1 text-neutral-700">
+            <Users size={14} aria-hidden="true" />
+            <span className="text-sm font-medium">{r.partySize}</span>
+          </div>
+          <span className={`text-xs font-semibold px-2.5 py-1 rounded-full border ${statusStyle.badgeClass}`}>
+            {r.status.charAt(0).toUpperCase() + r.status.slice(1)}
+          </span>
+          {(r.status === "confirmed" || r.status === "pending") && (
+            <span onClick={(e) => e.stopPropagation()}>
+              <PrimaryButton
+                label="Check In"
+                size="xs"
+                isLoading={updatingStatus}
+                rightIcon={<LogIn size={12} aria-hidden="true" />}
+                onClick={async () => { setUpdatingStatus(true); await onUpdateStatus(r.id, "seated"); setUpdatingStatus(false); }}
+              />
+            </span>
+          )}
+          {r.status === "seated" && (
+            <span onClick={(e) => e.stopPropagation()}>
+              <PrimaryButton
+                label="Complete"
+                size="xs"
+                isLoading={updatingStatus}
+                rightIcon={<Flag size={12} aria-hidden="true" />}
+                onClick={async () => { setUpdatingStatus(true); await onUpdateStatus(r.id, "completed"); setUpdatingStatus(false); }}
+              />
+            </span>
+          )}
+        </div>
+
+        <span className="text-neutral-600 shrink-0" aria-hidden="true">
+          {isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
         </span>
-        <ChevronDown size={16} className="text-gray-300" />
+      </div>
+
+      {/* ── Expanded section ── */}
+      <div
+        id={expandedId}
+        className={`transition-all duration-300 ease-in-out overflow-hidden ${isOpen ? "max-h-[800px] opacity-100" : "max-h-0 opacity-0"}`}
+      >
+        <div className="border-t px-5 py-5" style={{ borderColor: statusStyle.border, backgroundColor: statusStyle.bg }}>
+          <div className="grid grid-cols-2 gap-8">
+
+            {/* LEFT — Reservation Details */}
+            <div>
+              <p className="text-xs font-bold text-neutral-600 uppercase tracking-wider mb-3">Reservation Details</p>
+              <div className="space-y-2 text-sm text-neutral-700">
+                <div className="flex items-center gap-2">
+                  <Calendar size={14} className="text-neutral-500" aria-hidden="true" />
+                  <span>{new Date(r.reservationDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Clock size={14} className="text-neutral-500" aria-hidden="true" />
+                  <span>{formatTime(r.startTime)} <span className="text-neutral-600">({duration.toFixed(1)} hours)</span></span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Dice5 size={14} className="text-neutral-500" aria-hidden="true" />
+                  {gameName
+                    ? <span>{gameName}</span>
+                    : <span className="text-neutral-600 italic">No game selected</span>}
+                </div>
+              </div>
+            </div>
+
+            {/* RIGHT — Contact + Booking Info */}
+            <div>
+              <p className="text-xs font-bold text-neutral-600 uppercase tracking-wider mb-3">Contact Information</p>
+              <div className="space-y-2 text-sm text-neutral-700">
+                <div className="flex items-center gap-2">
+                  <Mail size={14} className="text-neutral-500" aria-hidden="true" />
+                  <span>{r.user.email}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Users size={14} className="text-neutral-500" aria-hidden="true" />
+                  {phone
+                    ? <span>{phone}</span>
+                    : <span className="text-neutral-600 italic">No phone on file</span>}
+                </div>
+              </div>
+              <div className="mt-5">
+                <p className="text-xs font-bold text-neutral-600 uppercase tracking-wider mb-2">Booking Info</p>
+                <div className="space-y-1.5 text-sm text-neutral-700">
+                  <div className="flex items-center gap-2">
+                    <Hash size={14} className="text-neutral-500" aria-hidden="true" />
+                    <span>Reservation ID: {r.id}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Hash size={14} className="text-neutral-500" aria-hidden="true" />
+                    <span>Customer ID: {r.user.id}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Hash size={14} className="text-neutral-500" aria-hidden="true" />
+                    <span>Type: {source ?? <span className="text-neutral-600 italic">—</span>}</span>
+                  </div>
+                  <p className="text-xs text-neutral-600">
+                    Booked: {new Date(r.createdAt).toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" })}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Notes */}
+          <div className="bg-white rounded-xl border border-neutral-200 p-4 mt-5">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <MessageSquare size={14} className="text-neutral-500" aria-hidden="true" />
+                <p className="text-xs font-bold text-neutral-600 uppercase tracking-wider">Notes</p>
+              </div>
+              {!editingNotes && (
+                <button
+                  type="button"
+                  aria-label="Edit notes"
+                  onClick={(e) => { e.stopPropagation(); setEditingNotes(true); }}
+                  className="text-neutral-500 hover:text-teal-600 transition-colors cursor-pointer p-1 rounded hover:bg-teal-50 focus-visible:outline-2 focus-visible:outline-teal-700 focus-visible:outline-offset-1"
+                >
+                  <Pencil size={13} aria-hidden="true" />
+                </button>
+              )}
+            </div>
+            {editingNotes ? (
+              <div className="space-y-2" onClick={(e) => e.stopPropagation()}>
+                <textarea
+                  value={notesText}
+                  onChange={(e) => setNotesText(e.target.value)}
+                  rows={3}
+                  autoFocus
+                  className="w-full px-3 py-2 border border-warm-200 rounded-lg text-sm text-neutral-700 placeholder:text-neutral-500 bg-warm-50 outline-none focus:ring-2 focus:ring-teal-500 resize-none"
+                  placeholder="Add notes about this reservation..."
+                />
+                <div className="flex gap-2 justify-end">
+                  <button
+                    type="button"
+                    onClick={() => { setNotesText(r.specialRequests ?? ""); setEditingNotes(false); }}
+                    className="text-xs text-neutral-600 hover:text-neutral-800 px-3 py-1.5 rounded-lg hover:bg-warm-100 transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-teal-700 focus-visible:outline-offset-1"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    disabled={savingNotes}
+                    onClick={async () => {
+                      setSavingNotes(true);
+                      await onSaveNotes(r.id, r.status, notesText);
+                      setSavingNotes(false);
+                      setEditingNotes(false);
+                    }}
+                    className="text-xs font-semibold text-white bg-teal-600 hover:bg-teal-700 px-3 py-1.5 rounded-lg transition-colors cursor-pointer disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-teal-700 focus-visible:outline-offset-1"
+                  >
+                    {savingNotes ? "Saving…" : "Save"}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm text-neutral-600">
+                {notesText || <span className="text-neutral-600 italic">No notes added yet</span>}
+              </p>
+            )}
+          </div>
+
+          {/* Footer actions */}
+          <div className="flex items-center justify-between mt-5">
+            <div className="flex items-center gap-2">
+              <SecondaryButton label="Modify" size="xs" leftIcon={<Edit3 size={13} aria-hidden="true" />} onClick={() => onModify(r)} />
+              <SecondaryButton label="Send Reminder" size="xs" leftIcon={<Send size={13} aria-hidden="true" />} />
+            </div>
+            <div className="flex items-center gap-2">
+              {r.status === "completed" ? (
+                <button
+                  type="button"
+                  disabled={updatingStatus}
+                  onClick={async () => { setUpdatingStatus(true); await onDelete(r.id); setUpdatingStatus(false); }}
+                  className="inline-flex items-center justify-center gap-2 py-2 px-3 text-xs font-semibold rounded-lg border border-red-600 text-red-700 bg-white hover:bg-red-50 transition-colors cursor-pointer disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-red-700 focus-visible:outline-offset-1"
+                  style={{ fontFamily: "'DM Sans', sans-serif" }}
+                >
+                  <Trash2 size={13} aria-hidden="true" />
+                  {updatingStatus ? "Deleting…" : "Delete"}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  disabled={updatingStatus}
+                  onClick={async () => { setUpdatingStatus(true); await onUpdateStatus(r.id, "cancelled"); setUpdatingStatus(false); }}
+                  className="inline-flex items-center justify-center gap-2 py-2 px-3 text-xs font-semibold rounded-lg border border-red-600 text-red-700 bg-white hover:bg-red-50 transition-colors cursor-pointer disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-red-700 focus-visible:outline-offset-1"
+                  style={{ fontFamily: "'DM Sans', sans-serif" }}
+                >
+                  <XCircle size={13} aria-hidden="true" />
+                  {updatingStatus ? "Cancelling…" : "Cancel"}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -189,10 +440,17 @@ function ReservationRow({ r }: { r: DashboardReservation }) {
    ═══════════════════════════════════════════════════════════════════ */
 
 export default function BusinessDashboard() {
+  const navigate = useNavigate();
   const [showFilter, setShowFilter] = useState(true);
   const [showNewReservation, setShowNewReservation] = useState(false);
+  const [editingReservation, setEditingReservation] = useState<DashboardReservation | null>(null);
+  const [filterStatus, setFilterStatus] = useState("All");
+  const [filterTable, setFilterTable] = useState("All");
+  const [filterGuests, setFilterGuests] = useState("Any");
+  const [filterSource, setFilterSource] = useState("All");
+  const [filterTime, setFilterTime] = useState("All Day");
 
-  const { stats, profile, loading, createWalkIn } = useBusinessDashboard();
+  const { stats, profile, loading, createWalkIn, updateReservation, updateReservationNotes, updateReservationStatus, deleteReservation } = useBusinessDashboard();
 
   const today = new Date();
   const dateStr = today.toLocaleDateString("en-US", {
@@ -206,13 +464,36 @@ export default function BusinessDashboard() {
   const todayRes = stats?.todayReservations ?? { total: 0, pending: 0 };
   const reservations = stats?.reservations ?? [];
 
+  const filteredReservations = reservations.filter((r) => {
+    if (filterStatus !== "All" && r.status.toLowerCase() !== filterStatus.toLowerCase()) return false;
+    if (filterTable !== "All" && r.table.name !== filterTable) return false;
+    if (filterGuests !== "Any") {
+      if (filterGuests === "1–2" && r.partySize > 2) return false;
+      if (filterGuests === "3–4" && (r.partySize < 3 || r.partySize > 4)) return false;
+      if (filterGuests === "5+" && r.partySize < 5) return false;
+    }
+    if (filterSource !== "All") {
+      const { source } = parseBookingNotes(r.notes);
+      if (!source || source.toLowerCase() !== filterSource.toLowerCase()) return false;
+    }
+    if (filterTime !== "All Day") {
+      const hour = new Date(r.startTime).getHours();
+      if (filterTime === "Morning" && hour >= 12) return false;
+      if (filterTime === "Afternoon" && (hour < 12 || hour >= 17)) return false;
+      if (filterTime === "Evening" && hour < 17) return false;
+    }
+    return true;
+  });
+
+  const filtersActive = filterStatus !== "All" || filterTable !== "All" || filterGuests !== "Any" || filterSource !== "All" || filterTime !== "All Day";
+
   return (
     <BusinessLayout>
       <div className="max-w-[1100px] mx-auto px-8 py-8">
         {/* ── Loading ────────────────────────────────────────── */}
         {loading && (
-          <div className="flex items-center justify-center py-20">
-            <Loader2 size={32} className="animate-spin text-teal-600" />
+          <div className="flex items-center justify-center py-20" role="status" aria-label="Loading dashboard">
+            <Loader2 size={32} className="animate-spin text-teal-600" aria-hidden="true" />
           </div>
         )}
 
@@ -221,30 +502,23 @@ export default function BusinessDashboard() {
             {/* ── Header ───────────────────────────────────────────── */}
             <div className="flex items-start justify-between mb-2">
               <div>
-                <h1 className="text-2xl font-black text-gray-900">{dateStr}</h1>
+                <h1 className="text-2xl font-black text-neutral-800">{dateStr}</h1>
                 <div className="flex items-center gap-5 mt-2 flex-wrap">
-                  <span className="flex items-center gap-1.5 text-xs text-gray-500">
+                  <span className="flex items-center gap-1.5 text-xs text-neutral-500">
                     <Clock size={13} className="text-teal-600" />
                     Peak hours: 6–9 PM
                   </span>
-                  <span className="flex items-center gap-1.5 text-xs text-gray-500">
+                  <span className="flex items-center gap-1.5 text-xs text-neutral-500">
                     <Activity size={13} className="text-amber-500" />
                     {todayRes.pending} reservations pending confirmation
                   </span>
-                  <span className="flex items-center gap-1.5 text-xs text-gray-500">
-                    <TrendingUp size={13} className="text-gray-400" />
+                  <span className="flex items-center gap-1.5 text-xs text-neutral-500">
+                    <TrendingUp size={13} className="text-neutral-400" />
                     {occupancy.total - occupancy.occupied} tables available
                   </span>
                 </div>
               </div>
-              <Button
-                variant="primary"
-                onClick={() => setShowNewReservation(true)}
-                className="flex items-center gap-2 px-5 py-2.5 shrink-0 bg-teal-700"
-              >
-                <Plus size={16} />
-                Quick Book
-              </Button>
+              <PrimaryButton label="Quick Book" onClick={() => setShowNewReservation(true)} rightIcon={<Plus size={16} aria-hidden="true" />} />
             </div>
 
             {/* ── Stat Cards ───────────────────────────────────────── */}
@@ -281,80 +555,104 @@ export default function BusinessDashboard() {
             </div>
 
             {/* ── Upcoming Reservations ─────────────────────────────── */}
-            <div className="bg-white border border-gray-100 rounded-2xl shadow-sm mt-8 p-6">
+            <div className="bg-white border border-warm-200 rounded-2xl shadow-sm mt-8 p-6">
               <div className="flex items-center justify-between mb-1">
                 <div>
-                  <h2 className="text-lg font-bold text-gray-900">Upcoming Reservations</h2>
-                  <p className="text-xs text-gray-400 mt-0.5">Next reservations for today</p>
+                  <h2 className="text-lg font-bold text-neutral-800">Upcoming Reservations</h2>
+                  <p className="text-xs text-neutral-600 mt-0.5">Next reservations for today</p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <button className="flex items-center gap-1.5 text-sm text-gray-600 hover:text-teal-700 transition-colors cursor-pointer">
-                    <Search size={15} />
-                    Search
-                  </button>
-                  <button
+                  <TextButton
+                    label="Search"
+                    size="small"
+                    leftIcon={<Search size={15} />}
+                  />
+                  <TextButton
+                    label="Filter"
+                    size="small"
+                    leftIcon={<SlidersHorizontal size={15} />}
+                    rightIcon={
+                      <ChevronDown
+                        size={13}
+                        style={{
+                          transition: "transform 200ms",
+                          transform: showFilter ? "rotate(180deg)" : "rotate(0deg)",
+                        }}
+                      />
+                    }
                     onClick={() => setShowFilter((v) => !v)}
-                    className="flex items-center gap-1.5 text-sm text-gray-600 hover:text-teal-700 transition-colors cursor-pointer"
-                  >
-                    <SlidersHorizontal size={15} />
-                    Filter
-                    <ChevronDown
-                      size={13}
-                      className={`transition-transform duration-200 ${showFilter ? "rotate-180" : ""}`}
-                    />
-                  </button>
-                  <button
-                    onClick={() => setShowNewReservation(true)}
-                    className="flex items-center gap-2 border-2 border-teal-600 text-teal-700 text-sm font-semibold px-4 py-2 rounded-xl hover:bg-teal-50 transition-colors cursor-pointer"
-                  >
-                    <Plus size={15} />
-                    New Reservation
-                  </button>
+                  />
+                  <SecondaryButton label="New Reservation" onClick={() => setShowNewReservation(true)} leftIcon={<Plus size={15} aria-hidden="true" />} size="small" />
                 </div>
               </div>
 
               {showFilter && (
-                <div className="bg-gray-50/70 border border-gray-100 rounded-xl p-4 mt-4 mb-4">
+                <div className="bg-warm-50 border border-warm-200 rounded-xl p-4 mt-4 mb-4">
                   <div className="flex items-center justify-between mb-3">
-                    <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+                    <span className="text-xs font-bold text-neutral-600 uppercase tracking-wider">
                       Filter Reservations
                     </span>
                     <button
                       onClick={() => setShowFilter(false)}
-                      className="text-gray-400 hover:text-gray-600 cursor-pointer"
+                      aria-label="Close filters"
+                      className="text-neutral-500 hover:text-neutral-700 cursor-pointer"
                     >
-                      <X size={16} />
+                      <X size={16} aria-hidden="true" />
                     </button>
                   </div>
                   <div className="flex items-end gap-3">
-                    <FilterDropdown label="Status" value="All" />
-                    <FilterDropdown label="Table" value="All" />
-                    <FilterDropdown label="Guests" value="Any" />
-                    <FilterDropdown label="Source" value="All" />
-                    <FilterDropdown label="Time" value="All Day" />
+                    <FilterSelect label="Status" value={filterStatus} onChange={setFilterStatus} options={["All", "Confirmed", "Pending", "Seated", "Completed", "Cancelled"]} />
+                    <FilterSelect label="Table" value={filterTable} onChange={setFilterTable} options={["All", ...Array.from(new Set(reservations.map((r) => r.table.name)))]} />
+                    <FilterSelect label="Guests" value={filterGuests} onChange={setFilterGuests} options={["Any", "1–2", "3–4", "5+"]} />
+                    <FilterSelect label="Source" value={filterSource} onChange={setFilterSource} options={["All", "Walk-in", "Phone", "Online", "Email"]} />
+                    <FilterSelect label="Time" value={filterTime} onChange={setFilterTime} options={["All Day", "Morning", "Afternoon", "Evening"]} />
                   </div>
                 </div>
               )}
 
               <div className="flex flex-col gap-3 mt-2">
-                {reservations.length === 0 && (
-                  <p className="text-sm text-gray-400 text-center py-8">
-                    No reservations for today yet.
+                {filteredReservations.length === 0 && (
+                  <p className="text-sm text-neutral-500 text-center py-8">
+                    {filtersActive
+                      ? "No reservations match the current filters."
+                      : "No reservations for today yet."}
                   </p>
                 )}
-                {reservations.map((r) => (
-                  <ReservationRow key={r.id} r={r} />
+                {filteredReservations.map((r) => (
+                  <ReservationRow
+                    key={r.id}
+                    r={r}
+                    onSaveNotes={async (id, status, notes) => { await updateReservationNotes(id, status, notes); }}
+                    onUpdateStatus={async (id, status) => { await updateReservationStatus(id, status); }}
+                    onModify={(res) => setEditingReservation(res)}
+                    onDelete={async (id) => { await deleteReservation(id); }}
+                  />
                 ))}
               </div>
 
               {reservations.length > 0 && (
-                <div className="flex items-center justify-between mt-5 pt-4 border-t border-gray-100">
-                  <p className="text-xs text-gray-400">
-                    Showing {reservations.length} of {todayRes.total} reservations
+                <div className="flex items-center justify-between mt-5 pt-4 border-t border-warm-200">
+                  <p className="text-xs text-neutral-600">
+                    {filtersActive
+                      ? `Showing ${filteredReservations.length} of ${reservations.length} reservations`
+                      : `Showing ${reservations.length} of ${todayRes.total} reservations`}
                   </p>
-                  <button className="text-xs font-semibold text-teal-600 hover:text-teal-800 transition-colors cursor-pointer">
-                    View all reservations →
-                  </button>
+                  <div className="flex items-center gap-3">
+                    {filtersActive && (
+                      <TextButton
+                        label="Clear filters"
+                        size="xs"
+                        onClick={() => {
+                          setFilterStatus("All");
+                          setFilterTable("All");
+                          setFilterGuests("Any");
+                          setFilterSource("All");
+                          setFilterTime("All Day");
+                        }}
+                      />
+                    )}
+                    <TextButton label="View all reservations →" size="xs" onClick={() => navigate("/dashboard/reservations")} />
+                  </div>
                 </div>
               )}
             </div>
@@ -367,12 +665,28 @@ export default function BusinessDashboard() {
         isOpen={showNewReservation}
         onClose={() => setShowNewReservation(false)}
         tables={profile?.tables ?? []}
+        games={(profile?.restaurantGames ?? []).map((rg: any) => ({ id: rg.game.id, name: rg.game.name }))}
         onCreateWalkIn={async (data) => {
           const result = await createWalkIn(data);
           if (result.success) setShowNewReservation(false);
           return result;
         }}
       />
+
+      {editingReservation && (
+        <EditReservationModal
+          isOpen={!!editingReservation}
+          onClose={() => setEditingReservation(null)}
+          reservation={editingReservation}
+          tables={profile?.tables ?? []}
+          games={(profile?.restaurantGames ?? []).map((rg: any) => ({ id: rg.game.id, name: rg.game.name }))}
+          onSave={async (id, data) => {
+            const result = await updateReservation(id, data);
+            if (result.success) setEditingReservation(null);
+            return result;
+          }}
+        />
+      )}
 
     </BusinessLayout>
   );

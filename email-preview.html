@@ -1,12 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Gatore — Email Preview</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'DM Sans', system-ui, sans-serif; background: #1a1a2e; color: #fff; min-height: 100vh; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'DM Sans', system-ui, sans-serif;
+      background: #1a1a2e;
+      color: #fff;
+      min-height: 100vh;
+    }
 
     /* ── Header ── */
     .preview-header {
@@ -17,8 +28,18 @@
       gap: 16px;
       border-bottom: 1px solid #0d9488;
     }
-    .preview-header h1 { font-size: 15px; font-weight: 700; letter-spacing: 2px; color: #f0fdfa; }
-    .preview-header span { font-size: 12px; color: #99f6e4; }
+
+    .preview-header h1 {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: #f0fdfa;
+    }
+
+    .preview-header span {
+      font-size: 12px;
+      color: #99f6e4;
+    }
 
     /* ── Tabs ── */
     .tabs {
@@ -28,6 +49,7 @@
       background: #111827;
       border-bottom: 1px solid #1f2937;
     }
+
     .tab {
       padding: 8px 16px;
       border-radius: 8px 8px 0 0;
@@ -39,8 +61,17 @@
       background: #1f2937;
       transition: all 150ms;
     }
-    .tab:hover { color: #f0fdfa; background: #374151; }
-    .tab.active { background: #fffbf7; color: #134e4a; font-weight: 700; }
+
+    .tab:hover {
+      color: #f0fdfa;
+      background: #374151;
+    }
+
+    .tab.active {
+      background: #fffbf7;
+      color: #134e4a;
+      font-weight: 700;
+    }
 
     /* ── Canvas ── */
     .canvas {
@@ -49,7 +80,10 @@
       display: none;
       padding: 0;
     }
-    .canvas.active { display: block; }
+
+    .canvas.active {
+      display: block;
+    }
 
     /* ── Email panel ── */
     iframe {
@@ -60,25 +94,26 @@
     }
   </style>
 </head>
+
 <body>
 
-<div class="preview-header">
-  <h1>GATORE</h1>
-  <span>Email Preview — Dev Tool</span>
-</div>
+  <div class="preview-header">
+    <h1>GATORE</h1>
+    <span>Email Preview — Dev Tool</span>
+  </div>
 
-<div class="tabs">
-  <button class="tab active" onclick="show('user-otp')">User OTP</button>
-  <button class="tab" onclick="show('business-otp')">Business OTP</button>
-  <button class="tab" onclick="show('approved')">Approved</button>
-  <button class="tab" onclick="show('rejected')">Rejected</button>
-</div>
+  <div class="tabs">
+    <button class="tab active" onclick="show('user-otp')">User OTP</button>
+    <button class="tab" onclick="show('business-otp')">Business OTP</button>
+    <button class="tab" onclick="show('approved')">Approved</button>
+    <button class="tab" onclick="show('rejected')">Rejected</button>
+  </div>
 
-<!-- ═══════════════════════════════════════════════════════════
+  <!-- ═══════════════════════════════════════════════════════════
      USER OTP
 ════════════════════════════════════════════════════════════ -->
-<div class="canvas active" id="tab-user-otp">
-  <iframe srcdoc="
+  <div class="canvas active" id="tab-user-otp">
+    <iframe srcdoc="
 <!DOCTYPE html>
 <html lang='en'>
 <head>
@@ -201,13 +236,13 @@
 </body>
 </html>
   "></iframe>
-</div>
+  </div>
 
-<!-- ═══════════════════════════════════════════════════════════
+  <!-- ═══════════════════════════════════════════════════════════
      BUSINESS OTP
 ════════════════════════════════════════════════════════════ -->
-<div class="canvas" id="tab-business-otp">
-  <iframe srcdoc="
+  <div class="canvas" id="tab-business-otp">
+    <iframe srcdoc="
 <!DOCTYPE html>
 <html lang='en'>
 <head>
@@ -312,13 +347,13 @@
 </body>
 </html>
   "></iframe>
-</div>
+  </div>
 
-<!-- ═══════════════════════════════════════════════════════════
+  <!-- ═══════════════════════════════════════════════════════════
      APPROVED
 ════════════════════════════════════════════════════════════ -->
-<div class="canvas" id="tab-approved">
-  <iframe srcdoc="
+  <div class="canvas" id="tab-approved">
+    <iframe srcdoc="
 <!DOCTYPE html>
 <html lang='en'>
 <head>
@@ -443,13 +478,13 @@
 </body>
 </html>
   "></iframe>
-</div>
+  </div>
 
-<!-- ═══════════════════════════════════════════════════════════
+  <!-- ═══════════════════════════════════════════════════════════
      REJECTED
 ════════════════════════════════════════════════════════════ -->
-<div class="canvas" id="tab-rejected">
-  <iframe srcdoc="
+  <div class="canvas" id="tab-rejected">
+    <iframe srcdoc="
 <!DOCTYPE html>
 <html lang='en'>
 <head>
@@ -568,16 +603,17 @@
 </body>
 </html>
   "></iframe>
-</div>
+  </div>
 
-<script>
-  function show(id) {
-    document.querySelectorAll('.canvas').forEach(el => el.classList.remove('active'));
-    document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
-    document.getElementById('tab-' + id).classList.add('active');
-    event.target.classList.add('active');
-  }
-</script>
+  <script>
+    function show(id) {
+      document.querySelectorAll('.canvas').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+      document.getElementById('tab-' + id).classList.add('active');
+      event.target.classList.add('active');
+    }
+  </script>
 
 </body>
+
 </html>

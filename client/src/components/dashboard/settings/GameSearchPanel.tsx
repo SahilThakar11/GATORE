@@ -49,7 +49,7 @@ export default function GameSearchPanel({
   onAdd,
   onRemove,
 }: GameSearchPanelProps) {
-  const { games, loading, loadingMore, hasMore, search, loadMore, clear } = useBGGSearch();
+  const { games, loading, loadingMore, hasMore, error, search, loadMore, clear } = useBGGSearch();
   const [query, setQuery] = useState("");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -145,6 +145,10 @@ export default function GameSearchPanel({
         </div>
       )}
 
+      {!loading && error && (
+        <p className="text-sm text-red-500 text-center py-4">{error}</p>
+      )}
+
       {!loading && games.length > 0 && (
         <div className="flex flex-col gap-3">
           {games.map((game) => {
@@ -232,7 +236,7 @@ export default function GameSearchPanel({
         </div>
       )}
 
-      {!loading && query && games.length === 0 && (
+      {!loading && !error && query && games.length === 0 && (
         <p className="text-sm text-gray-400 text-center py-4">No games found for "{query}"</p>
       )}
     </div>

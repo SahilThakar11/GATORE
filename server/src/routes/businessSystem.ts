@@ -22,6 +22,8 @@ import {
   getReservations,
   createWalkInReservation,
   updateReservationStatus,
+  updateReservation,
+  deleteReservation,
   deleteBusinessAccount,
 } from "../controllers/businessSystemController";
 
@@ -68,6 +70,8 @@ router.put("/pricing", updatePricing as any);
 router.get("/reservations", getReservations as any);
 router.post("/reservations", createWalkInReservation as any);
 router.patch("/reservations/:id/status", updateReservationStatus as any);
+router.patch("/reservations/:id", updateReservation as any);
+router.delete("/reservations/:id", deleteReservation as any);
 
 // ── Account Deletion ─────────────────────────────────────────────────────────
 router.delete("/account", deleteBusinessAccount as any);

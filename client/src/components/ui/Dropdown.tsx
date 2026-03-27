@@ -1,4 +1,5 @@
 import { useRef, useEffect, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { ChevronDown, MoreVertical } from "lucide-react";
 
 export interface DropdownItem {
@@ -33,14 +34,33 @@ export function Dropdown({
   dropUp = false,
 }: DropdownProps) {
   const [open, setOpen] = useState(false);
+  const [menuPos, setMenuPos] = useState<{ top?: number; bottom?: number; left?: number; right?: number; width?: number }>({});
   const containerRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  // Close on outside click
+  // Calculate portal position when opening
+  useEffect(() => {
+    if (!open || !triggerRef.current) return;
+    const rect = triggerRef.current.getBoundingClientRect();
+    setMenuPos({
+      ...(dropUp
+        ? { bottom: window.innerHeight - rect.top + 6 }
+        : { top: rect.bottom + 6 }),
+      ...(align === "right"
+        ? { right: window.innerWidth - rect.right }
+        : { left: rect.left }),
+      ...(fullWidth ? { width: rect.width } : {}),
+    });
+  }, [open, dropUp, align, fullWidth]);
+
+  // Close on outside click (check both container and portal menu)
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node))
-        setOpen(false);
+      if (
+        containerRef.current && !containerRef.current.contains(e.target as Node) &&
+        menuRef.current && !menuRef.current.contains(e.target as Node)
+      ) setOpen(false);
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
@@ -65,18 +85,15 @@ export function Dropdown({
   }, [open]);
 
   const menuStyle: React.CSSProperties = {
+    position: "fixed",
+    ...menuPos,
+    minWidth: fullWidth ? undefined : "180px",
     backgroundColor: "#FFFFFF",
     borderRadius: "8px",
     border: "1px solid #E8D4C4",
     boxShadow: "0 4px 12px 0 rgba(0,0,0,0.10)",
-    ...(fullWidth ? { width: "100%" } : { minWidth: "180px" }),
     padding: "4px 0",
-    position: "absolute",
-    ...(dropUp
-      ? { bottom: "calc(100% + 6px)" }
-      : { top: "calc(100% + 6px)" }),
-    zIndex: 50,
-    ...(align === "right" ? { right: 0 } : { left: 0 }),
+    zIndex: 9999,
   };
 
   return (
@@ -87,6 +104,7 @@ export function Dropdown({
       {/* Trigger */}
       {trigger === "kebab" ? (
         <button
+          ref={triggerRef}
           onClick={() => setOpen((v) => !v)}
           aria-haspopup="menu"
           aria-expanded={open}
@@ -108,6 +126,7 @@ export function Dropdown({
         </button>
       ) : (
         <button
+          ref={triggerRef}
           onClick={() => setOpen((v) => !v)}
           aria-haspopup="menu"
           aria-expanded={open}
@@ -134,7 +153,7 @@ export function Dropdown({
               fontFamily: "'DM Sans', sans-serif",
               fontSize: 16,
               fontWeight: 400,
-              color: isPlaceholder ? "#78716C" : "#292524",
+              color: isPlaceholder ? "#57534E" : "#292524",
               flex: 1,
               textAlign: "left",
               whiteSpace: "nowrap",
@@ -156,8 +175,8 @@ export function Dropdown({
         </button>
       )}
 
-      {/* Menu */}
-      {open && (
+      {/* Menu rendered via portal to escape overflow clipping */}
+      {open && createPortal(
         <div ref={menuRef} style={menuStyle} role="menu">
           {items.map((item, i) => (
             <div key={i}>
@@ -198,7 +217,8 @@ export function Dropdown({
               </button>
             </div>
           ))}
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

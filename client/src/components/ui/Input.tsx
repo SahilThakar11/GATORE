@@ -34,7 +34,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
 
           <input
             ref={ref}
-            className={`w-full px-4 py-3 text-sm sm:text-base border rounded-lg transition-colors focus:outline-none focus:ring-2 ${
+            className={`w-full px-4 py-3 text-sm sm:text-base border rounded-lg transition-colors focus:outline-none focus:ring-2 placeholder:text-neutral-500 ${
               error
                 ? "bg-red-50 border-red-300 focus:ring-red-600"
                 : isFilled

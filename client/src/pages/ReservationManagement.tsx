@@ -17,6 +17,9 @@ import {
   Trash2,
   MoreVertical,
   Loader2,
+  Send,
+  XCircle,
+  Pencil,
 } from "lucide-react";
 import BusinessLayout from "../components/dashboard/BusinessLayout";
 import FloorPlan from "../components/business/FloorPlan";
@@ -270,14 +273,23 @@ function FloorPlanView() {
 function ReservationCard({
   reservation,
   onStatusChange,
+  phone,
+  previousVisits = 0,
+  noShows = 0,
+  source = "Walk-in",
 }: {
   reservation: DashboardReservation;
   onStatusChange: (id: number, status: string) => void;
+  phone?: string;
+  previousVisits?: number;
+  noShows?: number;
+  source?: string;
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const badgeStyle = STATUS_BADGE[reservation.status] || STATUS_BADGE.pending;
-  const gameName = reservation.gameReservations?.[0]?.game?.name || "—";
+  const gameName = reservation.gameReservations?.[0]?.game?.name;
   const duration = getDurationHours(reservation.startTime, reservation.endTime);
+  const notes = reservation.specialRequests || reservation.notes;
 
   const renderActionButtons = () => {
     switch (reservation.status) {
@@ -320,112 +332,186 @@ function ReservationCard({
 
   return (
     <div className="bg-teal-50/70 border border-teal-200 rounded-2xl shadow-sm overflow-hidden transition-shadow hover:shadow-md">
-      {/* Collapsed Header */}
-      <div className="flex items-center justify-between px-6 py-4">
+      {/* ── Collapsed Header ──────────────────────────────────────── */}
+      <div
+        className="flex items-center justify-between px-6 py-4 cursor-pointer select-none"
+        onClick={() => setIsOpen((v) => !v)}
+        role="button"
+        aria-expanded={isOpen}
+        aria-label={isOpen ? "Collapse reservation details" : "Expand reservation details"}
+        tabIndex={0}
+        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setIsOpen((v) => !v); } }}
+      >
         <div className="flex items-center gap-4">
-          <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${STATUS_BG[reservation.status] || "bg-gray-400"}`} />
+          <span
+            className={`w-2.5 h-2.5 rounded-full shrink-0 ${STATUS_BG[reservation.status] || "bg-neutral-400"}`}
+            aria-hidden="true"
+          />
           <div className="w-20 shrink-0">
-            <p className="text-sm font-bold text-gray-900">{formatTime12(reservation.startTime)}</p>
-            <p className="text-[11px] text-gray-400">{reservation.table.name}</p>
+            <p className="text-sm font-bold text-neutral-800">{formatTime12(reservation.startTime)}</p>
+            <p className="text-xs text-neutral-600">{reservation.table.name}</p>
           </div>
           <div
             className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 text-white text-xs font-bold shadow-sm"
             style={{ backgroundColor: getAvatarColor(reservation.user.name) }}
+            aria-hidden="true"
           >
             {getInitials(reservation.user.name)}
           </div>
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-gray-900 truncate">{reservation.user.name}</p>
-            <p className="text-[11px] text-gray-400">{gameName}</p>
+            <p className="text-sm font-semibold text-neutral-800 truncate">{reservation.user.name}</p>
+            <p className="text-xs text-neutral-600">{gameName ?? "No game selected"}</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-3 shrink-0">
-          {reservation.specialRequests && <MessageSquare size={14} className="text-gray-400" />}
-          <div className="flex items-center gap-1 text-gray-500">
-            <Users size={14} />
+        <div className="flex items-center gap-3 shrink-0" onClick={(e) => e.stopPropagation()}>
+          {reservation.specialRequests && (
+            <MessageSquare size={14} className="text-neutral-500" aria-label="Has special requests" />
+          )}
+          <div className="flex items-center gap-1 text-neutral-500">
+            <Users size={14} aria-hidden="true" />
             <span className="text-xs font-medium">{reservation.partySize}</span>
           </div>
           {renderActionButtons()}
-          <button
-            onClick={() => setIsOpen(!isOpen)}
-            className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer p-1 rounded-lg hover:bg-gray-100"
-          >
+          <span className="text-neutral-500 p-1" aria-hidden="true">
             {isOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-          </button>
+          </span>
         </div>
       </div>
 
-      {/* Expanded Details */}
-      <div className={`transition-all duration-300 ease-in-out overflow-hidden ${isOpen ? "max-h-[600px] opacity-100" : "max-h-0 opacity-0"}`}>
-        <div className="border-t border-teal-200 px-6 py-5">
-          <div className="grid grid-cols-2 gap-8">
-            <div>
-              <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Reservation Details</p>
-              <div className="space-y-2 text-sm text-gray-700">
-                <div className="flex items-center gap-2">
-                  <Calendar size={14} className="text-gray-400" />
-                  <span>{formatDate(reservation.reservationDate)}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Clock size={14} className="text-gray-400" />
-                  <span>{formatTime12(reservation.startTime)} ({duration.toFixed(1)} hours)</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Dice5 size={14} className="text-gray-400" />
-                  <span>{gameName}</span>
-                </div>
-              </div>
-            </div>
+      {/* ── Expanded Details ──────────────────────────────────────── */}
+      <div className={`transition-all duration-300 ease-in-out overflow-hidden ${isOpen ? "max-h-[800px] opacity-100" : "max-h-0 opacity-0"}`}>
+        <div className="border-t border-teal-200" style={{ backgroundColor: "#eff6ff" }}>
+          <div className="px-6 py-5">
 
-            <div>
-              <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Contact Information</p>
-              <div className="space-y-2 text-sm text-gray-700">
-                <div className="flex items-center gap-2">
-                  <Mail size={14} className="text-gray-400" />
-                  <span>{reservation.user.email}</span>
-                </div>
-              </div>
+            {/* Two-column grid */}
+            <div className="grid grid-cols-2 gap-8">
 
-              <div className="mt-5">
-                <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Booking Info</p>
-                <div className="space-y-1.5 text-sm text-gray-700">
+              {/* LEFT — Reservation Details + Customer History */}
+              <div>
+                <p className="text-xs font-bold text-neutral-500 uppercase tracking-wider mb-3">Reservation Details</p>
+                <div className="space-y-2 text-sm text-neutral-700">
                   <div className="flex items-center gap-2">
-                    <Hash size={14} className="text-gray-400" />
-                    <span>ID: {reservation.id}</span>
+                    <Calendar size={14} className="text-neutral-400" aria-hidden="true" />
+                    <span>{formatDate(reservation.reservationDate)}</span>
                   </div>
-                  <p className="text-xs text-gray-400">
-                    Booked: {new Date(reservation.createdAt).toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" })}
-                  </p>
+                  <div className="flex items-center gap-2">
+                    <Clock size={14} className="text-neutral-400" aria-hidden="true" />
+                    <span>{formatTime12(reservation.startTime)} <span className="text-neutral-500">({duration.toFixed(1)} hours)</span></span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Dice5 size={14} className="text-neutral-400" aria-hidden="true" />
+                    <span>{gameName ?? <span className="text-neutral-400 italic">No game selected</span>}</span>
+                  </div>
+                </div>
+
+                <div className="mt-5">
+                  <p className="text-xs font-bold text-neutral-500 uppercase tracking-wider mb-2">Customer History</p>
+                  <div className="space-y-1.5 text-sm text-neutral-700">
+                    <div className="flex items-center gap-2">
+                      <History size={14} className="text-neutral-400" aria-hidden="true" />
+                      {previousVisits !== undefined
+                        ? <span>{previousVisits} previous visit{previousVisits !== 1 ? "s" : ""}</span>
+                        : <span className="text-neutral-400 italic">No visit history</span>}
+                    </div>
+                    {noShows !== undefined && noShows > 0 && (
+                      <div className="flex items-center gap-2">
+                        <XCircle size={14} className="text-red-400" aria-hidden="true" />
+                        <span className="text-red-600">{noShows} no-show{noShows !== 1 ? "s" : ""}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* RIGHT — Contact Information + Booking Info */}
+              <div>
+                <p className="text-xs font-bold text-neutral-500 uppercase tracking-wider mb-3">Contact Information</p>
+                <div className="space-y-2 text-sm text-neutral-700">
+                  <div className="flex items-center gap-2">
+                    <Mail size={14} className="text-neutral-400" aria-hidden="true" />
+                    <span>{reservation.user.email}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Phone size={14} className="text-neutral-400" aria-hidden="true" />
+                    {phone
+                      ? <span>{phone}</span>
+                      : <span className="text-neutral-400 italic">No phone on file</span>}
+                  </div>
+                </div>
+
+                <div className="mt-5">
+                  <p className="text-xs font-bold text-neutral-500 uppercase tracking-wider mb-2">Booking Info</p>
+                  <div className="space-y-1.5 text-sm text-neutral-700">
+                    <div className="flex items-center gap-2">
+                      <Hash size={14} className="text-neutral-400" aria-hidden="true" />
+                      <span>ID: {reservation.id}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Users size={14} className="text-neutral-400" aria-hidden="true" />
+                      {source
+                        ? <span>{source}</span>
+                        : <span className="text-neutral-400 italic">Source unknown</span>}
+                    </div>
+                    <p className="text-xs text-neutral-500">
+                      Booked: {new Date(reservation.createdAt).toLocaleString("en-US", {
+                        month: "short", day: "numeric", year: "numeric",
+                        hour: "numeric", minute: "2-digit",
+                      })}
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          {reservation.specialRequests && (
-            <div className="bg-white rounded-xl border border-gray-200 p-4 mt-5">
-              <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Notes</p>
-              <p className="text-sm text-gray-700">{reservation.specialRequests}</p>
+            {/* Notes — full width */}
+            <div className="bg-white rounded-xl border border-blue-100 p-4 mt-5">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <MessageSquare size={14} className="text-neutral-400" aria-hidden="true" />
+                  <p className="text-xs font-bold text-neutral-500 uppercase tracking-wider">Notes</p>
+                </div>
+                <button
+                  aria-label="Edit notes"
+                  className="text-neutral-400 hover:text-teal-600 transition-colors cursor-pointer p-1 rounded hover:bg-teal-50"
+                >
+                  <Pencil size={13} aria-hidden="true" />
+                </button>
+              </div>
+              <p className="text-sm text-neutral-600">
+                {notes || <span className="text-neutral-400 italic">No notes added yet</span>}
+              </p>
             </div>
-          )}
 
-          <div className="flex justify-between items-center mt-5">
-            <div className="flex items-center gap-2">
-              <button className="border border-teal-400 text-teal-600 text-xs font-medium px-4 py-2 rounded-lg hover:bg-teal-50 bg-white transition-colors cursor-pointer">
-                Send Reminder
-              </button>
+            {/* Footer actions — full width */}
+            <div className="flex items-center justify-between mt-5">
+              <div className="flex items-center gap-2">
+                <button className="flex items-center gap-1.5 border border-teal-300 text-teal-700 text-xs font-medium px-4 py-2 rounded-lg hover:bg-teal-50 bg-white transition-colors cursor-pointer">
+                  <Edit3 size={13} aria-hidden="true" />
+                  Modify
+                </button>
+                <button className="flex items-center gap-1.5 border border-teal-300 text-teal-700 text-xs font-medium px-4 py-2 rounded-lg hover:bg-teal-50 bg-white transition-colors cursor-pointer">
+                  <Send size={13} aria-hidden="true" />
+                  Send Reminder
+                </button>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => onStatusChange(reservation.id, "cancelled")}
+                  className="flex items-center gap-1.5 border border-red-300 text-red-600 text-xs font-medium px-4 py-2 rounded-lg hover:bg-red-50 bg-white transition-colors cursor-pointer"
+                >
+                  <XCircle size={13} aria-hidden="true" />
+                  Cancel
+                </button>
+                <button
+                  aria-label="More options"
+                  className="text-neutral-500 hover:text-neutral-700 transition-colors cursor-pointer p-2 rounded-lg hover:bg-white/60"
+                >
+                  <MoreVertical size={16} aria-hidden="true" />
+                </button>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => onStatusChange(reservation.id, "cancelled")}
-                className="border border-red-300 text-red-500 text-xs font-medium px-4 py-2 rounded-lg hover:bg-red-50 bg-white transition-colors cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button className="text-gray-400 hover:text-gray-600 transition-colors cursor-pointer p-1 rounded hover:bg-gray-100">
-                <MoreVertical size={16} />
-              </button>
-            </div>
+
           </div>
         </div>
       </div>
