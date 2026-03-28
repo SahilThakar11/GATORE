@@ -390,12 +390,12 @@ export const getDashboardStats = async (req: AuthRequest, res: Response): Promis
     // Total tables
     const totalTables = await prisma.table.count({ where: { restaurantId } });
 
-    // Tables currently occupied (reservations active right now)
+    // Tables currently occupied (reservations active right now, any non-cancelled active status)
     const now = new Date();
     const occupiedTables = await prisma.reservation.findMany({
       where: {
         table: { restaurantId },
-        status: { in: ["confirmed", "pending"] },
+        status: { in: ["confirmed", "pending", "seated"] },
         startTime: { lte: now },
         endTime: { gte: now },
       },
@@ -403,11 +403,12 @@ export const getDashboardStats = async (req: AuthRequest, res: Response): Promis
       distinct: ["tableId"],
     });
 
-    // Today's reservations
+    // Today's reservations (exclude cancelled)
     const todayReservations = await prisma.reservation.findMany({
       where: {
         table: { restaurantId },
         startTime: { gte: startOfDay, lte: endOfDay },
+        status: { not: "cancelled" },
       },
       include: {
         table: { select: { id: true, name: true, capacity: true } },
@@ -898,7 +899,7 @@ export const createWalkInReservation = async (req: AuthRequest, res: Response): 
     const restaurantId = await getBusinessRestaurant(req, res);
     if (!restaurantId) return;
 
-    const { customerName, email, phone, partySize, tableId, specialRequests, source } = req.body;
+    const { customerName, email, phone, partySize, tableId, specialRequests, source, reservationDate, arrivalTime, durationHours, gameId } = req.body;
 
     if (!customerName || !partySize || !tableId) {
       res.status(400).json({
@@ -937,14 +938,24 @@ export const createWalkInReservation = async (req: AuthRequest, res: Response): 
       });
     }
 
-    // Create reservation starting now, 2 hours duration
+    // Build start/end times from submitted fields (or fall back to now + 2h)
     const now = new Date();
-    const endTime = new Date(now.getTime() + 2 * 60 * 60 * 1000);
+    let startTime: Date;
+    if (reservationDate && arrivalTime) {
+      // Parse date and time in local time (same as startOfDay/endOfDay in dashboard query)
+      const [year, month, day] = (reservationDate as string).split("-").map(Number);
+      const [hours, minutes] = (arrivalTime as string).split(":").map(Number);
+      startTime = new Date(year, month - 1, day, hours, minutes, 0, 0);
+    } else {
+      startTime = now;
+    }
+    const durationMs = (parseFloat(durationHours) || 2) * 60 * 60 * 1000;
+    const endTime = new Date(startTime.getTime() + durationMs);
 
     const reservation = await prisma.reservation.create({
       data: {
-        reservationDate: now,
-        startTime: now,
+        reservationDate: startTime,
+        startTime,
         endTime,
         partySize: parseInt(partySize),
         status: "confirmed",
@@ -958,6 +969,12 @@ export const createWalkInReservation = async (req: AuthRequest, res: Response): 
         user: { select: { id: true, name: true, email: true } },
       },
     });
+
+    if (gameId) {
+      await prisma.gameReservation.create({
+        data: { reservationId: reservation.id, gameId: parseInt(gameId) },
+      });
+    }
 
     res.status(201).json({
       success: true,
@@ -1028,6 +1045,32 @@ export const deleteBusinessAccount = async (req: AuthRequest, res: Response): Pr
   }
 };
 
+// DELETE /api/business-system/reservations/:id
+export const deleteReservation = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const restaurantId = await getBusinessRestaurant(req, res);
+    if (!restaurantId) return;
+
+    const id = parseInt(req.params.id as string);
+    const reservation = await prisma.reservation.findFirst({
+      where: { id, table: { restaurantId } },
+    });
+
+    if (!reservation) {
+      res.status(404).json({ success: false, message: "Reservation not found." });
+      return;
+    }
+
+    await prisma.gameReservation.deleteMany({ where: { reservationId: id } });
+    await prisma.reservation.delete({ where: { id } });
+
+    res.json({ success: true, message: "Reservation deleted." });
+  } catch (error) {
+    console.error("Delete reservation error:", error);
+    res.status(500).json({ success: false, message: "Failed to delete reservation." });
+  }
+};
+
 // PATCH /api/business-system/reservations/:id/status
 export const updateReservationStatus = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -1035,9 +1078,9 @@ export const updateReservationStatus = async (req: AuthRequest, res: Response): 
     if (!restaurantId) return;
 
     const id = parseInt(req.params.id as string);
-    const { status, notes } = req.body;
+    const { status, notes, specialRequests } = req.body;
 
-    const allowed = ["pending", "confirmed", "cancelled", "completed"];
+    const allowed = ["pending", "confirmed", "seated", "cancelled", "completed"];
     if (!allowed.includes(status)) {
       res.status(400).json({
         success: false,
@@ -1061,6 +1104,7 @@ export const updateReservationStatus = async (req: AuthRequest, res: Response): 
       data: {
         status,
         ...(notes !== undefined ? { notes } : {}),
+        ...(specialRequests !== undefined ? { specialRequests } : {}),
       },
       include: {
         table: { select: { id: true, name: true, capacity: true } },
@@ -1075,6 +1119,82 @@ export const updateReservationStatus = async (req: AuthRequest, res: Response): 
     });
   } catch (error) {
     console.error("Update reservation status error:", error);
+    res.status(500).json({ success: false, message: "Failed to update reservation." });
+  }
+};
+
+// PATCH /api/business-system/reservations/:id
+export const updateReservation = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const restaurantId = await getBusinessRestaurant(req, res);
+    if (!restaurantId) return;
+
+    const id = parseInt(req.params.id as string);
+    const { customerName, tableId, partySize, reservationDate, arrivalTime, durationHours, specialRequests, gameId } = req.body;
+
+    const reservation = await prisma.reservation.findFirst({
+      where: { id, table: { restaurantId } },
+    });
+    if (!reservation) {
+      res.status(404).json({ success: false, message: "Reservation not found." });
+      return;
+    }
+
+    // If new table provided, verify it belongs to this restaurant
+    if (tableId) {
+      const table = await prisma.table.findFirst({ where: { id: parseInt(tableId), restaurantId } });
+      if (!table) {
+        res.status(404).json({ success: false, message: "Table not found." });
+        return;
+      }
+    }
+
+    let startTime: Date | undefined;
+    let endTime: Date | undefined;
+    if (reservationDate && arrivalTime) {
+      const [year, month, day] = (reservationDate as string).split("-").map(Number);
+      const [hours, minutes] = (arrivalTime as string).split(":").map(Number);
+      startTime = new Date(year, month - 1, day, hours, minutes, 0, 0);
+      const durationMs = (parseFloat(durationHours) || 2) * 60 * 60 * 1000;
+      endTime = new Date(startTime.getTime() + durationMs);
+    }
+
+    // Update the guest user's name if provided
+    if (customerName) {
+      await prisma.user.update({
+        where: { id: reservation.userId },
+        data: { name: customerName },
+      });
+    }
+
+    const updated = await prisma.reservation.update({
+      where: { id },
+      data: {
+        ...(tableId !== undefined ? { tableId: parseInt(tableId) } : {}),
+        ...(partySize !== undefined ? { partySize: parseInt(partySize) } : {}),
+        ...(startTime ? { startTime, reservationDate: startTime } : {}),
+        ...(endTime ? { endTime } : {}),
+        ...(specialRequests !== undefined ? { specialRequests } : {}),
+      },
+      include: {
+        table: { select: { id: true, name: true, capacity: true } },
+        user: { select: { id: true, name: true, email: true } },
+      },
+    });
+
+    // Replace game if gameId provided (null = remove, number = set)
+    if (gameId !== undefined) {
+      await prisma.gameReservation.deleteMany({ where: { reservationId: id } });
+      if (gameId !== null && gameId !== "") {
+        await prisma.gameReservation.create({
+          data: { reservationId: id, gameId: parseInt(gameId) },
+        });
+      }
+    }
+
+    res.json({ success: true, message: "Reservation updated.", data: updated });
+  } catch (error) {
+    console.error("Update reservation error:", error);
     res.status(500).json({ success: false, message: "Failed to update reservation." });
   }
 };

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
-import { Check, ChevronDown, Loader2 } from "lucide-react";
+import { Check, Loader2 } from "lucide-react";
 import { SettingsPanel } from "./SettingsPanel";
+import { SecondaryButton } from "../../ui/SecondaryButton";
 import {
   useBusinessSettings,
   type HoursConfig,
@@ -11,13 +12,6 @@ import {
 const DAYS = [
   "Monday", "Tuesday", "Wednesday", "Thursday",
   "Friday", "Saturday", "Sunday",
-];
-
-const TIME_OPTIONS = [
-  "6:00 AM", "7:00 AM", "8:00 AM", "9:00 AM", "10:00 AM",
-  "11:00 AM", "12:00 PM", "1:00 PM", "2:00 PM", "3:00 PM",
-  "4:00 PM", "5:00 PM", "6:00 PM", "7:00 PM", "8:00 PM",
-  "9:00 PM", "10:00 PM", "11:00 PM", "12:00 AM",
 ];
 
 interface DayHours {
@@ -36,6 +30,23 @@ const DEFAULT_HOURS: Record<string, DayHours> = {
   Sunday: { enabled: true, open: "11:00 AM", close: "11:00 PM" },
 };
 
+// "10:00 AM" → "10:00" (HH:MM 24h for <input type="time">)
+function toInputTime(ampm: string): string {
+  const [time, period] = ampm.split(" ");
+  let [h, m] = time.split(":").map(Number);
+  if (period === "AM" && h === 12) h = 0;
+  if (period === "PM" && h !== 12) h += 12;
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+}
+
+// "13:00" → "1:00 PM"
+function fromInputTime(hhmm: string): string {
+  const [h, m] = hhmm.split(":").map(Number);
+  const period = h < 12 ? "AM" : "PM";
+  const hour = h % 12 || 12;
+  return `${hour}:${String(m).padStart(2, "0")} ${period}`;
+}
+
 export default function OperatingHoursTab({ onBack }: { onBack: () => void }) {
   const { fetchHours, updateHours, saving } = useBusinessSettings();
   const [hours, setHours] = useState<Record<string, DayHours>>(DEFAULT_HOURS);
@@ -52,7 +63,6 @@ export default function OperatingHoursTab({ onBack }: { onBack: () => void }) {
             close: minutesToTimeString(h.closeTime),
           };
         });
-        // Fill in any missing days
         DAYS.forEach((day) => {
           if (!mapped[day]) mapped[day] = DEFAULT_HOURS[day];
         });
@@ -102,75 +112,59 @@ export default function OperatingHoursTab({ onBack }: { onBack: () => void }) {
       saving={saving}
     >
       {/* Apply-to-all bar */}
-      <div className="flex items-center justify-between border border-gray-200 rounded-xl px-4 py-3 mb-5">
-        <p className="text-sm text-gray-500">
+      <div className="flex items-center justify-between border border-warm-200 rounded-xl bg-white px-4 py-3 mb-5">
+        <p className="text-sm text-neutral-600">
           Use Monday's hours for all days
         </p>
-        <button
-          onClick={applyToAll}
-          className="text-sm font-semibold text-gray-700 border border-gray-200 px-4 py-1.5 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
-        >
-          Apply to all
-        </button>
+        <SecondaryButton label="Apply to all" onClick={applyToAll} size="xs" />
       </div>
 
       {/* Day rows */}
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-2.5">
         {DAYS.map((day) => {
           const h = hours[day];
           return (
             <div
               key={day}
-              className="flex items-center gap-4 border border-gray-100 rounded-xl px-4 py-3"
+              className="flex items-center gap-3 border border-warm-200 rounded-xl px-3 py-2.5 bg-warm-50"
             >
-              <button
-                onClick={() => updateDay(day, { enabled: !h.enabled })}
-                className={`w-5 h-5 rounded flex items-center justify-center border-2 transition-colors shrink-0 cursor-pointer ${
-                  h.enabled
-                    ? "bg-teal-600 border-teal-600"
-                    : "border-gray-300"
-                }`}
-              >
-                {h.enabled && <Check size={13} className="text-white" />}
-              </button>
-
-              <span className="text-sm font-medium text-gray-700 w-24">
-                {day}
-              </span>
-
-              <div className="flex-1 relative">
-                <select
-                  value={h.open}
-                  onChange={(e) => updateDay(day, { open: e.target.value })}
-                  disabled={!h.enabled}
-                  className="w-full appearance-none px-3 py-2.5 border border-warm-200 rounded-lg text-sm text-gray-700 outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer disabled:opacity-40 bg-white"
+              {/* Checkbox + day name */}
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => updateDay(day, { enabled: !h.enabled })}
+                  aria-pressed={h.enabled}
+                  aria-label={`${h.enabled ? "Disable" : "Enable"} ${day}`}
+                  className={`w-5 h-5 rounded flex items-center justify-center border-2 transition-colors shrink-0 cursor-pointer ${
+                    h.enabled
+                      ? "bg-teal-600 border-teal-600"
+                      : "border-warm-300"
+                  }`}
                 >
-                  {TIME_OPTIONS.map((t) => (
-                    <option key={t} value={t}>{t}</option>
-                  ))}
-                </select>
-                <ChevronDown
-                  size={14}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
-                />
+                  {h.enabled && <Check size={13} className="text-white" strokeWidth={3} aria-hidden="true" />}
+                </button>
+                <span className="text-sm font-medium text-neutral-700 w-24">
+                  {day}
+                </span>
               </div>
 
-              <span className="text-xs text-gray-400">to</span>
-
-              <div className="flex-1 relative">
-                <select
-                  value={h.close}
-                  onChange={(e) => updateDay(day, { close: e.target.value })}
+              {/* Time inputs */}
+              <div className={`flex items-center gap-2 flex-1 ${!h.enabled ? "opacity-40 pointer-events-none" : ""}`}>
+                <input
+                  type="time"
+                  value={toInputTime(h.open)}
+                  onChange={(e) => e.target.value && updateDay(day, { open: fromInputTime(e.target.value) })}
                   disabled={!h.enabled}
-                  className="w-full appearance-none px-3 py-2.5 border border-warm-200 rounded-lg text-sm text-gray-700 outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer disabled:opacity-40 bg-white"
-                >
-                  {TIME_OPTIONS.map((t) => (
-                    <option key={t} value={t}>{t}</option>
-                  ))}
-                </select>
-                <ChevronDown
-                  size={14}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+                  aria-label={`${day} opening time`}
+                  className="flex-1 px-3 py-3 border border-warm-300 rounded-lg text-sm text-neutral-700 outline-none focus:ring-2 focus:ring-teal-500 disabled:opacity-40 bg-white cursor-pointer"
+                />
+                <span className="text-xs text-neutral-600 shrink-0">to</span>
+                <input
+                  type="time"
+                  value={toInputTime(h.close)}
+                  onChange={(e) => e.target.value && updateDay(day, { close: fromInputTime(e.target.value) })}
+                  disabled={!h.enabled}
+                  aria-label={`${day} closing time`}
+                  className="flex-1 px-3 py-3 border border-warm-300 rounded-lg text-sm text-neutral-700 outline-none focus:ring-2 focus:ring-teal-500 disabled:opacity-40 bg-white cursor-pointer"
                 />
               </div>
             </div>

@@ -73,7 +73,10 @@ export function useBGGSearch() {
   // Fetch details for a batch of IDs
   const fetchDetails = useCallback(
     async (ids: string[], isLoadMore = false) => {
-      if (ids.length === 0) return;
+      if (ids.length === 0) {
+        isLoadMore ? setLoadingMore(false) : setLoading(false);
+        return;
+      }
 
       isLoadMore ? setLoadingMore(true) : setLoading(true);
       try {

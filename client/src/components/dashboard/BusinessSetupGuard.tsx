@@ -1,9 +1,12 @@
 import { useState, useEffect } from "react";
-import { ArrowRight, Building2, Loader2, LogOut, CheckCircle2 } from "lucide-react";
+import { Loader2, CheckCircle2, ArrowRight } from "lucide-react";
+import { GatoreLogo } from "../ui/GatoreLogo";
 import { useAuth } from "../../context/AuthContext";
 import { useBusinessDashboard } from "../../hooks/useBusinessDashboard";
 import type { SetupPrefill } from "../../hooks/useBusinessDashboard";
 import CafeSetupWizard from "./CafeSetupWizard";
+import { PrimaryButton } from "../ui/PrimaryButton";
+import { LogoutButton } from "../ui/LogoutButton";
 
 const SETUP_STEPS = [
   "Business profile & contact info",
@@ -17,7 +20,8 @@ export default function BusinessSetupGuard({
 }: {
   children: React.ReactNode;
 }) {
-  const { loading, needsSetup, profile, completeSetup, fetchPrefill } = useBusinessDashboard();
+  const { loading, needsSetup, profile, completeSetup, fetchPrefill } =
+    useBusinessDashboard();
   const { logout } = useAuth();
   const [showWizard, setShowWizard] = useState(false);
   const [prefill, setPrefill] = useState<SetupPrefill | null>(null);
@@ -41,30 +45,20 @@ export default function BusinessSetupGuard({
   /* ── Setup Required ──────────────────────────────────────────────── */
   if (needsSetup) {
     return (
-      <div className="min-h-screen bg-[#faf8f4] flex flex-col items-center justify-center px-4">
-        {/* Logout link top-right */}
-        <button
-          onClick={logout}
-          className="absolute top-6 right-8 flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-700 transition-colors cursor-pointer"
-        >
-          <LogOut size={15} />
-          Log out
-        </button>
+      <div className="min-h-screen bg-warm-100 flex flex-col items-center justify-center px-4">
+        {/* Logout top-right */}
+        <div className="absolute top-6 right-8">
+          <LogoutButton onLogout={logout} />
+        </div>
 
         {/* Card */}
-        <div className="bg-white rounded-3xl border border-gray-100 shadow-lg w-full max-w-lg p-10 flex flex-col items-center text-center">
-          {/* Icon */}
-          <div
-            className="w-16 h-16 rounded-2xl flex items-center justify-center mb-6"
-            style={{ background: "linear-gradient(135deg, #0a5c47, #0d9488)" }}
-          >
-            <Building2 size={28} className="text-white" />
-          </div>
+        <div className="bg-white rounded-2xl border border-warm-200 shadow-lg w-full max-w-lg p-10 flex flex-col items-center text-center">
+          <GatoreLogo className="w-36 h-18 mb-4" animateDie />
 
-          <h1 className="text-2xl font-black text-gray-900 mb-2">
+          <h1 className="text-2xl font-bold text-neutral-800 mb-2">
             Welcome to Gatore!
           </h1>
-          <p className="text-gray-500 text-sm leading-relaxed mb-8 max-w-sm">
+          <p className="text-neutral-600 text-sm leading-relaxed mb-8 max-w-sm">
             Before customers can find and book your café, you need to complete a
             quick one-time setup. It only takes a few minutes.
           </p>
@@ -73,21 +67,21 @@ export default function BusinessSetupGuard({
           <ul className="w-full text-left flex flex-col gap-2.5 mb-8">
             {SETUP_STEPS.map((step) => (
               <li key={step} className="flex items-center gap-3">
-                <CheckCircle2 size={17} className="text-teal-400 shrink-0" />
-                <span className="text-sm text-gray-700">{step}</span>
+                <CheckCircle2 size={17} className="text-teal-600 shrink-0" />
+                <span className="text-sm text-neutral-700">{step}</span>
               </li>
             ))}
           </ul>
 
-          <button
-            onClick={() => setShowWizard(true)}
-            className="flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-bold px-8 py-3.5 rounded-xl transition-all shadow-sm hover:shadow-md w-full justify-center cursor-pointer"
-          >
-            Begin Setup
-            <ArrowRight size={16} />
-          </button>
+          <div className="w-full [&>button]:w-full">
+            <PrimaryButton
+              label="Begin Setup"
+              onClick={() => setShowWizard(true)}
+              rightIcon={<ArrowRight size={16} aria-hidden="true" />}
+            />
+          </div>
 
-          <p className="text-xs text-gray-400 mt-4">
+          <p className="text-xs text-neutral-500 mt-4">
             You can edit all settings later from your dashboard.
           </p>
         </div>

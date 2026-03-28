@@ -97,6 +97,12 @@ export const BookingSummary: React.FC<BookingSummaryProps> = ({
       )}
 
       {/* Price Summary */}
+      {/* TODO: Hook up café pricing model here. The venue's pricingType, coverFee, hourlyRate,
+          enableThreshold, and minSpend should be fetched as part of the venue/restaurant data
+          and passed into this component. Replace the hardcoded reservationFee ($6) with the
+          real pricing breakdown — e.g. flat cover fee per person, hourly rate estimate based
+          on a typical session length, or hybrid of both. Show the threshold waiver note if
+          enableThreshold is true and the customer's spend qualifies. */}
       {showPricing && (
         <div className="border-t border-warm-200 pt-4 space-y-2">
           <div className="flex justify-between text-sm">

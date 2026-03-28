@@ -1,5 +1,6 @@
-import { CheckCircle } from "lucide-react";
-import { Button } from "../ui/Button";
+import { Check, Store, Mail } from "lucide-react";
+import { PrimaryButton } from "../ui/PrimaryButton";
+import { TextButton } from "../ui/TextButton";
 
 interface Props {
   cafeName: string;
@@ -10,37 +11,41 @@ interface Props {
 
 export function BPRequestSuccess({ cafeName, email, onReset, onClose }: Props) {
   return (
-    <div className="px-6 pt-8 pb-6 flex flex-col items-center text-center gap-5">
-      <div className="w-16 h-16 rounded-full bg-teal-50 flex items-center justify-center">
-        <div className="w-11 h-11 rounded-full bg-teal-600 flex items-center justify-center">
-          <CheckCircle size={22} className="text-white" />
+    <div className="px-5 pt-6 pb-4 flex flex-col items-center text-center gap-5 flex-1">
+      <div className="flex flex-col items-center gap-2 pt-2">
+        <div className="w-14 h-14 rounded-full bg-teal-100 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-full bg-teal-500 flex items-center justify-center">
+            <Check size={22} strokeWidth={3} aria-hidden="true" className="text-white" />
+          </div>
         </div>
-      </div>
-
-      <div>
-        <h2 className="text-2xl font-black text-gray-900">Request received!</h2>
-        <p className="text-sm text-gray-500 mt-2 leading-relaxed max-w-xs">
+        <h2 id="auth-step-heading" className="text-xl sm:text-2xl font-bold text-neutral-800">Request received!</h2>
+        <p className="text-xs sm:text-sm text-neutral-600 leading-relaxed max-w-xs">
           Thanks for reaching out. Our team will review your application and
-          email you within <strong className="text-gray-700">48 hours</strong>.
+          email you within <strong className="text-neutral-700">48 hours</strong>.
         </p>
       </div>
 
-      <div className="w-full bg-[#faf8f4] border border-gray-100 rounded-xl px-5 py-4 text-left">
-        <p className="text-xs text-gray-400">Submitted for</p>
-        <p className="text-sm font-bold text-gray-800 mt-0.5">{cafeName}</p>
-        <p className="text-xs text-gray-500">{email}</p>
+      <div className="w-full bg-warm-50 border border-warm-200 rounded-xl px-5 py-4 text-left">
+        <p className="text-xs text-neutral-600 mb-3">Submitted for</p>
+        <div className="flex items-center gap-3">
+          <div className="w-11 h-11 rounded-xl bg-[#f5ede0] flex items-center justify-center shrink-0">
+            <Store size={20} aria-hidden="true" className="text-[#a07850]" />
+          </div>
+          <div>
+            <p className="text-base font-bold text-neutral-800">{cafeName}</p>
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <Mail size={13} aria-hidden="true" className="text-neutral-500" />
+              <span className="text-sm text-neutral-600">{email}</span>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="flex flex-col gap-2 w-full pt-1">
-        <Button variant="primary" fullWidth onClick={onClose}>
-          Done
-        </Button>
-        <button
-          onClick={onReset}
-          className="text-xs text-gray-400 hover:text-teal-700 transition-colors py-1"
-        >
-          Submit another request
-        </button>
+        <div className="[&>button]:w-full">
+          <PrimaryButton label="Done" onClick={onClose} />
+        </div>
+        <TextButton label="Submit another request" onClick={onReset} size="small" />
       </div>
     </div>
   );

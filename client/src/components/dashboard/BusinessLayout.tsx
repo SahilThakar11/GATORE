@@ -8,7 +8,7 @@ export default function BusinessLayout({
   return (
     <div className="flex min-h-screen bg-[#faf8f4]">
       <BusinessSidebar />
-      <main className="flex-1 overflow-y-auto">{children}</main>
+      <main className="flex-1 overflow-y-auto" aria-label="Dashboard">{children}</main>
     </div>
   );
 }

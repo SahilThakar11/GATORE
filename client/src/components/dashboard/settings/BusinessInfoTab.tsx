@@ -138,8 +138,8 @@ export default function BusinessInfoTab({ onBack }: { onBack: () => void }) {
             logoError
               ? "border-red-300 bg-red-50/30"
               : currentLogo
-                ? "border-teal-300 bg-teal-50/30"
-                : "border-gray-200 hover:border-teal-300 hover:bg-teal-50/20"
+                ? "border-teal-300 bg-teal-50/30 hover:border-teal-500 hover:bg-teal-50/60"
+                : "border-warm-300 bg-warm-50 hover:border-teal-600 hover:bg-teal-50"
           }`}
         >
           {currentLogo ? (
@@ -147,23 +147,23 @@ export default function BusinessInfoTab({ onBack }: { onBack: () => void }) {
               <img
                 src={currentLogo}
                 alt="Café logo"
-                className="w-16 h-16 rounded-xl object-cover border border-gray-200 shrink-0"
+                className="w-16 h-16 rounded-xl object-cover border border-warm-200 shrink-0"
               />
               <div>
-                <p className="text-sm font-medium text-gray-900">{profile?.name}</p>
-                <p className="text-xs text-teal-600 mt-0.5">Click or drag to replace logo</p>
-                <p className="text-xs text-gray-400 mt-0.5">PNG, JPG, WebP, or SVG (max 2 MB)</p>
+                <p className="text-sm font-medium text-neutral-800">{profile?.name}</p>
+                <p className="text-xs text-teal-700 mt-0.5">Click or drag to replace logo</p>
+                <p className="text-xs text-neutral-500 mt-0.5">PNG, JPG, WebP, or SVG (max 2 MB)</p>
               </div>
             </>
           ) : (
             <>
-              <div className="w-16 h-16 rounded-xl bg-gray-100 flex items-center justify-center shrink-0">
-                <ImagePlus size={22} className="text-gray-400" />
+              <div className="w-16 h-16 rounded-xl bg-warm-200 flex items-center justify-center shrink-0">
+                <ImagePlus size={22} className="text-neutral-600" aria-hidden="true" />
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-700">Upload café logo</p>
-                <p className="text-xs text-gray-400 mt-0.5">Click or drag and drop</p>
-                <p className="text-xs text-gray-400">PNG, JPG, WebP, or SVG (max 2 MB)</p>
+                <p className="text-sm font-medium text-neutral-700">Upload café logo</p>
+                <p className="text-xs text-neutral-500 mt-0.5">Click or drag and drop</p>
+                <p className="text-xs text-neutral-500">PNG, JPG, WebP, or SVG (max 2 MB)</p>
               </div>
             </>
           )}
@@ -171,6 +171,7 @@ export default function BusinessInfoTab({ onBack }: { onBack: () => void }) {
             ref={fileInputRef}
             type="file"
             accept="image/png,image/jpeg,image/webp,image/svg+xml"
+            aria-label="Upload café logo"
             className="hidden"
             onChange={(e) => {
               const file = e.target.files?.[0];
@@ -180,7 +181,7 @@ export default function BusinessInfoTab({ onBack }: { onBack: () => void }) {
           />
         </div>
         {logoError && (
-          <p className="text-xs text-red-500 mt-1.5">{logoError}</p>
+          <p role="alert" className="text-xs text-red-500 mt-1.5">{logoError}</p>
         )}
       </div>
 
@@ -242,7 +243,7 @@ export default function BusinessInfoTab({ onBack }: { onBack: () => void }) {
 
       {/* Business Address */}
       <div className="mt-8">
-        <h3 className="text-base font-bold text-gray-900 mb-4">Business Address</h3>
+        <h3 className="text-base font-bold text-neutral-800 mb-4">Business Address</h3>
         <div className="flex flex-col gap-4">
           <Input label="Street Address" placeholder="123 Main Street" value={form.address} onChange={update("address")} error={errors.address} />
           <div className="grid grid-cols-3 gap-4">
@@ -253,9 +254,9 @@ export default function BusinessInfoTab({ onBack }: { onBack: () => void }) {
         </div>
       </div>
 
-      {/* Preferences */}
+      {/* Timezone Preferences */}
       <div className="mt-8">
-        <h3 className="text-base font-bold text-gray-900 mb-4">Preferences</h3>
+        <h3 className="text-base font-bold text-neutral-800 mb-4">Timezone Preferences</h3>
         <SelectField
           label="Timezone"
           options={[
@@ -266,6 +267,7 @@ export default function BusinessInfoTab({ onBack }: { onBack: () => void }) {
           ]}
           value={form.timezone}
           onChange={(v) => setForm((prev) => ({ ...prev, timezone: v }))}
+          dropUp
         />
       </div>
     </SettingsPanel>

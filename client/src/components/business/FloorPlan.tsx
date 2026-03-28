@@ -1,213 +1,232 @@
-import React, {
-  createRef,
-  useMemo,
-  useState,
-  useEffect,
-  useCallback,
-} from "react";
-import Draggable, {
-  type DraggableData,
-  type DraggableEvent,
-} from "react-draggable";
+import React, { createRef, useRef, useState, useEffect } from 'react';
+import Draggable, { type DraggableData, type DraggableEvent } from 'react-draggable';
 
-interface Table {
+export interface FloorPlanTable {
   id: number;
   name: string;
-  size: number;
-  status: "Available" | "Reserved" | "Occupied" | "Out of Service";
+  capacity: number;
+  type: string;
+  status: 'Available' | 'Confirmed' | 'Seated' | 'Out of Service';
 }
 
-// Different colors based on capacity — used for both table square and chair dots
-const SIZE_COLORS: Record<number, { bg: string; chair: string }> = {
-  2: { bg: "bg-amber-400", chair: "bg-amber-300" },
-  4: { bg: "bg-teal-400", chair: "bg-teal-300" },
-  6: { bg: "bg-blue-400", chair: "bg-blue-300" },
-  8: { bg: "bg-purple-400", chair: "bg-purple-300" },
+const STATUS_COLORS: Record<string, string> = {
+  Available:        'bg-teal-400',
+  Confirmed:        'bg-blue-400',
+  Seated:           'bg-teal-600',
+  'Out of Service': 'bg-neutral-400',
 };
 
-const getSizeColor = (size: number) => {
-  if (size <= 2) return SIZE_COLORS[2];
-  if (size <= 4) return SIZE_COLORS[4];
-  if (size <= 6) return SIZE_COLORS[6];
-  return SIZE_COLORS[8];
-};
+const getStatusColor = (status: string): string => STATUS_COLORS[status] ?? 'bg-neutral-400';
 
-const STORAGE_KEY = "gatore-floorplan-positions";
+/** Strip "Table " prefix so "Table 4" → "4" */
+function tableLabel(name: string): string {
+  return name.replace(/^table\s*/i, '');
+}
 
-type Positions = Record<number, { x: number; y: number }>;
+/** True for round-cornered table shapes */
+function isRound(type: string): boolean {
+  return type === 'Round' || type === 'High-Top';
+}
 
-function loadPositions(): Positions {
+const STORAGE_KEY = 'gatore_floorplan_positions';
+type Position = { x: number; y: number };
+
+function loadPositions(): Record<number, Position> {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : {};
+    const saved = localStorage.getItem(STORAGE_KEY);
+    return saved ? JSON.parse(saved) : {};
   } catch {
     return {};
   }
 }
 
-function savePositions(positions: Positions) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(positions));
-}
-
-// Generate default grid positions so tables don't stack
-function getDefaultPositions(tables: Table[]): Positions {
-  const cols = Math.min(tables.length, 4);
-  const cellW = 160;
-  const cellH = 180;
-  const positions: Positions = {};
-  tables.forEach((t, i) => {
-    const col = i % cols;
-    const row = Math.floor(i / cols);
-    positions[t.id] = { x: col * cellW + 20, y: row * cellH + 20 };
-  });
-  return positions;
+function savePosition(tableId: number, pos: Position) {
+  try {
+    const current = loadPositions();
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...current, [tableId]: pos }));
+  } catch {}
 }
 
 interface FloorPlanProps {
   isEditable?: boolean;
-  tables?: Table[];
+  tables: FloorPlanTable[];
+  onStatusChange?: (tableId: number, status: 'Available' | 'Out of Service') => void;
 }
 
-const FloorPlan: React.FC<FloorPlanProps> = ({
-  isEditable = false,
-  tables = [],
-}) => {
-  const tableRefs = useMemo(
-    () => tables.map(() => createRef<HTMLDivElement>()),
-    [tables.length],
-  );
+const FloorPlan: React.FC<FloorPlanProps> = ({ isEditable = false, tables, onStatusChange }) => {
+  const [savedPositions] = useState<Record<number, Position>>(loadPositions);
+  const [activePopover, setActivePopover] = useState<number | null>(null);
+  const isDragging = useRef(false);
 
-  const [positions, setPositions] = useState<Positions>(() => {
-    const saved = loadPositions();
-    const defaults = getDefaultPositions(tables);
-    // Merge: use saved position if it exists, otherwise default
-    const merged: Positions = {};
-    tables.forEach((t) => {
-      merged[t.id] = saved[t.id] ?? defaults[t.id];
-    });
-    return merged;
-  });
+  const nodeRefs = useRef<Map<number, React.RefObject<HTMLDivElement>>>(new Map());
+  const popoverRefs = useRef<Map<number, React.RefObject<HTMLDivElement>>>(new Map());
 
-  // Update positions when tables change (new tables added, etc.)
+  const getNodeRef = (id: number) => {
+    if (!nodeRefs.current.has(id)) nodeRefs.current.set(id, createRef<HTMLDivElement>());
+    return nodeRefs.current.get(id)!;
+  };
+
+  const getPopoverRef = (id: number) => {
+    if (!popoverRefs.current.has(id)) popoverRefs.current.set(id, createRef<HTMLDivElement>());
+    return popoverRefs.current.get(id)!;
+  };
+
+  // Close popover on outside click or Escape
   useEffect(() => {
-    const saved = loadPositions();
-    const defaults = getDefaultPositions(tables);
-    const merged: Positions = {};
-    tables.forEach((t) => {
-      merged[t.id] = saved[t.id] ?? defaults[t.id];
-    });
-    setPositions(merged);
-  }, [tables.length]);
+    if (activePopover === null) return;
+    const handleKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setActivePopover(null); };
+    const handleClick = (e: MouseEvent) => {
+      const popoverEl = popoverRefs.current.get(activePopover);
+      if (popoverEl?.current && !popoverEl.current.contains(e.target as Node)) {
+        setActivePopover(null);
+      }
+    };
+    document.addEventListener('keydown', handleKey);
+    document.addEventListener('mousedown', handleClick);
+    return () => {
+      document.removeEventListener('keydown', handleKey);
+      document.removeEventListener('mousedown', handleClick);
+    };
+  }, [activePopover]);
 
-  const handleDragStop = useCallback(
-    (tableId: number, _e: DraggableEvent, data: DraggableData) => {
-      setPositions((prev) => {
-        const updated = { ...prev, [tableId]: { x: data.x, y: data.y } };
-        savePositions(updated);
-        return updated;
-      });
-    },
-    [],
-  );
+  // Close popover when exiting edit mode
+  useEffect(() => {
+    if (!isEditable) setActivePopover(null);
+  }, [isEditable]);
 
-  if (tables.length === 0) {
-    return (
-      <div className="min-h-[420px] bg-gray-50 rounded-xl border border-gray-200 flex items-center justify-center">
-        <p className="text-sm text-gray-400">No tables configured yet.</p>
-      </div>
-    );
-  }
-
-  // Calculate min height based on number of rows
-  const cols = Math.min(tables.length, 4);
-  const rows = Math.ceil(tables.length / cols);
-  const minHeight = Math.max(420, rows * 180 + 40);
+  const handleStop = (_: DraggableEvent, data: DraggableData, tableId: number) => {
+    savePosition(tableId, { x: data.x, y: data.y });
+  };
 
   return (
-    <div className="bg-gray-50 rounded-xl border border-gray-200 p-4">
-      <div className="relative" style={{ minHeight }}>
-        {tables.map((table, index) => {
-          const sizeColor = getSizeColor(table.size);
-          const topChairs = Math.max(1, Math.ceil((table.size - 2) / 2));
-          const bottomChairs = Math.max(1, Math.floor((table.size - 2) / 2));
-          const pos = positions[table.id] ?? { x: 0, y: 0 };
+    <div
+      className="min-h-[420px] bg-gray-50 rounded-xl border border-gray-200"
+      style={{ position: 'relative' }}
+    >
+      {tables.map((table) => {
+        const nodeRef = getNodeRef(table.id);
+        const popoverRef = getPopoverRef(table.id);
+        const color = getStatusColor(table.status);
+        const tableShape = isRound(table.type) ? 'rounded-full' : 'rounded-xl';
 
-          return (
-            <Draggable
-              key={table.id}
-              nodeRef={tableRefs[index]}
-              disabled={!isEditable}
-              position={pos}
-              onStop={(e, data) => handleDragStop(table.id, e, data)}
-              bounds="parent"
+        const sides = Math.min(2, table.capacity);
+        const remaining = Math.max(0, table.capacity - sides);
+        const topCount = Math.floor(remaining / 2);
+        const bottomCount = Math.ceil(remaining / 2);
+        const label = tableLabel(table.name);
+        const isOOS = table.status === 'Out of Service';
+
+        return (
+          <Draggable
+            key={table.id}
+            bounds="parent"
+            nodeRef={nodeRef}
+            disabled={!isEditable}
+            defaultPosition={savedPositions[table.id] ?? { x: 0, y: 0 }}
+            onStart={() => { isDragging.current = false; }}
+            onDrag={() => { isDragging.current = true; }}
+            onStop={(e, data) => handleStop(e, data, table.id)}
+          >
+            <div
+              ref={nodeRef}
+              className={`w-[140px] h-[140px] select-none ${isEditable ? 'cursor-grab active:cursor-grabbing' : 'cursor-default'}`}
+              style={{ position: 'absolute' }}
+              aria-label={`${label}, ${table.capacity} seats, ${table.type}, ${table.status}`}
+              onClick={() => {
+                if (isEditable && !isDragging.current) {
+                  setActivePopover((v) => (v === table.id ? null : table.id));
+                }
+              }}
             >
-              <div
-                ref={tableRefs[index]}
-                className={`absolute flex flex-col items-center gap-1.5 ${isEditable ? "cursor-grab active:cursor-grabbing" : ""}`}
-              >
-                {/* Top chairs */}
-                <div className="flex items-center justify-center gap-2">
-                  {Array.from({ length: topChairs }).map((_, i) => (
+              {/* Status popover */}
+              {isEditable && activePopover === table.id && (
+                <div
+                  ref={popoverRef}
+                  style={{
+                    position: 'absolute',
+                    bottom: '110%',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    zIndex: 100,
+                  }}
+                  className="bg-white rounded-xl shadow-lg border border-warm-200 p-2 flex flex-col gap-1 whitespace-nowrap"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <p className="text-xs font-semibold text-neutral-500 px-2 pt-0.5 pb-0.5">
+                    Table {label}
+                  </p>
+                  <button
+                    className={`text-sm px-3 py-1.5 rounded-lg font-medium transition-colors cursor-pointer text-left ${
+                      !isOOS
+                        ? 'bg-teal-50 text-teal-700 ring-1 ring-teal-300'
+                        : 'text-neutral-600 hover:bg-warm-100'
+                    }`}
+                    onClick={() => { onStatusChange?.(table.id, 'Available'); setActivePopover(null); }}
+                  >
+                    Available
+                  </button>
+                  <button
+                    className={`text-sm px-3 py-1.5 rounded-lg font-medium transition-colors cursor-pointer text-left ${
+                      isOOS
+                        ? 'bg-neutral-100 text-neutral-700 ring-1 ring-neutral-300'
+                        : 'text-neutral-600 hover:bg-warm-100'
+                    }`}
+                    onClick={() => { onStatusChange?.(table.id, 'Out of Service'); setActivePopover(null); }}
+                  >
+                    Out of Service
+                  </button>
+                </div>
+              )}
+
+              {/* Top chairs */}
+              {topCount > 0 && (
+                <div className="w-full gap-2 flex items-center justify-center">
+                  {Array.from({ length: topCount }).map((_, i) => (
                     <div
                       key={`top-${table.id}-${i}`}
-                      className={`w-6 h-6 rounded-full ${sizeColor.chair} border-2 border-white shadow-sm`}
+                      className={`w-7 h-7 rounded-full ${color} border-2 border-white shadow-sm`}
+                      aria-hidden="true"
                     />
                   ))}
                 </div>
+              )}
 
-                {/* Middle row: left chair + table square + right chair */}
-                <div className="flex items-center justify-center gap-2">
-                  <div
-                    className={`w-6 h-6 rounded-full ${sizeColor.chair} border-2 border-white shadow-sm`}
-                  />
-                  <div
-                    className={`w-16 h-16 rounded-xl ${sizeColor.bg} shadow-md border-2 border-white/40`}
-                  />
-                  <div
-                    className={`w-6 h-6 rounded-full ${sizeColor.chair} border-2 border-white shadow-sm`}
-                  />
+              {/* Middle row: left chair + table body + right chair */}
+              <div className="w-full flex items-center justify-center gap-1.5">
+                <div
+                  className={`w-7 h-7 rounded-full ${color} border-2 border-white shadow-sm shrink-0`}
+                  aria-hidden="true"
+                />
+                <div
+                  className={`w-[72px] h-[72px] ${tableShape} ${color} flex items-center justify-center shadow-md`}
+                  aria-hidden="true"
+                >
+                  <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-sm font-bold text-neutral-700 shadow-inner">
+                    {label}
+                  </div>
                 </div>
+                <div
+                  className={`w-7 h-7 rounded-full ${color} border-2 border-white shadow-sm shrink-0`}
+                  aria-hidden="true"
+                />
+              </div>
 
-                {/* Bottom chairs */}
-                <div className="flex items-center justify-center gap-2">
-                  {Array.from({ length: bottomChairs }).map((_, i) => (
+              {/* Bottom chairs */}
+              {bottomCount > 0 && (
+                <div className="w-full gap-2 flex items-center justify-center">
+                  {Array.from({ length: bottomCount }).map((_, i) => (
                     <div
                       key={`bottom-${table.id}-${i}`}
-                      className={`w-6 h-6 rounded-full ${sizeColor.chair} border-2 border-white shadow-sm`}
+                      className={`w-7 h-7 rounded-full ${color} border-2 border-white shadow-sm`}
+                      aria-hidden="true"
                     />
                   ))}
                 </div>
-
-                {/* Table name + seat count */}
-                <div className="flex flex-col items-center mt-1">
-                  <span className="text-xs font-semibold text-gray-700">
-                    {table.name}
-                  </span>
-                  <span className="text-[10px] text-gray-400 font-medium">
-                    {table.size} seats
-                  </span>
-                </div>
-              </div>
-            </Draggable>
-          );
-        })}
-      </div>
-
-      {/* Size legend */}
-      <div className="flex items-center justify-center gap-6 mt-6 pt-4 border-t border-gray-200">
-        <span className="text-xs text-gray-400 font-medium">Table size:</span>
-        {[
-          { label: "1-2", color: "bg-amber-400" },
-          { label: "3-4", color: "bg-teal-400" },
-          { label: "5-6", color: "bg-blue-400" },
-          { label: "7+", color: "bg-purple-400" },
-        ].map((item) => (
-          <div key={item.label} className="flex items-center gap-1.5">
-            <span className={`w-3 h-3 rounded ${item.color}`} />
-            <span className="text-xs text-gray-500">{item.label}</span>
-          </div>
-        ))}
-      </div>
+              )}
+            </div>
+          </Draggable>
+        );
+      })}
     </div>
   );
 };

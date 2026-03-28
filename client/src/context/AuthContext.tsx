@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useState, useEffect, useCallback, useMemo } from "react";
 
 interface AuthUser {
   id: string;
@@ -39,7 +39,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const setAuth = (
+  const setAuth = useCallback((
     newUser: AuthUser,
     newAccessToken: string,
     refreshToken: string,
@@ -49,26 +49,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem("authUser", JSON.stringify(newUser));
     setUser(newUser);
     setAccessToken(newAccessToken);
-  };
+  }, []);
 
-  const updateUser = (updates: Partial<AuthUser>) => {
+  const updateUser = useCallback((updates: Partial<AuthUser>) => {
     setUser((prev) => {
       if (!prev) return prev;
       const updated = { ...prev, ...updates };
       localStorage.setItem("authUser", JSON.stringify(updated));
       return updated;
     });
-  };
+  }, []);
 
-  const logout = () => {
+  const logout = useCallback(() => {
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
     localStorage.removeItem("authUser");
     setUser(null);
     setAccessToken(null);
-  };
+  }, []);
 
-  const refreshAccessToken = async (): Promise<string | null> => {
+  // Only logout when the server explicitly rejects the token (401/403);
+  // network errors and timeouts should not force a logout.
+  const refreshAccessToken = useCallback(async (): Promise<string | null> => {
     const storedRefreshToken = localStorage.getItem("refreshToken");
     if (!storedRefreshToken) return null;
 
@@ -78,6 +80,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ refreshToken: storedRefreshToken }),
       });
+
+      // Only logout if the server explicitly rejects the token
+      if (res.status === 401 || res.status === 403) {
+        logout();
+        return null;
+      }
+
+      // Server error or unexpected response — don't logout, just fail silently
+      if (!res.ok) return null;
+
       const json = await res.json();
       if (json.success && json.data?.accessToken) {
         localStorage.setItem("accessToken", json.data.accessToken);
@@ -85,25 +97,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return json.data.accessToken;
       }
     } catch {
-      // network error — fall through to logout
+      // Network error (offline, timeout, etc.) — don't logout
     }
 
-    logout();
     return null;
-  };
+  }, [logout]);
+
+  const contextValue = useMemo(() => ({
+    user,
+    accessToken,
+    isAuthenticated: !!user,
+    setAuth,
+    updateUser,
+    logout,
+    refreshAccessToken,
+  }), [user, accessToken, logout, refreshAccessToken, setAuth, updateUser]);
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        accessToken,
-        isAuthenticated: !!user,
-        setAuth,
-        updateUser,
-        logout,
-        refreshAccessToken,
-      }}
-    >
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );

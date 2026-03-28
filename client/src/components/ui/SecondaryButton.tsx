@@ -1,6 +1,6 @@
 import React, { useState, useRef } from "react";
 
-type ButtonSize = "small" | "medium" | "large";
+type ButtonSize = "xs" | "small" | "medium" | "large";
 
 interface SecondaryButtonProps {
   label: string;
@@ -18,6 +18,7 @@ const SIZE_STYLES: Record<
   ButtonSize,
   { sizeClass: string; spinnerSize: number }
 > = {
+  xs:     { sizeClass: "py-2 px-3 text-xs",                              spinnerSize: 12 },
   small:  { sizeClass: "py-3 px-4 text-sm",                              spinnerSize: 14 },
   medium: { sizeClass: "py-3 px-4 text-sm sm:px-6 sm:text-base",         spinnerSize: 16 },
   large:  { sizeClass: "py-3 px-4 text-sm sm:py-3.5 sm:px-7 sm:text-lg", spinnerSize: 18 },
@@ -44,13 +45,13 @@ export function SecondaryButton({
 
   const bg = (() => {
     if (isInert) return "#FFFFFF";
-    if (active) return "#F0FDFA";
-    if (hovered) return "#F0FDFA";
+    if (active) return "var(--color-teal-50)";
+    if (hovered) return "var(--color-teal-50)";
     return "#FFFFFF";
   })();
 
-  const borderColor = isInert && !isLoading ? "#D6D3D1" : "#0F766E";
-  const textColor = isInert && !isLoading ? "#78716C" : "#0F766E";
+  const borderColor = isInert && !isLoading ? "var(--color-neutral-300)" : "var(--color-teal-700)";
+  const textColor = isInert && !isLoading ? "var(--color-neutral-500)" : "var(--color-teal-700)";
 
   const { sizeClass, spinnerSize } = SIZE_STYLES[size];
 
@@ -94,7 +95,7 @@ export function SecondaryButton({
             width: spinnerSize,
             height: spinnerSize,
             flexShrink: 0,
-            color: "#0F766E",
+            color: "var(--color-teal-700)",
           }}
           className="animate-spin"
           viewBox="0 0 24 24"

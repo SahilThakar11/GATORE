@@ -18,7 +18,7 @@ function parseDuration(duration: string): number {
 }
 
 export default function GameLibraryTab({ onBack }: { onBack: () => void }) {
-  const { fetchGames, addGame, removeGame } = useBusinessSettings();
+  const { fetchGames, addGame, removeGame, saving } = useBusinessSettings();
   const [library, setLibrary] = useState<GameItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState<Set<string>>(new Set());
@@ -89,6 +89,8 @@ export default function GameLibraryTab({ onBack }: { onBack: () => void }) {
       title="Game Library"
       subtitle="Search BoardGameGeek and add games your café offers"
       onBack={onBack}
+      onSave={async () => true}
+      saving={saving}
     >
       <GameSearchPanel
         library={library}

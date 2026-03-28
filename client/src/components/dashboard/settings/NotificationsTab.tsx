@@ -63,7 +63,7 @@ export default function NotificationsTab({ onBack }: { onBack: () => void }) {
       onBack={onBack}
     >
       {/* Email Notifications */}
-      <h3 className="text-sm font-bold text-gray-900 mb-3">
+      <h3 className="text-sm font-bold text-neutral-800 mb-3">
         Email Notifications
       </h3>
       <div className="flex flex-col gap-2 mb-8">
@@ -71,27 +71,30 @@ export default function NotificationsTab({ onBack }: { onBack: () => void }) {
           <button
             key={n.key}
             onClick={() => toggleEmail(n.key)}
-            className="flex items-center gap-3.5 border border-gray-200 rounded-xl px-4 py-3.5 text-left hover:bg-gray-50/50 transition-colors cursor-pointer"
+            aria-pressed={n.enabled}
+            aria-label={`${n.enabled ? "Disable" : "Enable"} email notifications for ${n.label}`}
+            className="flex items-center gap-3.5 border border-warm-200 rounded-xl px-4 py-3.5 text-left hover:bg-warm-50 transition-colors cursor-pointer"
           >
             <div
               className={`w-5 h-5 rounded flex items-center justify-center border-2 shrink-0 transition-colors ${
                 n.enabled
                   ? "bg-teal-600 border-teal-600"
-                  : "border-gray-300"
+                  : "border-neutral-400"
               }`}
+              aria-hidden="true"
             >
-              {n.enabled && <Check size={13} className="text-white" />}
+              {n.enabled && <Check size={13} className="text-white" aria-hidden="true" />}
             </div>
             <div>
-              <p className="text-sm font-semibold text-gray-900">{n.label}</p>
-              <p className="text-xs text-gray-400 mt-0.5">{n.desc}</p>
+              <p className="text-sm font-semibold text-neutral-800">{n.label}</p>
+              <p className="text-xs text-neutral-500 mt-0.5">{n.desc}</p>
             </div>
           </button>
         ))}
       </div>
 
       {/* Push Notifications */}
-      <h3 className="text-sm font-bold text-gray-900 mb-3">
+      <h3 className="text-sm font-bold text-neutral-800 mb-3">
         Push Notifications
       </h3>
       <div className="flex flex-col gap-2">
@@ -99,20 +102,23 @@ export default function NotificationsTab({ onBack }: { onBack: () => void }) {
           <button
             key={n.key}
             onClick={() => togglePush(n.key)}
-            className="flex items-center gap-3.5 border border-gray-200 rounded-xl px-4 py-3.5 text-left hover:bg-gray-50/50 transition-colors cursor-pointer"
+            aria-pressed={n.enabled}
+            aria-label={`${n.enabled ? "Disable" : "Enable"} push notifications for ${n.label}`}
+            className="flex items-center gap-3.5 border border-warm-200 rounded-xl px-4 py-3.5 text-left hover:bg-warm-50 transition-colors cursor-pointer"
           >
             <div
               className={`w-5 h-5 rounded flex items-center justify-center border-2 shrink-0 transition-colors ${
                 n.enabled
                   ? "bg-teal-600 border-teal-600"
-                  : "border-gray-300"
+                  : "border-neutral-400"
               }`}
+              aria-hidden="true"
             >
-              {n.enabled && <Check size={13} className="text-white" />}
+              {n.enabled && <Check size={13} className="text-white" aria-hidden="true" />}
             </div>
             <div>
-              <p className="text-sm font-semibold text-gray-900">{n.label}</p>
-              <p className="text-xs text-gray-400 mt-0.5">{n.desc}</p>
+              <p className="text-sm font-semibold text-neutral-800">{n.label}</p>
+              <p className="text-xs text-neutral-500 mt-0.5">{n.desc}</p>
             </div>
           </button>
         ))}

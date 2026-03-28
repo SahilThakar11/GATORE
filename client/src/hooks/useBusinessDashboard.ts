@@ -170,17 +170,26 @@ export function useBusinessDashboard() {
       tableId: number;
       specialRequests?: string;
       source?: string;
+      reservationDate?: string;
+      arrivalTime?: string;
+      durationHours?: number;
+      gameId?: number;
     }) => {
-      const res = await fetchWithAuth(`${BASE_URL}/reservations`, {
-        method: "POST",
-        headers: headers(),
-        body: JSON.stringify(data),
-      });
-      const json = await res.json();
-      if (json.success) {
-        await fetchDashboard();
+      try {
+        const res = await fetchWithAuth(`${BASE_URL}/reservations`, {
+          method: "POST",
+          headers: headers(),
+          body: JSON.stringify(data),
+        });
+        const json = await res.json();
+        if (json.success) {
+          await fetchDashboard();
+        }
+        return json;
+      } catch (err) {
+        console.error("Create walk-in error:", err);
+        return { success: false, message: "Network error. Please try again." };
       }
-      return json;
     },
     [headers, fetchDashboard, fetchWithAuth],
   );
@@ -188,16 +197,89 @@ export function useBusinessDashboard() {
   // Update reservation status
   const updateReservationStatus = useCallback(
     async (id: number, status: string, notes?: string) => {
-      const res = await fetchWithAuth(`${BASE_URL}/reservations/${id}/status`, {
-        method: "PATCH",
-        headers: headers(),
-        body: JSON.stringify({ status, notes }),
-      });
-      const json = await res.json();
-      if (json.success) {
-        await fetchDashboard();
+      try {
+        const res = await fetchWithAuth(`${BASE_URL}/reservations/${id}/status`, {
+          method: "PATCH",
+          headers: headers(),
+          body: JSON.stringify({ status, notes }),
+        });
+        const json = await res.json();
+        if (json.success) {
+          await fetchDashboard();
+        }
+        return json;
+      } catch (err) {
+        console.error("Update status error:", err);
+        return { success: false, message: "Network error. Please try again." };
       }
-      return json;
+    },
+    [headers, fetchDashboard, fetchWithAuth],
+  );
+
+  // Update reservation details (modify)
+  const updateReservation = useCallback(
+    async (id: number, data: {
+      customerName?: string;
+      tableId?: number;
+      partySize?: number;
+      reservationDate?: string;
+      arrivalTime?: string;
+      durationHours?: number;
+      specialRequests?: string;
+      gameId?: number | null;
+    }) => {
+      try {
+        const res = await fetchWithAuth(`${BASE_URL}/reservations/${id}`, {
+          method: "PATCH",
+          headers: headers(),
+          body: JSON.stringify(data),
+        });
+        const json = await res.json();
+        if (json.success) await fetchDashboard();
+        return json;
+      } catch (err) {
+        console.error("Update reservation error:", err);
+        return { success: false, message: "Network error. Please try again." };
+      }
+    },
+    [headers, fetchDashboard, fetchWithAuth],
+  );
+
+  // Update reservation special requests (notes)
+  const updateReservationNotes = useCallback(
+    async (id: number, status: string, specialRequests: string) => {
+      try {
+        const res = await fetchWithAuth(`${BASE_URL}/reservations/${id}/status`, {
+          method: "PATCH",
+          headers: headers(),
+          body: JSON.stringify({ status, specialRequests }),
+        });
+        const json = await res.json();
+        if (json.success) await fetchDashboard();
+        return json;
+      } catch (err) {
+        console.error("Update notes error:", err);
+        return { success: false, message: "Network error. Please try again." };
+      }
+    },
+    [headers, fetchDashboard, fetchWithAuth],
+  );
+
+  // Delete a reservation
+  const deleteReservation = useCallback(
+    async (id: number) => {
+      try {
+        const res = await fetchWithAuth(`${BASE_URL}/reservations/${id}`, {
+          method: "DELETE",
+          headers: headers(),
+        });
+        const json = await res.json();
+        if (json.success) await fetchDashboard();
+        return json;
+      } catch (err) {
+        console.error("Delete reservation error:", err);
+        return { success: false, message: "Network error. Please try again." };
+      }
     },
     [headers, fetchDashboard, fetchWithAuth],
   );
@@ -239,6 +321,9 @@ export function useBusinessDashboard() {
     fetchPrefill,
     createWalkIn,
     updateReservationStatus,
+    updateReservation,
+    updateReservationNotes,
+    deleteReservation,
     fetchReservations,
     refresh: fetchAll,
   };

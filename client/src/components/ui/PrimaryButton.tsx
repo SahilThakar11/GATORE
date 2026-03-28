@@ -1,6 +1,6 @@
 import React, { useState, useRef } from "react";
 
-type ButtonSize = "sm" | "md" | "lg";
+type ButtonSize = "xs" | "sm" | "md" | "lg";
 
 interface PrimaryButtonProps {
   label: string;
@@ -11,6 +11,8 @@ interface PrimaryButtonProps {
   rightIcon?: React.ReactNode;
   /** Use gray-300/gray-500 for the disabled state instead of the default white */
   grayDisabled?: boolean;
+  "aria-expanded"?: boolean;
+  "aria-haspopup"?: boolean | "menu" | "listbox" | "tree" | "grid" | "dialog";
 }
 
 const SHADOW_DEFAULT = "0px 4px 14px 0px rgba(15,118,110,0.25)";
@@ -19,6 +21,7 @@ const SIZE_STYLES: Record<
   ButtonSize,
   { sizeClass: string; spinnerSize: number }
 > = {
+  xs: { sizeClass: "py-2 px-3 text-xs",                                    spinnerSize: 12 },
   sm: { sizeClass: "py-3 px-4 text-sm",                                    spinnerSize: 14 },
   md: { sizeClass: "py-3 px-4 text-sm sm:px-6 sm:text-base",               spinnerSize: 16 },
   lg: { sizeClass: "py-3 px-4 text-sm sm:py-3.5 sm:px-7 sm:text-lg",       spinnerSize: 18 },
@@ -32,6 +35,8 @@ export function PrimaryButton({
   size = "md",
   rightIcon,
   grayDisabled = false,
+  "aria-expanded": ariaExpanded,
+  "aria-haspopup": ariaHaspopup,
 }: PrimaryButtonProps) {
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
@@ -47,28 +52,28 @@ export function PrimaryButton({
 
   const bg = (() => {
     if (isLoading) return "#FFFFFF";
-    if (disabled)  return grayDisabled ? "#D1D5DB" : "#FFFFFF";
-    if (active)    return "#CCFBF1";
-    if (hovered)   return "#115E59";
+    if (disabled)  return grayDisabled ? "var(--color-neutral-300)" : "#FFFFFF";
+    if (active)    return "var(--color-teal-100)";
+    if (hovered)   return "var(--color-teal-800)";
     if (focused)   return "#FFFFFF";
-    return "#0F766E";
+    return "var(--color-teal-700)";
   })();
 
   const borderColor = (() => {
-    if (isLoading) return "#0F766E";
-    if (disabled)  return grayDisabled ? "#D1D5DB" : "#D6D3D1";
+    if (isLoading) return "var(--color-teal-700)";
+    if (disabled)  return grayDisabled ? "var(--color-neutral-300)" : "var(--color-neutral-300)";
     if (active)    return "#134E4A";
-    if (hovered)   return "#115E59";
-    if (focused)   return "#0F766E";
+    if (hovered)   return "var(--color-teal-800)";
+    if (focused)   return "var(--color-teal-700)";
     return "transparent";
   })();
 
   const textColor = (() => {
-    if (isLoading) return "#0F766E";
-    if (disabled)  return grayDisabled ? "#6B7280" : "#78716C";
+    if (isLoading) return "var(--color-teal-700)";
+    if (disabled)  return grayDisabled ? "#6B7280" : "var(--color-neutral-500)";
     if (active)    return "#134E4A";
     if (hovered)   return "#FFFFFF";
-    if (focused)   return "#0F766E";
+    if (focused)   return "var(--color-teal-700)";
     return "#FFFFFF";
   })();
 
@@ -78,6 +83,8 @@ export function PrimaryButton({
     <button
       onClick={isInert ? undefined : onClick}
       disabled={isInert}
+      aria-expanded={ariaExpanded}
+      aria-haspopup={ariaHaspopup}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => {
         setHovered(false);
@@ -109,7 +116,7 @@ export function PrimaryButton({
     >
       {isLoading && (
         <svg
-          style={{ width: spinnerSize, height: spinnerSize, flexShrink: 0, color: "#0F766E" }}
+          style={{ width: spinnerSize, height: spinnerSize, flexShrink: 0, color: "var(--color-teal-700)" }}
           className="animate-spin"
           viewBox="0 0 24 24"
           fill="none"

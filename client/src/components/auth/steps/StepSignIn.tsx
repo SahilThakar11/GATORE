@@ -73,7 +73,7 @@ export function StepSignIn({
       />
 
       {/* Divider */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3" aria-hidden="true">
         <div className="flex-1 h-px bg-warm-300" />
         <span className="text-sm text-gray-600">or</span>
         <div className="flex-1 h-px bg-warm-300" />

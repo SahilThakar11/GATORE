@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { Lock, Clock } from "lucide-react";
-import { Button } from "../ui/Button";
+import { Lock, Clock, ChevronLeft } from "lucide-react";
+import { PrimaryButton } from "../ui/PrimaryButton";
+import { SecondaryButton } from "../ui/SecondaryButton";
+import { TextButton } from "../ui/TextButton";
 
 interface Props {
   email: string;
@@ -18,6 +20,7 @@ export function BPOTPVerify({
   loading,
 }: Props) {
   const [digits, setDigits] = useState<string[]>(["", "", "", "", "", ""]);
+  const [resending, setResending] = useState(false);
   const refs = useRef<(HTMLInputElement | null)[]>([]);
 
   const isComplete = digits.every((d) => d !== "");
@@ -26,6 +29,13 @@ export function BPOTPVerify({
   useEffect(() => {
     refs.current[0]?.focus();
   }, []);
+
+  // Auto-submit when all digits are filled
+  useEffect(() => {
+    if (isComplete && !loading) {
+      onVerify(digits.join(""));
+    }
+  }, [digits]);
 
   const handleChange = (idx: number, val: string) => {
     if (!/^\d?$/.test(val)) return;
@@ -56,86 +66,80 @@ export function BPOTPVerify({
     refs.current[Math.min(pasted.length, 5)]?.focus();
   };
 
+  const handleResend = async () => {
+    setResending(true);
+    setDigits(["", "", "", "", "", ""]);
+    await onResend();
+    setResending(false);
+    refs.current[0]?.focus();
+  };
+
   return (
     <div className="px-5 pt-5 pb-4 flex flex-col gap-5 flex-1">
       <div>
-        <h2 className="text-2xl font-bold text-gray-900">Check your email</h2>
-        <p className="text-sm text-gray-500 mt-1">
+        <h2 id="auth-step-heading" className="text-xl sm:text-2xl font-bold text-neutral-800">Check your email</h2>
+        <p className="text-xs sm:text-sm text-neutral-600 mt-1">
           We sent a 6-digit code to{" "}
-          <span className="font-medium text-gray-700">{email}</span>
+          <span className="font-medium text-neutral-800">{email}</span>
         </p>
       </div>
 
       {/* OTP boxes */}
-      <div className="flex justify-center gap-2.5 py-2">
-        {digits.map((digit, idx) => (
-          <input
-            key={idx}
-            ref={(el) => {
-              refs.current[idx] = el;
-            }}
-            type="text"
-            inputMode="numeric"
-            maxLength={1}
-            value={digit}
-            onChange={(e) => handleChange(idx, e.target.value)}
-            onKeyDown={(e) => handleKeyDown(idx, e)}
-            onPaste={handlePaste}
-            disabled={loading}
-            className="w-11 h-12 text-center text-lg font-semibold border border-gray-200 rounded-lg bg-[#faf8f4] focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all disabled:opacity-50"
-          />
-        ))}
+      <div className="flex flex-col items-center gap-2">
+        <div className="flex justify-center gap-2.5 py-2">
+          {digits.map((digit, idx) => (
+            <input
+              key={idx}
+              ref={(el) => {
+                refs.current[idx] = el;
+              }}
+              type="text"
+              inputMode="numeric"
+              maxLength={1}
+              value={digit}
+              aria-label={`Digit ${idx + 1} of 6`}
+              onChange={(e) => handleChange(idx, e.target.value)}
+              onKeyDown={(e) => handleKeyDown(idx, e)}
+              onPaste={handlePaste}
+              disabled={loading}
+              className="w-12 h-14 text-center text-lg font-semibold border border-warm-300 rounded-lg bg-warm-50 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all disabled:opacity-50"
+            />
+          ))}
+        </div>
+
+        <div className="flex items-center justify-center gap-1.5 text-xs text-neutral-600">
+          <Clock size={14} className="text-teal-600" />
+          Code expires in 10 minutes
+        </div>
       </div>
 
-      {/* Resend / change email */}
-      <div className="text-center space-y-2">
-        <p className="text-sm text-gray-500">
+      {/* Resend */}
+      <div className="text-center">
+        <p className="text-xs sm:text-sm text-neutral-600">
           Didn't receive it?{" "}
-          <button
-            onClick={() => {
-              setDigits(["", "", "", "", "", ""]);
-              onResend();
-            }}
-            disabled={loading}
-            className="text-teal-700 font-medium hover:underline disabled:opacity-50"
-          >
-            {loading ? "Sending..." : "Resend code"}
-          </button>
+          <TextButton
+            label={resending ? "Sending…" : "Resend code"}
+            onClick={handleResend}
+            disabled={loading || resending}
+            isLoading={resending}
+            size="small"
+          />
         </p>
-        <button
-          onClick={onChangeEmail}
-          disabled={loading}
-          className="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-1 mx-auto disabled:opacity-50"
-        >
-          ← Use a different email
-        </button>
       </div>
 
-      <div className="flex items-center justify-center gap-1.5 text-xs text-gray-400">
-        <Clock size={11} className="text-amber-400" />
-        Code expires in 10 minutes
-      </div>
-
-      <div className="mt-auto flex gap-3">
-        <Button
-          variant="outline"
-          fullWidth
-          onClick={onChangeEmail}
-          disabled={loading}
-        >
-          Back
-        </Button>
-        <Button
-          variant="primary"
-          fullWidth
-          disabled={!isComplete || loading}
-          onClick={() => onVerify(digits.join(""))}
-        >
-          <span className="flex items-center justify-center gap-2">
-            <Lock size={14} />
-            {loading ? "Verifying…" : "Continue"}
-          </span>
-        </Button>
+      <div className="mt-auto flex gap-3 bg-warm-50 px-4 py-4 border border-warm-200 -mx-5 -mb-4">
+        <div className="flex-1 [&>button]:w-full">
+          <SecondaryButton label="Back" onClick={onChangeEmail} disabled={loading} leftIcon={<ChevronLeft size={16} aria-hidden="true" />} />
+        </div>
+        <div className="flex-1 [&>button]:w-full">
+          <PrimaryButton
+            label={loading ? "Verifying…" : "Continue"}
+            onClick={() => onVerify(digits.join(""))}
+            disabled={!isComplete || loading}
+            isLoading={loading}
+            rightIcon={!loading ? <Lock size={14} aria-hidden="true" /> : undefined}
+          />
+        </div>
       </div>
     </div>
   );

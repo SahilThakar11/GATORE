@@ -1,4 +1,5 @@
 import { useRef, useEffect, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { ChevronDown, MoreVertical } from "lucide-react";
 
 export interface DropdownItem {
@@ -18,6 +19,8 @@ interface DropdownProps {
   fullWidth?: boolean;
   isPlaceholder?: boolean;
   triggerClassName?: string;
+  dropUp?: boolean;
+  triggerAriaLabel?: string;
 }
 
 export function Dropdown({
@@ -29,16 +32,40 @@ export function Dropdown({
   fullWidth = false,
   isPlaceholder = false,
   triggerClassName = "",
+  dropUp = false,
+  triggerAriaLabel,
 }: DropdownProps) {
   const [open, setOpen] = useState(false);
+  const [menuPos, setMenuPos] = useState<{ top?: number; bottom?: number; left?: number; right?: number; width?: number }>({});
   const containerRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  // Close on outside click
+  // Calculate portal position when opening
+  useEffect(() => {
+    if (!open || !triggerRef.current) return;
+    const rect = triggerRef.current.getBoundingClientRect();
+    const estimatedMenuHeight = items.length * 44 + 8;
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const shouldFlipUp = !dropUp && spaceBelow < estimatedMenuHeight + 8;
+    setMenuPos({
+      ...(dropUp || shouldFlipUp
+        ? { bottom: window.innerHeight - rect.top + 6 }
+        : { top: rect.bottom + 6 }),
+      ...(align === "right"
+        ? { right: window.innerWidth - rect.right }
+        : { left: rect.left }),
+      ...(fullWidth ? { width: rect.width } : {}),
+    });
+  }, [open, dropUp, align, fullWidth, items.length]);
+
+  // Close on outside click (check both container and portal menu)
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node))
-        setOpen(false);
+      if (
+        containerRef.current && !containerRef.current.contains(e.target as Node) &&
+        menuRef.current && !menuRef.current.contains(e.target as Node)
+      ) setOpen(false);
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
@@ -63,17 +90,15 @@ export function Dropdown({
   }, [open]);
 
   const menuStyle: React.CSSProperties = {
+    position: "fixed",
+    ...menuPos,
+    minWidth: fullWidth ? undefined : "180px",
     backgroundColor: "#FFFFFF",
     borderRadius: "8px",
     border: "1px solid #E8D4C4",
     boxShadow: "0 4px 12px 0 rgba(0,0,0,0.10)",
-    minWidth: "180px",
-    ...(fullWidth ? { width: "100%" } : {}),
     padding: "4px 0",
-    position: "absolute",
-    top: "calc(100% + 6px)",
-    zIndex: 50,
-    ...(align === "right" ? { right: 0 } : { left: 0 }),
+    zIndex: 9999,
   };
 
   return (
@@ -84,6 +109,7 @@ export function Dropdown({
       {/* Trigger */}
       {trigger === "kebab" ? (
         <button
+          ref={triggerRef}
           onClick={() => setOpen((v) => !v)}
           aria-haspopup="menu"
           aria-expanded={open}
@@ -96,18 +122,20 @@ export function Dropdown({
             justifyContent: "center",
             cursor: "pointer",
             border: "none",
-            color: "#57534E",
+            color: "var(--color-neutral-600)",
             transition: "background 150ms",
           }}
-          className="bg-transparent hover:bg-[#FEF7F0]"
+          className="bg-transparent hover:bg-warm-100"
         >
           <MoreVertical size={16} />
         </button>
       ) : (
         <button
+          ref={triggerRef}
           onClick={() => setOpen((v) => !v)}
           aria-haspopup="menu"
           aria-expanded={open}
+          aria-label={triggerAriaLabel}
           style={{
             width: fullWidth ? "100%" : undefined,
             border: "1px solid #E8D4C4",
@@ -119,10 +147,10 @@ export function Dropdown({
             cursor: "pointer",
             transition: "background 150ms",
           }}
-          className={`hover:bg-[#FEF7F0] ${triggerClassName || "bg-white"}`}
+          className={`hover:bg-warm-100 ${triggerClassName || "bg-warm-50"}`}
         >
           {triggerIcon && (
-            <span style={{ display: "flex", alignItems: "center", color: "#57534E", flexShrink: 0 }}>
+            <span style={{ display: "flex", alignItems: "center", color: "var(--color-neutral-600)", flexShrink: 0 }}>
               {triggerIcon}
             </span>
           )}
@@ -131,16 +159,20 @@ export function Dropdown({
               fontFamily: "'DM Sans', sans-serif",
               fontSize: 16,
               fontWeight: 400,
-              color: isPlaceholder ? "#9CA3AF" : "#292524",
+              color: isPlaceholder ? "var(--color-neutral-600)" : "var(--color-neutral-800)",
               flex: 1,
               textAlign: "left",
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
             }}
           >
             {triggerLabel}
           </span>
           <ChevronDown
             size={15}
-            color="#57534E"
+            color="var(--color-neutral-600)"
+            aria-hidden="true"
             style={{
               transition: "transform 200ms",
               transform: open ? "rotate(180deg)" : "rotate(0deg)",
@@ -150,8 +182,8 @@ export function Dropdown({
         </button>
       )}
 
-      {/* Menu */}
-      {open && (
+      {/* Menu rendered via portal to escape overflow clipping */}
+      {open && createPortal(
         <div ref={menuRef} style={menuStyle} role="menu">
           {items.map((item, i) => (
             <div key={i}>
@@ -171,12 +203,12 @@ export function Dropdown({
                   border: "none",
                   textAlign: "left",
                   transition: "background 150ms",
-                  color: item.danger ? "#EF4444" : "#292524",
+                  color: item.danger ? "var(--color-error)" : "var(--color-neutral-800)",
                 }}
-                className={item.danger ? "bg-transparent hover:bg-[#FEF2F2]" : "bg-transparent hover:bg-[#FEF7F0]"}
+                className={item.danger ? "bg-transparent hover:bg-error-light" : "bg-transparent hover:bg-warm-100"}
               >
                 {item.icon && (
-                  <span style={{ display: "flex", alignItems: "center", color: item.danger ? "#EF4444" : "#57534E", flexShrink: 0 }}>
+                  <span style={{ display: "flex", alignItems: "center", color: item.danger ? "var(--color-error)" : "var(--color-neutral-600)", flexShrink: 0 }}>
                     {item.icon}
                   </span>
                 )}
@@ -192,7 +224,8 @@ export function Dropdown({
               </button>
             </div>
           ))}
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

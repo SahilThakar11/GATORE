@@ -6,11 +6,12 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   helperText?: string;
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
+  emptyBg?: string;
 }
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
   (
-    { label, error, helperText, leftIcon, rightIcon, className = "", onFocus, onBlur, ...props },
+    { label, error, helperText, leftIcon, rightIcon, emptyBg = "bg-warm-50", className = "", onFocus, onBlur, ...props },
     ref,
   ) => {
     const [isFocused, setIsFocused] = useState(false);
@@ -33,12 +34,12 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
 
           <input
             ref={ref}
-            className={`w-full px-4 py-3 text-sm sm:text-base border rounded-lg transition-colors focus:outline-none focus:ring-2 ${
+            className={`w-full px-4 py-3 text-sm sm:text-base border rounded-lg transition-colors focus:outline-none focus:ring-2 placeholder:text-neutral-500 ${
               error
                 ? "bg-red-50 border-red-300 focus:ring-red-600"
                 : isFilled
                   ? "bg-teal-50 border-warm-300 focus:ring-teal-500"
-                  : "bg-warm-50 border-warm-300 focus:ring-teal-500"
+                  : `${emptyBg} border-warm-300 focus:ring-teal-500`
             } ${leftIcon ? "pl-10" : ""} ${rightIcon ? "pr-12" : ""} ${className}`}
             onFocus={(e) => { setIsFocused(true); onFocus?.(e); }}
             onBlur={(e) => { setIsFocused(false); onBlur?.(e); }}
@@ -52,7 +53,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           )}
         </div>
 
-        {error && <p className="text-xs sm:text-sm text-red-600">{error}</p>}
+        {error && <p role="alert" className="text-xs sm:text-sm text-red-600">{error}</p>}
 
         {helperText && !error && (
           <p className="text-xs sm:text-sm text-neutral-500">{helperText}</p>

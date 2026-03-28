@@ -13,6 +13,7 @@ interface TextButtonProps {
   /** Use white text instead of teal — for use on dark backgrounds */
   white?: boolean;
   "aria-label"?: string;
+  "aria-expanded"?: boolean;
 }
 
 const SIZE_STYLES: Record<
@@ -41,6 +42,7 @@ export function TextButton({
   rightIcon,
   white = false,
   "aria-label": ariaLabel,
+  "aria-expanded": ariaExpanded,
 }: TextButtonProps) {
   const [hovered, setHovered] = useState(false);
   const [focused, setFocused] = useState(false);
@@ -56,12 +58,12 @@ export function TextButton({
         ? "rgba(255,255,255,0.7)"
         : "#FFFFFF"
     : isInert && !isLoading
-      ? "#D6D3D1"
+      ? "var(--color-neutral-300)"
       : active
         ? "#0C4A6E"
         : hovered
-          ? "#115E59"
-          : "#0F766E";
+          ? "var(--color-teal-800)"
+          : "var(--color-teal-700)";
 
   const { sizeClass, spinnerSize } = SIZE_STYLES[size];
 
@@ -70,6 +72,7 @@ export function TextButton({
       onClick={isInert ? undefined : onClick}
       disabled={isInert}
       aria-label={ariaLabel}
+      aria-expanded={ariaExpanded}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => {
         setHovered(false);
@@ -98,7 +101,7 @@ export function TextButton({
         color,
         border: "none",
         outline: focused
-          ? `2px solid ${white ? "#FFFFFF" : "#0F766E"}`
+          ? `2px solid ${white ? "#FFFFFF" : "var(--color-teal-700)"}`
           : undefined,
         outlineOffset: focused ? "3px" : undefined,
         cursor: isInert ? "not-allowed" : "pointer",
@@ -115,7 +118,7 @@ export function TextButton({
             width: spinnerSize,
             height: spinnerSize,
             flexShrink: 0,
-            color: "#0F766E",
+            color: "var(--color-teal-700)",
           }}
           className="animate-spin"
           viewBox="0 0 24 24"
