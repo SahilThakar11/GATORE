@@ -38,10 +38,9 @@ function makeProfileResponse(overrides: Record<string, unknown> = {}) {
       name: 'Test Cafe',
       isSetupComplete: true,
       tables: [],
-      menuItems: [],
       operatingHours: [],
       restaurantGames: [],
-      _count: { tables: 0, restaurantGames: 0, menuItems: 0 },
+      _count: { tables: 0, restaurantGames: 0 },
       ...overrides,
     },
   };

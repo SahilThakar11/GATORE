@@ -76,12 +76,11 @@ export const getProfile = async (req: AuthRequest, res: Response): Promise<void>
       include: {
         operatingHours: { orderBy: { dayOfWeek: "asc" } },
         tables: { orderBy: { id: "asc" } },
-        menuItems: { orderBy: { id: "asc" } },
         restaurantGames: {
           include: { game: true },
           orderBy: { id: "asc" },
         },
-        _count: { select: { tables: true, restaurantGames: true, menuItems: true } },
+        _count: { select: { tables: true, restaurantGames: true } },
       },
     });
 
@@ -766,75 +765,6 @@ export const removeGame = async (req: AuthRequest, res: Response): Promise<void>
 // ═════════════════════════════════════════════════════════════════════════════
 
 // GET /api/business-system/menu
-export const getMenu = async (req: AuthRequest, res: Response): Promise<void> => {
-  try {
-    const restaurantId = await getBusinessRestaurant(req, res);
-    if (!restaurantId) return;
-
-    const items = await prisma.menuItem.findMany({
-      where: { restaurantId },
-      orderBy: { id: "asc" },
-    });
-
-    res.json({ success: true, data: items });
-  } catch (error) {
-    console.error("Get menu error:", error);
-    res.status(500).json({ success: false, message: "Failed to retrieve menu." });
-  }
-};
-
-// POST /api/business-system/menu
-export const addMenuItem = async (req: AuthRequest, res: Response): Promise<void> => {
-  try {
-    const restaurantId = await getBusinessRestaurant(req, res);
-    if (!restaurantId) return;
-
-    const { name, description, price, category } = req.body;
-
-    if (!name || price === undefined) {
-      res.status(400).json({ success: false, message: "Name and price are required." });
-      return;
-    }
-
-    const item = await prisma.menuItem.create({
-      data: {
-        name,
-        description: description || null,
-        price: parseFloat(price),
-        category: category || "Drink",
-        restaurantId,
-      },
-    });
-
-    res.status(201).json({ success: true, message: "Menu item added.", data: item });
-  } catch (error) {
-    console.error("Add menu item error:", error);
-    res.status(500).json({ success: false, message: "Failed to add menu item." });
-  }
-};
-
-// DELETE /api/business-system/menu/:id
-export const removeMenuItem = async (req: AuthRequest, res: Response): Promise<void> => {
-  try {
-    const restaurantId = await getBusinessRestaurant(req, res);
-    if (!restaurantId) return;
-
-    const id = parseInt(req.params.id as string);
-    const item = await prisma.menuItem.findFirst({ where: { id, restaurantId } });
-
-    if (!item) {
-      res.status(404).json({ success: false, message: "Menu item not found." });
-      return;
-    }
-
-    await prisma.menuItem.delete({ where: { id } });
-    res.json({ success: true, message: "Menu item removed." });
-  } catch (error) {
-    console.error("Remove menu item error:", error);
-    res.status(500).json({ success: false, message: "Failed to remove menu item." });
-  }
-};
-
 // ═════════════════════════════════════════════════════════════════════════════
 //  PRICING
 // ═════════════════════════════════════════════════════════════════════════════

@@ -14,9 +14,6 @@ import {
   getGames,
   addGame,
   removeGame,
-  getMenu,
-  addMenuItem,
-  removeMenuItem,
   getPricing,
   updatePricing,
   getReservations,
@@ -56,11 +53,6 @@ router.put("/hours", updateHours as any);
 router.get("/games", getGames as any);
 router.post("/games", addGame as any);
 router.delete("/games/:id", removeGame as any);
-
-// ── Menu ─────────────────────────────────────────────────────────────────────
-router.get("/menu", getMenu as any);
-router.post("/menu", addMenuItem as any);
-router.delete("/menu/:id", removeMenuItem as any);
 
 // ── Pricing ──────────────────────────────────────────────────────────────────
 router.get("/pricing", getPricing as any);

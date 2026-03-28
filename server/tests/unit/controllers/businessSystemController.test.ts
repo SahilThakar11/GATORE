@@ -24,9 +24,6 @@ import {
   removeGame,
   getDashboardStats,
   completeSetup,
-  getMenu,
-  addMenuItem,
-  removeMenuItem,
   getPricing,
   updatePricing,
   getReservations,
@@ -59,7 +56,7 @@ const mockNoRestaurant = () => {
 
 const MOCK_RESTAURANT = {
   id: 1, name: 'Test Cafe', city: 'Toronto', operatingHours: [],
-  tables: [], menuItems: [], restaurantGames: [], _count: {},
+  tables: [], restaurantGames: [], _count: {},
 } as any;
 
 const MOCK_TABLE = {
@@ -773,111 +770,6 @@ describe('completeSetup', () => {
     await completeSetup(req, res);
 
     expect(res.status).toHaveBeenCalledWith(400);
-  });
-});
-
-// ─── getMenu ──────────────────────────────────────────────────────────────────
-describe('getMenu', () => {
-  it('returns 401 when unauthenticated', async () => {
-    const req = buildReq();
-    const res = buildRes();
-    await getMenu(req, res);
-
-    expect(res.status).toHaveBeenCalledWith(401);
-  });
-
-  it('returns 200 with menu items on success', async () => {
-    mockLinkedRestaurant();
-    const items = [{ id: 1, name: 'Coffee', price: 3.5, category: 'Drink', restaurantId: 1 }];
-    prismaMock.menuItem.findMany.mockResolvedValue(items as any);
-
-    const req = buildReq({}, {}, { userId: 1, email: 'b@b.com', role: 'business' });
-    const res = buildRes();
-    await getMenu(req, res);
-
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({ success: true, data: items }),
-    );
-  });
-});
-
-// ─── addMenuItem ──────────────────────────────────────────────────────────────
-describe('addMenuItem', () => {
-  it('returns 401 when unauthenticated', async () => {
-    const req = buildReq({ name: 'Coffee', price: 3.5 });
-    const res = buildRes();
-    await addMenuItem(req, res);
-
-    expect(res.status).toHaveBeenCalledWith(401);
-  });
-
-  it('returns 400 when name or price is missing', async () => {
-    mockLinkedRestaurant();
-
-    const req = buildReq({ name: 'Coffee' }, {}, { userId: 1, email: 'b@b.com', role: 'business' });
-    const res = buildRes();
-    await addMenuItem(req, res);
-
-    expect(res.status).toHaveBeenCalledWith(400);
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({ message: expect.stringContaining('required') }),
-    );
-  });
-
-  it('creates item and returns 201 on valid input', async () => {
-    mockLinkedRestaurant();
-    const newItem = { id: 1, name: 'Coffee', price: 3.5, category: 'Drink', restaurantId: 1 };
-    prismaMock.menuItem.create.mockResolvedValue(newItem as any);
-
-    const req = buildReq(
-      { name: 'Coffee', price: 3.5, category: 'Drink' },
-      {},
-      { userId: 1, email: 'b@b.com', role: 'business' },
-    );
-    const res = buildRes();
-    await addMenuItem(req, res);
-
-    expect(prismaMock.menuItem.create).toHaveBeenCalled();
-    expect(res.status).toHaveBeenCalledWith(201);
-    expect(res.json).toHaveBeenCalledWith(
-      expect.objectContaining({ success: true, data: newItem }),
-    );
-  });
-});
-
-// ─── removeMenuItem ───────────────────────────────────────────────────────────
-describe('removeMenuItem', () => {
-  it('returns 401 when unauthenticated', async () => {
-    const req = buildReq({}, { id: '1' });
-    const res = buildRes();
-    await removeMenuItem(req, res);
-
-    expect(res.status).toHaveBeenCalledWith(401);
-  });
-
-  it('returns 404 when menu item is not found', async () => {
-    mockLinkedRestaurant();
-    prismaMock.menuItem.findFirst.mockResolvedValue(null);
-
-    const req = buildReq({}, { id: '99' }, { userId: 1, email: 'b@b.com', role: 'business' });
-    const res = buildRes();
-    await removeMenuItem(req, res);
-
-    expect(res.status).toHaveBeenCalledWith(404);
-  });
-
-  it('removes item and returns 200 on success', async () => {
-    mockLinkedRestaurant();
-    const item = { id: 1, name: 'Coffee', restaurantId: 1 };
-    prismaMock.menuItem.findFirst.mockResolvedValue(item as any);
-    prismaMock.menuItem.delete.mockResolvedValue(item as any);
-
-    const req = buildReq({}, { id: '1' }, { userId: 1, email: 'b@b.com', role: 'business' });
-    const res = buildRes();
-    await removeMenuItem(req, res);
-
-    expect(prismaMock.menuItem.delete).toHaveBeenCalledWith({ where: { id: 1 } });
-    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ success: true }));
   });
 });
 

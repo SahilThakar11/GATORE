@@ -2,7 +2,6 @@ import { useState } from "react";
 import {
   Building2,
   DollarSign,
-  UtensilsCrossed,
   Armchair,
   Clock,
   User,
@@ -12,7 +11,6 @@ import {
 import BusinessLayout from "../components/dashboard/BusinessLayout";
 import BusinessInfoTab from "../components/dashboard/settings/BusinessInfoTab";
 import PricingTab from "../components/dashboard/settings/PricingTab";
-import MenuTab from "../components/dashboard/settings/MenuTab";
 import TablesTab from "../components/dashboard/settings/TablesTab";
 import OperatingHoursTab from "../components/dashboard/settings/OperatingHoursTab";
 import AccountTab from "../components/dashboard/settings/AccountTab";
@@ -25,7 +23,6 @@ import GameLibraryTab from "../components/dashboard/settings/GameLibraryTab";
 const SETTINGS_TABS = [
   { key: "info", label: "Business Info", icon: Building2 },
   { key: "pricing", label: "Pricing", icon: DollarSign },
-  { key: "menu", label: "Menu", icon: UtensilsCrossed },
   { key: "tables", label: "Tables", icon: Armchair },
   { key: "games", label: "Game Library", icon: Dices },
   { key: "hours", label: "Operating Hours", icon: Clock },
@@ -48,8 +45,6 @@ export default function BusinessSettings() {
         return <BusinessInfoTab onBack={back} />;
       case "pricing":
         return <PricingTab onBack={back} />;
-      case "menu":
-        return <MenuTab onBack={back} />;
       case "tables":
         return <TablesTab onBack={back} />;
       case "games":
