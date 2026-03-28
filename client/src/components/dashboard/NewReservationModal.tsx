@@ -9,6 +9,7 @@ import { SecondaryButton } from "../ui/SecondaryButton";
 interface NewReservationModalProps {
   isOpen: boolean;
   onClose: () => void;
+  defaultSource?: string;
   tables?: { id: number; name: string; capacity: number }[];
   games?: { id: number; name: string }[];
   onCreateWalkIn?: (data: {
@@ -80,6 +81,7 @@ function SelectField({
 export default function NewReservationModal({
   isOpen,
   onClose,
+  defaultSource = "",
   tables = [],
   games = [],
   onCreateWalkIn,
@@ -93,13 +95,18 @@ export default function NewReservationModal({
   const [guests, setGuests] = useState("");
   const [table, setTable] = useState("");
   const [game, setGame] = useState("");
-  const [source, setSource] = useState("");
+  const [source, setSource] = useState(defaultSource);
   const [specialRequests, setSpecialRequests] = useState("");
   const [reservationDate, setReservationDate] = useState(todayISO);
   const [arrivalTime, setArrivalTime] = useState(currentTimeRounded);
   const [duration, setDuration] = useState("2");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Reset source to defaultSource each time the modal opens
+  useEffect(() => {
+    if (isOpen) setSource(defaultSource);
+  }, [isOpen, defaultSource]);
 
   // Close on Escape
   useEffect(() => {
@@ -137,7 +144,7 @@ export default function NewReservationModal({
         setError(result.message || "Failed to create reservation.");
       } else {
         setName(""); setEmail(""); setPhone(""); setGuests("");
-        setTable(""); setGame(""); setSource(""); setSpecialRequests("");
+        setTable(""); setGame(""); setSource(defaultSource); setSpecialRequests("");
         setReservationDate(todayISO());
         setArrivalTime(currentTimeRounded());
         setDuration("2");
