@@ -7,8 +7,6 @@ const transporter = nodemailer.createTransport({
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
-  // TODO: remove before production — dev workaround only
-  tls: { rejectUnauthorized: false },
 });
 
 /* ─────────────────────────────────────────────────────────────────

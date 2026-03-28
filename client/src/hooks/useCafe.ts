@@ -88,9 +88,8 @@ export function useCafes(city?: string) {
 
   useEffect(() => {
     let cancelled = false;
-    // CHLOE: Local workaround — retries once after a short delay if the first fetch
-    // fails. This handles the case where a mid-render auth state change (logout)
-    // disrupts an in-flight fetch and causes a spurious "failed to load café" error.
+    // Retries once after a short delay if the first fetch fails, to handle
+    // in-flight requests disrupted by a mid-render auth state change.
     const fetchCafes = async (attempt = 0) => {
       setLoading(true);
       setError(null);

@@ -68,9 +68,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setAccessToken(null);
   }, []);
 
-  // CHLOE: Potential bug fix — previously any network error or failed refresh would
-  // immediately call logout(), causing random logouts on temporary connectivity issues.
-  // Now we only logout when the server explicitly rejects the token (401/403).
+  // Only logout when the server explicitly rejects the token (401/403);
+  // network errors and timeouts should not force a logout.
   const refreshAccessToken = useCallback(async (): Promise<string | null> => {
     const storedRefreshToken = localStorage.getItem("refreshToken");
     if (!storedRefreshToken) return null;
