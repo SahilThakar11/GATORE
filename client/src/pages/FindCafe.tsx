@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from "react";
 import {
   Search,
   X,
-  CalendarDays,
   MapPin,
   Star,
   ChevronDown,
@@ -11,17 +10,13 @@ import {
   Coffee,
   ParkingCircle,
   Clock,
-  Users,
   Eye,
   EyeOff,
 } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useCafes, type CafeSummary, formatMinutes } from "../hooks/useCafe";
-import { Dropdown } from "../components/ui/Dropdown";
-import { PrimaryButton } from "../components/ui/PrimaryButton";
 import { SecondaryButton } from "../components/ui/SecondaryButton";
 import { TertiaryButton } from "../components/ui/TertiaryButton";
-import { Input } from "../components/ui/Input";
 import { FilterPill } from "../components/ui/FilterPill";
 
 // ─── Amenity icon map ─────────────────────────────────────────────────────────
@@ -36,26 +31,6 @@ const AMENITY_ICONS: Record<string, any> = {
   Parking: ParkingCircle,
 };
 
-const TIME_OPTIONS = [
-  "5:00 PM",
-  "5:30 PM",
-  "6:00 PM",
-  "6:30 PM",
-  "7:00 PM",
-  "7:30 PM",
-  "8:00 PM",
-  "8:30 PM",
-];
-
-const PLAYER_OPTIONS = [
-  "1 player",
-  "2 players",
-  "3 players",
-  "4 players",
-  "5 players",
-  "6 players",
-  "7 players",
-];
 
 function useDebounce(value: string, delay: number) {
   const [debounced, setDebounced] = useState(value);
@@ -246,9 +221,6 @@ export default function FindCafePage() {
   const [inputValue, setInputValue] = useState(initialQuery);
   const [activeCity, setActiveCity] = useState("All");
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
-  const [date, setDate] = useState("");
-  const [time, setTime] = useState("");
-  const [players, setPlayers] = useState("");
   const [filtersOpen, setFiltersOpen] = useState(true);
   const [searchFocused, setSearchFocused] = useState(false);
 
@@ -338,89 +310,19 @@ export default function FindCafePage() {
             )}
           </div>
 
-          {/* Collapsible — Date / Time / Players / CTA + city pills */}
+          {/* Collapsible — city pills */}
           {filtersOpen && (
-            <>
-              {/* Row 2 — Date / Time / Players / CTA */}
-              <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-                {/* Date — full width on mobile, flex-1 on desktop */}
-                <div className="sm:flex-1">
-                  <Input
-                    type="date"
-                    value={date}
-                    onChange={(e) => setDate(e.target.value)}
-                    min={new Date().toISOString().split("T")[0]}
-                    aria-label="Select date"
-                    leftIcon={<CalendarDays size={16} color="#57534E" />}
-                    className={`bg-white border-warm-300 focus:ring-teal-500 cursor-pointer hide-calendar-indicator ${date ? "text-gray-700" : "text-gray-400"}`}
-                  />
-                </div>
-
-                {/* Time + Players — 2-col grid on mobile, inline on desktop */}
-                <div className="grid grid-cols-2 sm:contents gap-3">
-                  <div className="sm:flex-1 w-full shadow-[0px_4px_4px_0px_rgba(186,186,186,0.15)]">
-                    <Dropdown
-                      trigger="label"
-                      triggerIcon={<Clock size={16} />}
-                      triggerLabel={time || "Time"}
-                      isPlaceholder={!time}
-                      fullWidth
-                      onBackground="warm"
-                      items={TIME_OPTIONS.map((opt) => ({
-                        label: opt,
-                        onClick: () => setTime(opt),
-                      }))}
-                    />
-                  </div>
-
-                  <div className="sm:flex-1 w-full shadow-[0px_4px_4px_0px_rgba(186,186,186,0.15)]">
-                    <Dropdown
-                      trigger="label"
-                      onBackground="warm"
-                      triggerIcon={
-                        <svg xmlns="http://www.w3.org/2000/svg" width={16} height={16} viewBox="0 0 32 32" aria-hidden="true">
-                          <path fill="none" stroke="currentColor" strokeWidth="2.7" strokeLinecap="round" strokeLinejoin="round" d="M18.646 9a4 4 0 1 0-5.292 0H13a2 2 0 1 0 0 4h.5v4s0 .5-.5 1l-2.025 2.025c-1.493 1.493-1.26 3.703.015 4.975A3 3 0 0 0 8 28v2h16v-2a3 3 0 0 0-2.99-3c1.274-1.272 1.508-3.482.015-4.975L19 18c-.5-.5-.5-1-.5-1v-4h.5a2 2 0 1 0 0-4z" />
-                        </svg>
-                      }
-                      triggerLabel={players || "Party size"}
-                      isPlaceholder={!players}
-                      fullWidth
-                      items={PLAYER_OPTIONS.map((opt) => ({
-                        label: opt,
-                        onClick: () => setPlayers(opt),
-                      }))}
-                    />
-                  </div>
-                </div>
-
-                {/* CTA */}
-                <PrimaryButton
-                  label="Find tables"
-                  onClick={() => {}}
-                  size="sm"
+            <div className="flex gap-2 flex-wrap">
+              {allCities.map((city) => (
+                <FilterPill
+                  key={city}
+                  label={city}
+                  active={activeCity === city}
+                  onClick={() => setActiveCity(city)}
+                  icon={city !== "All" ? <MapPin size={11} /> : undefined}
                 />
-              </div>
-
-              {/* Divider — or browse by city */}
-              <div className="flex items-center gap-3">
-                <div className="flex-1 h-px bg-warm-400" />
-                <span className="text-xs text-gray-600">or browse by city</span>
-                <div className="flex-1 h-px bg-warm-400" />
-              </div>
-
-              {/* City filter pills */}
-              <div className="flex gap-2 flex-wrap">
-                {allCities.map((city) => (
-                  <FilterPill
-                    key={city}
-                    label={city}
-                    active={activeCity === city}
-                    onClick={() => setActiveCity(city)}
-                    icon={city !== "All" ? <MapPin size={11} /> : undefined}
-                  />
-                ))}
-              </div>
-            </>
+              ))}
+            </div>
           )}
 
           {/* Toggle — collapse/expand filters */}
