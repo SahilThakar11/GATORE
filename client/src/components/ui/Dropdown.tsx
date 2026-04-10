@@ -21,6 +21,8 @@ interface DropdownProps {
   triggerClassName?: string;
   dropUp?: boolean;
   triggerAriaLabel?: string;
+  /** The background colour the dropdown sits on. Controls trigger bg for contrast. Defaults to "white". */
+  onBackground?: "white" | "warm";
 }
 
 export function Dropdown({
@@ -34,6 +36,7 @@ export function Dropdown({
   triggerClassName = "",
   dropUp = false,
   triggerAriaLabel,
+  onBackground = "white",
 }: DropdownProps) {
   const [open, setOpen] = useState(false);
   const [menuPos, setMenuPos] = useState<{ top?: number; bottom?: number; left?: number; right?: number; width?: number }>({});
@@ -147,7 +150,7 @@ export function Dropdown({
             cursor: "pointer",
             transition: "background 150ms",
           }}
-          className={`hover:bg-warm-100 ${triggerClassName || "bg-warm-50"}`}
+          className={`hover:bg-warm-100 ${triggerClassName || (onBackground === "warm" ? "bg-white" : "bg-warm-50")}`}
         >
           {triggerIcon && (
             <span style={{ display: "flex", alignItems: "center", color: "var(--color-neutral-600)", flexShrink: 0 }}>

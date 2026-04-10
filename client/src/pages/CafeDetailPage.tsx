@@ -455,7 +455,7 @@ export default function CafeDetailPage() {
                   placeholder="Search games..."
                   value={gameQuery}
                   onChange={(e) => setGameQuery(e.target.value)}
-                  className="w-full pl-8 pr-4 py-2.5 border border-gray-200 rounded-lg text-sm sm:text-base text-gray-700 bg-warm-50 focus:ring-2 focus:ring-teal-500 outline-none"
+                  className="w-full pl-8 pr-4 py-2.5 border border-warm-200 rounded-lg text-sm sm:text-base text-gray-700 bg-warm-50 focus:ring-2 focus:ring-teal-500 outline-none"
                 />
               </div>
               {!gamesLoading && allCategories.length > 1 && (

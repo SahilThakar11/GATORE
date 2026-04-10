@@ -510,6 +510,7 @@ function StepTables({
                       triggerLabel={t.capacity ? `${t.capacity} seats` : "Select…"}
                       isPlaceholder={!t.capacity}
                       fullWidth
+                      onBackground="warm"
                       items={["2", "4", "6", "8", "10", "12"].map((opt) => ({
                         label: `${opt} seats`,
                         onClick: () => updateTable(t.id, { capacity: opt }),
@@ -524,6 +525,7 @@ function StepTables({
                       triggerLabel={t.type || "Select…"}
                       isPlaceholder={!t.type}
                       fullWidth
+                      onBackground="warm"
                       items={["Round", "Square", "Booth", "High-Top"].map((opt) => ({
                         label: opt,
                         onClick: () => updateTable(t.id, { type: opt }),

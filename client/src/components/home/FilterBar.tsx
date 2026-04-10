@@ -51,6 +51,7 @@ function FilterDropdown({
         triggerIcon={icon}
         triggerLabel={value}
         fullWidth
+        onBackground="warm"
         items={options.map((opt) => ({ label: opt, onClick: () => onChange(opt) }))}
       />
     </div>
