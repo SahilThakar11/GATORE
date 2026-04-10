@@ -166,7 +166,7 @@ export default function ProfilePage() {
       : undefined;
 
   return (
-    <div className="bg-[#faf8f4] min-h-screen">
+    <div className="bg-warm-50 min-h-screen">
       <div className="max-w-4xl mx-auto px-7 py-10">
 
         {/* Page header */}
@@ -178,7 +178,7 @@ export default function ProfilePage() {
         </div>
 
         {/* Contact info card */}
-        <div className="bg-warm-100 border border-warm-300 rounded-xl p-5 mb-5">
+        <div className="bg-white border border-warm-300 rounded-xl p-5 mb-5">
           <div className="flex items-center justify-between mb-4">
             <p className="text-xs font-semibold text-neutral-600 tracking-wider uppercase">
               Contact Info
@@ -259,7 +259,7 @@ export default function ProfilePage() {
         </div>
 
         {/* Game preferences card */}
-        <div className="bg-warm-100 border border-warm-300 rounded-xl p-5">
+        <div className="bg-white border border-warm-300 rounded-xl p-5">
           <div className="flex items-center justify-between mb-4">
             <p className="text-xs font-semibold text-neutral-600 tracking-wider uppercase">
               Game Preferences
@@ -433,13 +433,13 @@ export default function ProfilePage() {
               <div className="grid grid-cols-2 gap-4 border-t border-warm-300 pt-4">
                 <div>
                   <p className="text-xs text-neutral-600">Group size</p>
-                  <p className="text-sm font-semibold text-neutral-800 mt-2">
+                  <p className="text-sm font-semibold text-neutral-800 mt-0.5">
                     {GROUP_LABELS[profile.groupSize] || "Any"}
                   </p>
                 </div>
                 <div>
                   <p className="text-xs text-neutral-600">Complexity</p>
-                  <div className="flex items-center gap-1.5 mt-2">
+                  <div className="flex items-center gap-1.5 mt-0.5">
                     {(() => {
                       const c = COMPLEXITIES.find((c) => c.id === profile.complexity);
                       return c && c.dots > 0 ? (
