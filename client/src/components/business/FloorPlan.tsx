@@ -35,6 +35,12 @@ function isRound(type: string): boolean {
 const STORAGE_KEY = "gatore_floorplan_positions";
 type Position = { x: number; y: number };
 
+// Grid layout constants for default (unsaved) table positions
+const DEFAULT_COLS = 3;
+const TABLE_SIZE = 140;
+const TABLE_GAP = 20;
+const TABLE_PADDING = 20;
+
 function loadPositions(): Record<number, Position> {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
@@ -135,7 +141,7 @@ const FloorPlan: React.FC<FloorPlanProps> = ({
       className="min-h-[420px] bg-gray-50 rounded-xl border border-gray-200"
       style={{ position: "relative" }}
     >
-      {tables.map((table) => {
+      {tables.map((table, index) => {
         const nodeRef = getNodeRef(table.id);
         const popoverRef = getPopoverRef(table.id);
         const color = getStatusColor(table.status);
@@ -154,7 +160,12 @@ const FloorPlan: React.FC<FloorPlanProps> = ({
             bounds="parent"
             nodeRef={nodeRef}
             disabled={!isEditable}
-            defaultPosition={savedPositions[table.id] ?? { x: 0, y: 0 }}
+            defaultPosition={
+              savedPositions[table.id] ?? {
+                x: TABLE_PADDING + (index % DEFAULT_COLS) * (TABLE_SIZE + TABLE_GAP),
+                y: TABLE_PADDING + Math.floor(index / DEFAULT_COLS) * (TABLE_SIZE + TABLE_GAP),
+              }
+            }
             onStart={() => {
               isDragging.current = false;
             }}
