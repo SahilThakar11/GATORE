@@ -29,6 +29,7 @@ import { PrimaryButton } from "../components/ui/PrimaryButton";
 import { SecondaryButton } from "../components/ui/SecondaryButton";
 import { Dropdown } from "../components/ui/Dropdown";
 import NewReservationModal from "../components/dashboard/NewReservationModal";
+import EditReservationModal from "../components/dashboard/EditReservationModal";
 import {
   useBusinessDashboard,
   type DashboardReservation,
@@ -417,6 +418,7 @@ function FloorPlanView({
 function ReservationCard({
   reservation,
   onStatusChange,
+  onEdit,
   phone,
   previousVisits = 0,
   noShows = 0,
@@ -424,6 +426,7 @@ function ReservationCard({
 }: {
   reservation: DashboardReservation;
   onStatusChange: (id: number, status: string) => void;
+  onEdit: (reservation: DashboardReservation) => void;
   phone?: string;
   previousVisits?: number;
   noShows?: number;
@@ -752,6 +755,7 @@ function ReservationCard({
                 label="Modify"
                 size="xs"
                 leftIcon={<Edit3 size={13} aria-hidden="true" />}
+                onClick={() => onEdit(reservation)}
               />
               <SecondaryButton
                 label="Send Reminder"
@@ -804,11 +808,12 @@ function FilterSelect({
 }
 
 const ReservationManagement = () => {
-  const { fetchReservations, updateReservationStatus, profile, createWalkIn } =
+  const { fetchReservations, updateReservationStatus, updateReservation, profile, createWalkIn } =
     useBusinessDashboard();
   const [reservations, setReservations] = useState<DashboardReservation[]>([]);
   const [pageLoading, setPageLoading] = useState(true);
   const [showNewReservation, setShowNewReservation] = useState(false);
+  const [editingReservation, setEditingReservation] = useState<DashboardReservation | null>(null);
   const [modalDefaultSource, setModalDefaultSource] = useState("");
   const [showFilter, setShowFilter] = useState(false);
   const [filterStatus, setFilterStatus] = useState("All");
@@ -967,6 +972,7 @@ const ReservationManagement = () => {
                     <ReservationCard
                       reservation={reservation}
                       onStatusChange={handleStatusChange}
+                      onEdit={setEditingReservation}
                     />
                   </div>
                 ))}
@@ -993,6 +999,26 @@ const ReservationManagement = () => {
           return result;
         }}
       />
+      {editingReservation && (
+        <EditReservationModal
+          isOpen={!!editingReservation}
+          onClose={() => setEditingReservation(null)}
+          reservation={editingReservation}
+          tables={profile?.tables ?? []}
+          games={(profile?.restaurantGames ?? []).map((rg: any) => ({
+            id: rg.game.id,
+            name: rg.game.name,
+          }))}
+          onSave={async (id, data) => {
+            const result = await updateReservation(id, data);
+            if (result.success) {
+              setEditingReservation(null);
+              fetchReservations(todayStr).then((data) => setReservations(data));
+            }
+            return result;
+          }}
+        />
+      )}
     </BusinessLayout>
   );
 };
